@@ -1,1 +1,11 @@
-{ "name": "asistente-calle80", "private": true, "version": "1.0.0", "engines": { "node": ">=20" } }
+{
+  "name": "asistente-calle80",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/engine.test.js"
+  }
+}

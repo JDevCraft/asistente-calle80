@@ -3,7 +3,7 @@
 // varias claves separadas por coma. Las claves viven en
 // variables de entorno de Vercel (nunca en el navegador ni en el código).
 const { CATALOG, ESPS } = require('./_catalog');
-const { rapido, desdeSegmentos, normQuery } = require('./_engine');
+const { rapido, desdeSegmentos, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
 const CACHE = new Map(), CACHE_MAX = 300, CACHE_MS = 6 * 60 * 60 * 1000; // por instancia
 
@@ -89,7 +89,9 @@ module.exports = async (req, res) => {
     return res.status(status).json({ error });
   };
   if (!NV_KEYS.length && !GM_KEYS.length) return respaldo(500, 'sampling_disabled');
-  const key = normQuery(text) + '|' + answers.map(a => normQuery(a.q) + '=' + normQuery(a.a)).join('|');
+  // sin quitar stopwords: "con" y "sin" cambian el sentido de la necesidad
+  const clave = t => tokens(t).join(' ');
+  const key = clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
   const hit = CACHE.get(key);
   if (hit && Date.now() - hit.t < CACHE_MS) return res.status(200).json({ ...hit.v, cache: true, ms: Date.now() - t0 });
   if (limited(ip)) return respaldo(429, 'rate_limited');

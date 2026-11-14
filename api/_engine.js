@@ -60,7 +60,6 @@ function tipoDe(w) {
   return null;
 }
 const tokens = text => norm(text).replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
-const normQuery = text => tokens(text).filter(w => !STOP.has(w)).join(' ');
 
 // ---------- Destinos ----------
 const P = IDX.pasillos;
@@ -263,4 +262,4 @@ function desdeSegmentos(segs) {
   return decidir(destinos(entradas));
 }
 
-module.exports = { rapido, desdeSegmentos, normQuery, decidir, destinos };
+module.exports = { rapido, desdeSegmentos, tokens, decidir, destinos };
