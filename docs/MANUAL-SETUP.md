@@ -11,7 +11,7 @@ Sin ninguna key, `/api/sample` responde las búsquedas de producto desde el índ
 ## Orden recomendado
 
 1. Herramientas locales
-2. Cuentas de datos: Upstash Redis y Neon Postgres
+2. Cuentas de datos: Upstash Redis y Neon Postgres (hecho, falta aplicar el esquema)
 3. Keys de IA: NVIDIA y Gemini
 4. Proyecto Vercel del backend (Tarea 4 del plan del split)
 5. Protection Bypass y variables del frontend (Tarea 5)
@@ -28,20 +28,34 @@ Sin ninguna key, `/api/sample` responde las búsquedas de producto desde el índ
 - Vercel CLI: `npm i -g vercel`, luego `vercel login`.
 - Una vez: `cd backend && npm install`.
 
-## 2. Cuentas de datos
+## 2. Cuentas de datos (hecho: Neon y Upstash instalados desde el Marketplace de Vercel)
 
-### Upstash Redis (caché y rate limit)
-
-- Se crea desde el Marketplace de Vercel (integración Upstash for Redis) o directo en https://upstash.com.
-- Con la integración de Vercel se inyectan `KV_REST_API_URL` y `KV_REST_API_TOKEN`. Con cuenta directa se usan `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`. El código acepta ambos pares.
-- Secreto: sí (el token). Va solo al backend.
+Ambas integraciones están conectadas al proyecto `asistente-calle80-backend` en Production y Preview, sin Development. Quedó así:
 
 ### Neon Postgres (log de búsquedas y encuesta)
 
-- Crear proyecto en https://neon.tech (o desde el Marketplace de Vercel).
-- Aplicar el esquema una vez: abrir el SQL Editor de Neon y ejecutar el contenido de `backend/sql/001_busquedas.sql`.
-- Copiar la cadena de conexión a `POSTGRES_URL` (o `DATABASE_URL` como alternativa).
-- Secreto: sí. Va solo al backend, nunca al frontend.
+- Región Washington, D.C. (East), la misma zona que las funciones de Vercel (`iad1`). Auth y Realtime desactivados: la app no tiene usuarios ni escucha cambios.
+- Al conectar el proyecto: "Create database branch for deployment" marcado solo en **Preview** (cada preview recibe una copia aislada de la rama principal), **Production sin marcar** (producción usa la rama principal, para que los datos no se dispersen en ramas). Custom Prefix vacío, para que las variables se llamen `POSTGRES_URL` y `DATABASE_URL`. Sensitive activo.
+- Pendiente: aplicar el esquema en la **rama principal** desde el SQL Editor de Neon, ejecutando `backend/sql/001_busquedas.sql`. Hacerlo antes del primer Preview, porque cada Preview copia la rama principal.
+- Secreto: sí. Solo backend.
+
+### Upstash Redis (caché y rate limit)
+
+- Producto Upstash for Redis, plan gratuito, región `us-east-1`, eviction activada, Custom Prefix vacío.
+- Debe inyectar `KV_REST_API_URL` y `KV_REST_API_TOKEN` (el código también acepta `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`). Si en Settings → Environment Variables solo aparecen `REDIS_URL` y `KV_URL`, el código no los usa: lee la API REST, no `redis://`.
+- Secreto: sí (el token). Solo backend.
+
+### Verificación
+
+En Settings → Environment Variables del backend deben existir `POSTGRES_URL`, `KV_REST_API_URL` y `KV_REST_API_TOKEN` en Production y Preview.
+
+### Migración de datos
+
+No hay. La base de Neon nace vacía (el log y la encuesta son funciones nuevas) y solo se le aplica el esquema. Redis guarda caché de 6 h y contadores de 10 min, y se llena solo.
+
+### Uso en local
+
+No hace falta. Sin variables, el backend funciona en local con todo fail-open (fast path, sin caché ni log), y `npm test` simula Redis y Postgres. Con Development desactivado y las variables en modo Sensitive, `vercel env pull` no las trae. Si algún día se quiere probar en local contra datos reales, crear una rama de Neon y una base de Upstash aparte, nunca las de producción.
 
 ## 3. Keys de IA
 
@@ -53,7 +67,7 @@ Sin ninguna key, `/api/sample` responde las búsquedas de producto desde el índ
 
 ## 4. Proyecto Vercel del backend (Tarea 4)
 
-1. Dashboard de Vercel → Add New Project → importar este repo → Root Directory `backend/` → nombre `calle80-backend`.
+1. Hecho: proyecto `asistente-calle80-backend` creado con Root Directory `backend/`. Dominio: `https://asistente-calle80-backend.vercel.app`. Framework Preset "Other", sin Build Command. Ver la nota sobre la rama a desplegar al final de este paso.
 2. Cargar las variables en Production y Preview:
 
 | Variable | Origen | Secreto |
@@ -61,18 +75,19 @@ Sin ninguna key, `/api/sample` responde las búsquedas de producto desde el índ
 | `NVIDIA_API_KEY` | paso 3 | sí |
 | `GEMINI_API_KEY` | paso 3 | sí |
 | `NVIDIA_MODEL`, `GEMINI_MODEL` | opcionales | no |
-| `KV_REST_API_URL`, `KV_REST_API_TOKEN` (o `UPSTASH_*`) | paso 2 | token sí |
-| `POSTGRES_URL` | paso 2 | sí |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Marketplace (ya inyectadas) | token sí |
+| `POSTGRES_URL` | Marketplace (ya inyectada) | sí |
 
 3. Desplegar y comprobar que el deploy no está roto. Si Deployment Protection responde con un 401 o un reto, es lo esperado hasta el paso 5.
+4. Rama a desplegar: `origin/main` todavía tiene el layout viejo, sin `backend/`. Si no hay rama con el split en GitHub, el deploy no encuentra el Root Directory. Pushear una rama aparte (`split-vercel`) y usarla como Production Branch del proyecto, sin tocar `main`.
 
 ## 5. Protection Bypass y variables del frontend (Tarea 5)
 
 1. En el proyecto backend: Settings → Deployment Protection → Protection Bypass for Automation → generar el secreto. Vercel lo expone en el backend como `VERCEL_AUTOMATION_BYPASS_SECRET`.
 2. En el proyecto frontend, crear `BACKEND_BYPASS_SECRET` con ese mismo valor (Production y Preview). El nombre es distinto a propósito, para no chocar con la variable que Vercel pone en el frontend.
 3. Crear `BACKEND_URL` en el frontend:
-   - Production: dominio de producción del backend.
-   - Preview: `https://calle80-backend-git-<rama>.vercel.app` (alias fijo por rama).
+   - Production: `https://asistente-calle80-backend.vercel.app`.
+   - Preview: `https://asistente-calle80-backend-git-<rama>-jdevcrafts-projects.vercel.app` (confirmar el alias exacto en el dashboard) (alias fijo por rama).
 4. Auditoría: en el frontend no debe haber `NVIDIA_API_KEY`, `GEMINI_API_KEY`, variables de Redis ni `POSTGRES_URL`.
 
 ## 6. Proyecto Vercel del frontend y verificación (Tarea 6)
