@@ -539,20 +539,40 @@ function initConsentBar(){
 }
 // IDs de seguimiento: públicos, visibles en el cliente (no son secretos, a diferencia de toda variable de entorno del repo)
 const GA4_ID = 'G-XXXXXXX';
-// Apaga los trackers ya iniciados (opt-out en la primera visita, tras initTracking). Tarea 7 añade Clarity y Sentry.
+const CLARITY_ID = 'XXXXXXXXXX'; // ID de proyecto de Clarity: público, visible en el cliente
+const SENTRY_DSN = 'https://REEMPLAZAR@oXXXXXX.ingest.us.sentry.io/XXXXXXX'; // DSN de Sentry: público, no secreto
+// Un ID que sigue siendo placeholder no se inyecta: evita mandar basura a los vendors antes de tener los IDs reales
+const real = v => v && !/X{4,}|REEMPLAZAR/.test(v);
+// Apaga los trackers ya iniciados (opt-out en la primera visita, tras initTracking)
 function stopTracking(){
   window['ga-disable-' + GA4_ID] = true; // flag documentada de Google para desactivar GA4
+  // Clarity: 'consent', false borra sus cookies (doc consent API v2); 'stop' (presente en clarity.js, no en la doc) detiene la grabación, porque 'consent' false solo pasa a modo sin consentimiento
+  try{ if (window.clarity){ window.clarity('consent', false); window.clarity('stop'); } }catch(e){}
+  try{ if (window.Sentry) Promise.resolve(window.Sentry.close()).catch(()=>{}); }catch(e){}
 }
 function reportVital(m){ if (window.gtag) gtag('event', 'web_vital', { metric: m.name, value: Math.round(m.value), id: m.id }); }
 function initTracking(){
   if (lsGet('calle80_tracking_rechazado')) return;
-  const s1 = document.createElement('script'); s1.async = true; s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID; s1.dataset.tracking = '1'; document.head.appendChild(s1);
-  window.dataLayer = window.dataLayer || []; window.gtag = function(){ dataLayer.push(arguments); };
-  gtag('js', new Date()); gtag('config', GA4_ID);
-  const s2 = document.createElement('script'); s2.src = 'https://cdn.jsdelivr.net/npm/web-vitals@4.2.4/dist/web-vitals.iife.js'; s2.dataset.tracking = '1';
-  s2.onload = () => { webVitals.onCLS(reportVital); webVitals.onINP(reportVital); webVitals.onLCP(reportVital); };
-  document.head.appendChild(s2);
-  // Sentry/Clarity: Tarea 7
+  if (real(GA4_ID)){
+    const s1 = document.createElement('script'); s1.async = true; s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID; s1.dataset.tracking = '1'; document.head.appendChild(s1);
+    window.dataLayer = window.dataLayer || []; window.gtag = function(){ dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', GA4_ID);
+    // web-vitals reporta vía GA4, así que sigue a GA4_ID
+    const s2 = document.createElement('script'); s2.src = 'https://cdn.jsdelivr.net/npm/web-vitals@4.2.4/dist/web-vitals.iife.js'; s2.dataset.tracking = '1';
+    s2.onload = () => { webVitals.onCLS(reportVital); webVitals.onINP(reportVital); webVitals.onLCP(reportVital); };
+    document.head.appendChild(s2);
+  }
+  if (real(CLARITY_ID)){
+    // Snippet oficial de Clarity (cola window.clarity + tag/<id>), adaptado al estilo de la página
+    window.clarity = window.clarity || function(){ (window.clarity.q = window.clarity.q || []).push(arguments); };
+    const s4 = document.createElement('script'); s4.async = true; s4.src = 'https://www.clarity.ms/tag/' + CLARITY_ID; s4.dataset.tracking = '1'; document.head.appendChild(s4);
+  }
+  if (real(SENTRY_DSN)){
+    const s3 = document.createElement('script'); s3.src = 'https://browser.sentry-cdn.com/11.12.0/bundle.min.js'; s3.dataset.tracking = '1';
+    s3.integrity = 'sha384-fpjRzLWxkdRneAxDGo5pt5gKsjCWYV5ksPD+S1lx80QHBhs6Oe58hf8sKUKubCES'; s3.crossOrigin = 'anonymous';
+    s3.onload = () => { Sentry.init({ dsn: SENTRY_DSN }); };
+    document.head.appendChild(s3);
+  }
 }
 // Los datos viven en data.json y ai.json (antes iban dentro del HTML, 3,8 MB)
 Promise.all(['data.json','ai.json'].map(u=>fetch(u).then(r=>{ if(!r.ok) throw new Error(u+' '+r.status); return r.json(); }))).then(function(datos){
