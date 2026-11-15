@@ -52,7 +52,7 @@ sesión pudo ejecutar.
 - [x] Micro-encuesta "¿te ayudó?" (respuesta → Postgres)
 - [ ] Export de GA4 a BigQuery
 - [ ] Panel en Looker Studio (Postgres + BigQuery)
-- [ ] Prueba de carga (k6/Artillery) contra preview
+- [-] Prueba de carga (k6/Artillery) contra preview — descartada por el usuario el 2026-11-15
 - [ ] Revisión legal del texto del banner (negocio/abogado, fuera de este
       trabajo técnico)
 
