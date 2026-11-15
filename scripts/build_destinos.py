@@ -28,7 +28,7 @@ XLSX = ROOT / 'data' / 'Segmentacion_Productos_Calle80.xlsx'
 HTML = ROOT / 'public' / 'index.html'
 MANUAL = ROOT / 'data' / 'pasillo_destino.json'
 LATERALES = ROOT / 'data' / 'laterales.json'
-OUT = ROOT / 'api' / '_destinos.json'
+OUT = ROOT / 'backend' / 'api' / '_destinos.json'
 GAP_MAX = 32.0          # unidades del plano entre góndolas para considerarlas contiguas
 FAMILIAS_FUERA = {'MISCELANEOS'}  # bonos, donaciones, estibas: no son productos
 

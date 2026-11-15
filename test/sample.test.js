@@ -6,7 +6,7 @@ process.env.KV_REST_API_URL = 'https://fake-redis.test';
 process.env.KV_REST_API_TOKEN = 'tok-test';
 delete process.env.NVIDIA_MODEL; delete process.env.GEMINI_MODEL;
 const test = require('node:test'), assert = require('node:assert');
-const handler = require('../api/sample');
+const handler = require('../backend/api/sample');
 
 console.error = () => {}; // el handler registra los fallos esperados
 const PLAN = JSON.stringify({ necesidad: 'impermeabilizar', grupos: [{ rol: 'Principal', segmentos: [100] }], preguntas: [], consejo: '' });

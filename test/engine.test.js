@@ -1,7 +1,7 @@
 // Red de seguridad del motor de destinos: fija decisión y destinos de consultas conocidas.
 // Si cambia un umbral o el índice (scripts/build_destinos.py), estos casos avisan; actualizar solo si el cambio es intencional.
 const test = require('node:test'), assert = require('node:assert');
-const { rapido, tokens } = require('../api/_engine');
+const { rapido, tokens } = require('../backend/api/_engine');
 
 const resumen = q => { const r = rapido(q); return r && { decision: r.decision, rangos: r.destinos.map(d => d.rango) }; };
 

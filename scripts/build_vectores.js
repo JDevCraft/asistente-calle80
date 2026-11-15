@@ -10,7 +10,7 @@
 //   api/_vectores.json  { modelo, dim, segs: [números de segmento en el mismo orden], fecha }
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
-const { CATALOG } = require(path.join(ROOT, 'api', '_catalog'));
+const { CATALOG } = require(path.join(ROOT, 'backend', 'api', '_catalog'));
 const MODELO = 'nvidia/nemotron-3.5-embed-1b';
 const KEY = String(process.env.NVIDIA_API_KEY || '').split(/[\s,;]+/).filter(Boolean)[0] || ''; // si hay varias, la primera
 if (!KEY) { console.error('Falta NVIDIA_API_KEY'); process.exit(1); }
@@ -46,7 +46,7 @@ async function lote(input) {
     const mx = Math.max(...v.map(Math.abs)) || 1;
     for (let k = 0; k < dim; k++) buf.writeInt8(Math.round((v[k] / mx) * 127), i * dim + k);
   });
-  fs.writeFileSync(path.join(ROOT, 'api', '_vectores.bin'), buf);
-  fs.writeFileSync(path.join(ROOT, 'api', '_vectores.json'), JSON.stringify({ modelo: MODELO, dim, segs: segs.map(s => s.n), fecha: new Date().toISOString().slice(0, 10) }));
+  fs.writeFileSync(path.join(ROOT, 'backend', 'api', '_vectores.bin'), buf);
+  fs.writeFileSync(path.join(ROOT, 'backend', 'api', '_vectores.json'), JSON.stringify({ modelo: MODELO, dim, segs: segs.map(s => s.n), fecha: new Date().toISOString().slice(0, 10) }));
   console.log(`\nOK: ${segs.length} segmentos, ${dim} dimensiones, ${(buf.length / 1048576).toFixed(1)} MB`);
 })().catch(e => { console.error(e.message); process.exit(1); });

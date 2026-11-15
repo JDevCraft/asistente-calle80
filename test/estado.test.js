@@ -17,7 +17,7 @@ global.fetch = async (url, opts) => {
   });
   return { ok: true, status: 200, json: async () => results };
 };
-const estado = require('../api/_estado');
+const estado = require('../backend/api/_estado');
 
 test('cacheGet sin nada guardado → null', async () => {
   reset();
@@ -94,12 +94,12 @@ test('limitado: en el primer hit de una IP, manda un solo pipeline (INCR+EXPIRE 
 });
 test('sin KV_REST_API_URL configurado → no limita ni cachea, no lanza', async () => {
   delete process.env.KV_REST_API_URL; delete process.env.KV_REST_API_TOKEN;
-  delete require.cache[require.resolve('../api/_estado')];
-  const sinRedis = require('../api/_estado');
+  delete require.cache[require.resolve('../backend/api/_estado')];
+  const sinRedis = require('../backend/api/_estado');
   assert.strictEqual(await sinRedis.limitado('cualquiera'), false);
   assert.strictEqual(await sinRedis.cacheGet('x'), null);
   await assert.doesNotReject(sinRedis.cacheSet('x', { a: 1 }));
   process.env.KV_REST_API_URL = 'https://fake-redis.test';
   process.env.KV_REST_API_TOKEN = 'tok-test';
-  delete require.cache[require.resolve('../api/_estado')];
+  delete require.cache[require.resolve('../backend/api/_estado')];
 });
