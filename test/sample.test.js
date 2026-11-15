@@ -2,6 +2,8 @@
 // NVIDIA → Gemini → respaldo, la caché y el límite por IP, para poder reorganizar el handler sin cambiarlo.
 process.env.NVIDIA_API_KEY = 'nv-test';
 process.env.GEMINI_API_KEY = 'gm-test';
+process.env.KV_REST_API_URL = 'https://fake-redis.test';
+process.env.KV_REST_API_TOKEN = 'tok-test';
 delete process.env.NVIDIA_MODEL; delete process.env.GEMINI_MODEL;
 const test = require('node:test'), assert = require('node:assert');
 const handler = require('../api/sample');
@@ -12,9 +14,20 @@ const resp = (status, body) => ({ ok: status < 400, status, json: async () => bo
 const nvOk = () => resp(200, { choices: [{ message: { content: PLAN } }] });
 const gmOk = () => resp(200, { candidates: [{ content: { parts: [{ text: PLAN }] } }] });
 
-let sc, llamadas;
-global.fetch = async url => {
+let sc, llamadas, redisStore;
+global.fetch = async (url, opts) => {
   const u = String(url);
+  if (u.endsWith('/pipeline')) {
+    const cmds = JSON.parse(opts.body);
+    const results = cmds.map(([cmd, key, ...args]) => {
+      if (cmd === 'INCR') { const v = (redisStore.get(key) || 0) + 1; redisStore.set(key, v); return { result: v }; }
+      if (cmd === 'EXPIRE') return { result: redisStore.has(key) ? 1 : 0 };
+      if (cmd === 'GET') return { result: redisStore.has(key) ? redisStore.get(key) : null };
+      if (cmd === 'SET') { redisStore.set(key, args[0]); return { result: 'OK' }; }
+      return { result: null };
+    });
+    return resp(200, results);
+  }
   const k = u.includes('/embeddings') ? 'emb' : u.includes('nvidia.com') ? 'nv' : 'gm';
   llamadas[k]++;
   return sc[k]();
@@ -24,7 +37,7 @@ const run = async (text, { ip = 'ip-' + text, method = 'POST', answers } = {}) =
   await handler({ method, headers: { 'x-forwarded-for': ip }, body: { text, answers } }, res);
   return res;
 };
-const escenario = s => { sc = { emb: () => resp(500, {}), nv: nvOk, gm: gmOk, ...s }; llamadas = { emb: 0, nv: 0, gm: 0 }; };
+const escenario = s => { sc = { emb: () => resp(500, {}), nv: nvOk, gm: gmOk, ...s }; llamadas = { emb: 0, nv: 0, gm: 0 }; redisStore = new Map(); };
 // consultas abiertas que el índice no entiende, para que lleguen al modelo
 const Q = n => 'zzqx qwv ' + n;
 

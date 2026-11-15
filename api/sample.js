@@ -5,7 +5,7 @@
 const { CATALOG, ESPS } = require('./_catalog');
 const { rapido, desdeSegmentos, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
-const CACHE = new Map(), CACHE_MAX = 300, CACHE_MS = 6 * 60 * 60 * 1000; // por instancia
+const { limitado, cacheGet, cacheSet } = require('./_estado');
 
 // Varias claves por proveedor, separadas por coma en la misma variable (NVIDIA_API_KEY=nvapi-a,nvapi-b). Se usa la primera;
 // si responde 429 (cuota agotada) o 401/403 (clave inválida), se prueba la siguiente antes de pasar al otro modelo/proveedor.
@@ -26,8 +26,6 @@ const NV_MODELOS = process.env.NVIDIA_MODEL ? [[process.env.NVIDIA_MODEL, 30000]
 const MAX_TEXT = 600;      // caracteres de la necesidad
 const MAX_ANSWERS = 8;     // respuestas previas
 const MAX_ANSWER_LEN = 200;
-const LIMIT = 20, WINDOW_MS = 10 * 60 * 1000; // por IP y por instancia (límite de mejor esfuerzo)
-const hits = new Map();
 
 // El prompt se arma con el catálogo recortado para la pregunta (api/_recorte.js) o, si eso falla, con el completo
 const sistema = cat => `Eres asesor de una tienda de mejoramiento del hogar en Bogotá, Colombia. Un cliente describe con sus palabras lo que necesita. Entiende la necesidad real (el proyecto o el problema que quiere resolver, no solo la palabra que usa) y arma la canasta de productos usando SOLO los segmentos del catálogo de abajo, citándolos por su número.
@@ -50,14 +48,6 @@ Reglas:
 CATÁLOGO (número y nombre del segmento, agrupados por familia):
 ${cat}`;
 const SYSTEM = sistema(CATALOG);
-
-function limited(ip) {
-  const now = Date.now();
-  const h = (hits.get(ip) || []).filter(t => now - t < WINDOW_MS);
-  h.push(now); hits.set(ip, h);
-  if (hits.size > 5000) for (const [k, v] of hits) if (!v.some(t => now - t < WINDOW_MS)) hits.delete(k);
-  return h.length > LIMIT;
-}
 
 function extractJson(text) {
   const a = text.indexOf('{'), b = text.lastIndexOf('}');
@@ -170,9 +160,9 @@ module.exports = async (req, res) => {
   // sin quitar stopwords: "con" y "sin" cambian el sentido de la necesidad
   const clave = t => tokens(t).join(' ');
   const key = clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
-  const hit = CACHE.get(key);
-  if (hit && Date.now() - hit.t < CACHE_MS) return res.status(200).json({ ...hit.v, cache: true, ms: Date.now() - t0 });
-  if (limited(ip)) return respaldo(429, 'rate_limited');
+  const hit = await cacheGet(key);
+  if (hit) return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0 });
+  if (await limitado(ip)) return respaldo(429, 'rate_limited');
   const ans = answers.length ? `\n\nRespuestas del cliente a preguntas anteriores:\n${answers.map(a => `- ${a.q} → ${a.a}`).join('\n')}` : '';
 
   try {
@@ -204,8 +194,7 @@ module.exports = async (req, res) => {
     const ruta = segs.length ? { ...desdeSegmentos(segs), fuente: 'modelo', segmentos: segs } : null;
     if (ruta && ruta.decision !== 'directo') ruta.pregunta = ruta.decision === 'preguntar' ? '¿Cuál de estos buscas?' : '¿Para qué lo necesitas?';
     const v = { plan, ruta, catalogo: recorte ? { segmentos: recorte.segs, ms: recorte.ms } : 'completo' };
-    CACHE.set(key, { t: Date.now(), v });
-    if (CACHE.size > CACHE_MAX) CACHE.delete(CACHE.keys().next().value);
+    await cacheSet(key, v);
     return res.status(200).json({ ...v, ms: Date.now() - t0 });
   } catch (e) {
     console.error('sample', e && e.message);
