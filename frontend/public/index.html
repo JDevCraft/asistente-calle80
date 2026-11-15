@@ -183,6 +183,13 @@ footer{font-size:13px;color:var(--muted)}
 #popBody .opts{flex-direction:column}
 #popBody .opt{width:100%}
 body.pop-open{overflow:hidden}
+#consentBar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 16px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 8px rgba(0,0,0,.12);padding:12px max(16px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));font-size:13px;line-height:1.4;color:var(--ink)}
+#consentBar p{margin:0;flex:1 1 280px;max-width:640px}
+#consentBar .cb-btns{display:flex;flex-wrap:wrap;gap:8px;flex:0 1 auto}
+#consentBar button{min-height:40px;padding:8px 14px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
+#consentBar button:hover{background:var(--accent-hover)}
+#consentBar button.sec{background:#fff;color:var(--accent)}
+#consentBar button.sec:hover{background:var(--accent-soft)}
 .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .nomap{font-size:12px;color:var(--muted)}
 .ruta{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
@@ -487,6 +494,8 @@ body.pop-open{overflow:hidden}
     </section>
     <div id="result"></div>
     <div class="pop" id="pop" hidden><div class="pop-card" role="dialog" aria-modal="true" aria-labelledby="popTitulo"><button class="pop-x" id="popX" type="button" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div id="popBody"></div></div></div>
+    <!-- TODO(Task 10): copy NOT legally reviewed (Ley 1581 de 2012, habeas data). Must not ship to real beta traffic unchanged without business/legal sign-off. -->
+    <div id="consentBar" role="region" aria-label="Aviso de seguimiento" hidden><p>Usamos Microsoft Clarity, Google Analytics y un registro de búsquedas para mejorar el asistente durante la beta.</p><div class="cb-btns"><button type="button" id="consentOk">Entendido</button><button type="button" id="consentOff" class="sec">Desactivar seguimiento</button></div></div>
     <div class="hero-bg">
 
     <section class="ruta idle" id="rutaModal" aria-labelledby="rutaTitulo">
@@ -518,6 +527,20 @@ body.pop-open{overflow:hidden}
 
 </script>
 <script>
+// Consentimiento / opt-out: flags en localStorage (nunca lanzan)
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function initConsentBar(){
+  if (lsGet('calle80_banner_visto')) return;
+  const bar = document.getElementById('consentBar'); if (!bar) return;
+  bar.hidden = false;
+  document.getElementById('consentOk').onclick = () => { lsSet('calle80_banner_visto','1'); bar.hidden = true; };
+  document.getElementById('consentOff').onclick = () => { lsSet('calle80_banner_visto','1'); lsSet('calle80_tracking_rechazado','1'); bar.hidden = true; };
+}
+function initTracking(){
+  if (lsGet('calle80_tracking_rechazado')) return;
+  // Inyección de GA4/web-vitals/Sentry/Clarity: Tareas 6 y 7
+}
 // Los datos viven en data.json y ai.json (antes iban dentro del HTML, 3,8 MB)
 Promise.all(['data.json','ai.json'].map(u=>fetch(u).then(r=>{ if(!r.ok) throw new Error(u+' '+r.status); return r.json(); }))).then(function(datos){
 const D=datos[0], AI=datos[1];
@@ -1227,6 +1250,7 @@ sampleFn={ async json(opts){
   if(!r.ok||!j||j.error) throw {code:(j&&j.error)||(r.status===429?'rate_limited':r.status===503?'ia_ocupada':'error')};
   return j;
 } };
+initConsentBar(); initTracking();
 setStatus('Tú lo describes, nosotros lo encontramos.');
 const bb=$('barBack'); if(bb) bb.onclick=()=>{ if(history.length>1) history.back(); else window.scrollTo({top:0,behavior:'smooth'}); };
 
