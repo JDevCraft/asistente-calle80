@@ -206,26 +206,31 @@ test('rechazado:true suprime el registro en todos los caminos pero no cambia la 
   assert.strictEqual(r.code, 200);
   assert.strictEqual(r.body.plan.necesidad, 'impermeabilizar');
   assert.ok(!('id' in r.body));
+  assert.strictEqual(registros.length, 0, 'éxito con modelo no debe registrar');
   // caché
   r = await run(Q('r1'), { rechazado: true, ip: 'otra' });
   assert.strictEqual(r.body.cache, true);
   assert.ok(!('id' in r.body));
+  assert.strictEqual(registros.length, 0, 'acierto de caché no debe registrar');
   // camino rápido
   r = await run(IDX, { rechazado: true });
   assert.strictEqual(r.code, 200);
   assert.ok(!('id' in r.body));
+  assert.strictEqual(registros.length, 0, 'camino rápido no debe registrar');
   // respaldo laxo y error
   escenario({ nv: () => resp(503, {}), gm: () => resp(503, {}) });
   r = await run(IDX + ' zzqx qwv', { rechazado: true });
   assert.strictEqual(r.body.ruta.respaldo, true);
   assert.ok(!('id' in r.body));
+  assert.strictEqual(registros.length, 0, 'respaldo laxo no debe registrar');
   r = await run(Q('r2'), { rechazado: true });
   assert.strictEqual(r.code, 503);
+  assert.strictEqual(registros.length, 0, 'error 503 no debe registrar');
   // rate limit
   escenario({});
   for (let i = 0; i < 21; i++) r = await run(Q('rr' + i), { ip: 'misma-r', rechazado: true });
   assert.strictEqual(r.code, 429);
-  assert.strictEqual(registros.length, 0);
+  assert.strictEqual(registros.length, 0, 'éxitos con modelo y rate_limited no deben registrar');
   // control: la misma consulta sin rechazado sí se registra (la prueba no pasa solo porque nada registra)
   r = await run(IDX);
   assert.strictEqual(registros.length, 1);
