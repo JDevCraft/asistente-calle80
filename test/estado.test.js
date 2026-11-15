@@ -39,3 +39,35 @@ test('limitado: IPs distintas no comparten contador', async () => {
   for (let i = 0; i < 20; i++) await estado.limitado('ip-a');
   assert.strictEqual(await estado.limitado('ip-b'), false);
 });
+test('Upstash responde error HTTP → limitado/cacheGet/cacheSet se degradan sin lanzar', async () => {
+  reset();
+  const prev = global.fetch;
+  global.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
+  assert.strictEqual(await estado.limitado('cualquiera'), false);
+  assert.strictEqual(await estado.cacheGet('x'), null);
+  await assert.doesNotReject(estado.cacheSet('x', { a: 1 }));
+  global.fetch = prev;
+});
+test('un comando del pipeline devuelve {error} en vez de {result} → no crashea', async () => {
+  reset();
+  const prev = global.fetch;
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => [{ error: 'ERR algo' }] });
+  assert.strictEqual(await estado.limitado('cualquiera'), false);
+  global.fetch = prev;
+});
+test('valor corrupto (no-JSON) en caché → cacheGet devuelve null', async () => {
+  reset();
+  store.set('c:x', 'no es json{');
+  assert.strictEqual(await estado.cacheGet('x'), null);
+});
+test('sin KV_REST_API_URL configurado → no limita ni cachea, no lanza', async () => {
+  delete process.env.KV_REST_API_URL; delete process.env.KV_REST_API_TOKEN;
+  delete require.cache[require.resolve('../api/_estado')];
+  const sinRedis = require('../api/_estado');
+  assert.strictEqual(await sinRedis.limitado('cualquiera'), false);
+  assert.strictEqual(await sinRedis.cacheGet('x'), null);
+  await assert.doesNotReject(sinRedis.cacheSet('x', { a: 1 }));
+  process.env.KV_REST_API_URL = 'https://fake-redis.test';
+  process.env.KV_REST_API_TOKEN = 'tok-test';
+  delete require.cache[require.resolve('../api/_estado')];
+});
