@@ -153,9 +153,7 @@ def main():
                 tipos[norm(tipo)][key][a] += w
 
     # --- Segmentos del catálogo de la IA (mismo orden que api/_catalog.js) ---
-    html = HTML.read_text(encoding='utf8')
-    m = re.search(r'<script id="ai" type="application/json">(.*?)</script>', html, re.S)
-    segs = json.loads(m.group(1))['segs']
+    segs = json.loads((ROOT / 'public' / 'ai.json').read_text(encoding='utf8'))['segs']
     seg_id = {f'{s[0]}>{s[1]}': i for i, s in enumerate(segs)}
 
     # --- Espacio validado / nombre para cliente (si categorías ya lo llenó) ---

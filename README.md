@@ -19,6 +19,8 @@ test/
   engine.test.js     Pruebas del motor de destinos (npm test)
 public/
   index.html     Página única (UI, SKUs, plano SVG, ranking y ruta)
+  data.json      SKUs, familias y estadísticas (se carga con fetch al abrir la página)
+  ai.json        Segmentos del catálogo para la IA (los lee también build_destinos.py)
   empleada-inicio.jpg   Imagen del inicio
 data/
   Segmentacion_Productos_Calle80.xlsx   Fuente de datos del catálogo
