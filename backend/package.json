@@ -1,0 +1,10 @@
+{
+  "name": "asistente-calle80-backend",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.2.1"
+  }
+}
