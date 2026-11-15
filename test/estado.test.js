@@ -42,23 +42,55 @@ test('limitado: IPs distintas no comparten contador', async () => {
 test('Upstash responde error HTTP → limitado/cacheGet/cacheSet se degradan sin lanzar', async () => {
   reset();
   const prev = global.fetch;
-  global.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
-  assert.strictEqual(await estado.limitado('cualquiera'), false);
-  assert.strictEqual(await estado.cacheGet('x'), null);
-  await assert.doesNotReject(estado.cacheSet('x', { a: 1 }));
-  global.fetch = prev;
+  try {
+    global.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
+    assert.strictEqual(await estado.limitado('cualquiera'), false);
+    assert.strictEqual(await estado.cacheGet('x'), null);
+    await assert.doesNotReject(estado.cacheSet('x', { a: 1 }));
+  } finally { global.fetch = prev; }
 });
 test('un comando del pipeline devuelve {error} en vez de {result} → no crashea', async () => {
   reset();
   const prev = global.fetch;
-  global.fetch = async () => ({ ok: true, status: 200, json: async () => [{ error: 'ERR algo' }] });
-  assert.strictEqual(await estado.limitado('cualquiera'), false);
-  global.fetch = prev;
+  try {
+    global.fetch = async () => ({ ok: true, status: 200, json: async () => [{ error: 'ERR algo' }] });
+    assert.strictEqual(await estado.limitado('cualquiera'), false);
+  } finally { global.fetch = prev; }
 });
 test('valor corrupto (no-JSON) en caché → cacheGet devuelve null', async () => {
   reset();
   store.set('c:x', 'no es json{');
   assert.strictEqual(await estado.cacheGet('x'), null);
+});
+test('pipeline() pasa un signal de timeout a fetch (para no colgar si Redis no responde)', async () => {
+  reset();
+  const prev = global.fetch;
+  try {
+    let seenSignal;
+    global.fetch = async (url, opts) => { seenSignal = opts.signal; return { ok: true, status: 200, json: async () => [{ result: null }] }; };
+    await estado.cacheGet('x');
+    assert.ok(seenSignal instanceof AbortSignal, 'fetch debe recibir un AbortSignal');
+  } finally { global.fetch = prev; }
+});
+test('fetch que rechaza (timeout/abort) → limitado/cacheGet/cacheSet se degradan sin lanzar', async () => {
+  reset();
+  const prev = global.fetch;
+  try {
+    global.fetch = async () => { throw new DOMException('timeout', 'AbortError'); };
+    assert.strictEqual(await estado.limitado('cualquiera'), false);
+    assert.strictEqual(await estado.cacheGet('x'), null);
+    await assert.doesNotReject(estado.cacheSet('x', { a: 1 }));
+  } finally { global.fetch = prev; }
+});
+test('limitado: en el primer hit de una IP, manda un solo pipeline (INCR+EXPIRE juntos)', async () => {
+  reset();
+  const prev = global.fetch;
+  try {
+    let calls = 0;
+    global.fetch = async (url, opts) => { calls++; return prev(url, opts); };
+    await estado.limitado('ip-solo-una-llamada');
+    assert.strictEqual(calls, 1, 'debe ser un solo round trip, no INCR y EXPIRE por separado');
+  } finally { global.fetch = prev; }
 });
 test('sin KV_REST_API_URL configurado → no limita ni cachea, no lanza', async () => {
   delete process.env.KV_REST_API_URL; delete process.env.KV_REST_API_TOKEN;
