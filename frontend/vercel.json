@@ -11,11 +11,9 @@
       "continue": true
     },
     {
-      "src": "/api/(.*)",
-      "dest": "${BACKEND_URL}/api/$1",
-      "env": [
-        "BACKEND_URL"
-      ],
+      "source": "/api/(.*)",
+      "destination": "$BACKEND_URL/api/$1",
+      "env": ["BACKEND_URL"],
       "transforms": [
         {
           "type": "request.headers",
