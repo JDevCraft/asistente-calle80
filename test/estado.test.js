@@ -28,3 +28,14 @@ test('cacheSet luego cacheGet → el mismo valor', async () => {
   await estado.cacheSet('x', { a: 1 });
   assert.deepStrictEqual(await estado.cacheGet('x'), { a: 1 });
 });
+test('limitado: 20 llamadas no limitan, la 21 sí', async () => {
+  reset();
+  let last;
+  for (let i = 0; i < 21; i++) last = await estado.limitado('ip-1');
+  assert.strictEqual(last, true);
+});
+test('limitado: IPs distintas no comparten contador', async () => {
+  reset();
+  for (let i = 0; i < 20; i++) await estado.limitado('ip-a');
+  assert.strictEqual(await estado.limitado('ip-b'), false);
+});
