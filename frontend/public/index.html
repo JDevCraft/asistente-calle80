@@ -1074,7 +1074,9 @@ function loadRecipe(r){
   A.plan=clean({...r}); A.ruta=null; A.sel=null; A.source='demo'; renderPlan();
   setStatus(sampleFn?'Este es un ejemplo. Responde una pregunta o pulsa “Buscar” para que la IA lo arme con tus palabras.':'Este es un ejemplo.');
 }
-$('askBtn').onclick=()=>{ const v=$('need').value; if(v.trim()!==A.text.trim()) A.answers=[]; A.text=v; ask(); };
+// Canal de la búsqueda para el registro: 'voz' solo si este clic lo disparó el dictado (submit() del micrófono
+// marca __vozPendiente durante su click() síncrono); clics, Enter y todo lo demás son 'texto'.
+$('askBtn').onclick=()=>{ window.__canalBusqueda=window.__vozPendiente?'voz':'texto'; const v=$('need').value; if(v.trim()!==A.text.trim()) A.answers=[]; A.text=v; ask(); };
 $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); $('askBtn').click(); } });
 /* MIC-JS */
 (function(){
@@ -1121,7 +1123,8 @@ $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.pr
     if(M.ctx){ try{ M.ctx.close(); }catch(e){} M.ctx=null; }
     bars.forEach(b=>{ b.style.transform=''; }); wv&&wv.classList.remove('voz');
   }
-  function submit(){ const q=box.value.trim(); if(!q) return; $('askBtn').click(); box.value=''; showHeard(q); }
+  // click() es síncrono: onclick lee __vozPendiente y luego se limpia aunque el botón estuviera deshabilitado y no corriera
+  function submit(){ const q=box.value.trim(); if(!q) return; window.__vozPendiente=true; try{ $('askBtn').click(); }finally{ window.__vozPendiente=false; } box.value=''; showHeard(q); }
   // Modos: toque = escucha hasta que la persona calla y envía solo ('auto').
   //        mantener presionado = escucha mientras el dedo esté abajo; al soltar envía ('hold'); deslizar a la izquierda cancela.
   let holding=false, holdT=0, x0=0, out=false, fine=false, done=true, guardT=0;
@@ -1243,7 +1246,7 @@ $('stopBtn').onclick=()=>ctl&&ctl.abort();
 sampleFn={ async json(opts){
   // límite de 55 s por consulta (la función del servidor corta a los 60 s)
   const lim=new AbortController(), tl=setTimeout(()=>lim.abort(),55000), sg=opts&&opts.signal; if(sg) sg.addEventListener('abort',()=>lim.abort(),{once:true});
-  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers}),signal:lim.signal}); }
+  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers,canal:window.__canalBusqueda||'texto',rechazado:!!lsGet('calle80_tracking_rechazado')}),signal:lim.signal}); }
   catch(e){ throw {code:(sg&&sg.aborted)?'cancelled':(e&&e.name==='AbortError')?'timeout':'network'}; }
   finally{ clearTimeout(tl); }
   let j=null; try{ j=await r.json(); }catch(e){}

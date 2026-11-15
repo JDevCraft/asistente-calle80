@@ -6,6 +6,8 @@ const { CATALOG, ESPS } = require('./_catalog');
 const { rapido, desdeSegmentos, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
 const { limitado, cacheGet, cacheSet } = require('./_estado');
+const { registrarBusqueda } = require('./_tracking');
+const { randomUUID } = require('crypto');
 
 // Varias claves por proveedor, separadas por coma en la misma variable (NVIDIA_API_KEY=nvapi-a,nvapi-b). Se usa la primera;
 // si responde 429 (cuota agotada) o 401/403 (clave inválida), se prueba la siguiente antes de pasar al otro modelo/proveedor.
@@ -137,23 +139,37 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
+  const id = randomUUID();
   const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body); } catch { return {}; } })() : (req.body || {});
   const text = String(body.text || '').trim().slice(0, MAX_TEXT);
   if (!text) return res.status(400).json({ error: 'invalid_json' });
+  // Canal de entrada (voz/texto) y exclusión voluntaria del registro (barra de consentimiento del navegador)
+  const canal = body.canal === 'voz' ? 'voz' : 'texto';
+  const rechazado = !!body.rechazado;
   const answers = (Array.isArray(body.answers) ? body.answers : []).slice(0, MAX_ANSWERS)
     .map(a => ({ q: String((a && a.q) || '').slice(0, MAX_ANSWER_LEN), a: String((a && a.a) || '').slice(0, MAX_ANSWER_LEN) }))
     .filter(a => a.q && a.a);
 
   // Camino rápido: la consulta es un tipo de producto del índice → respuesta sin modelo, siempre igual
   const t0 = Date.now();
+  // Único punto de registro de la búsqueda. Se espera (await) antes de cada respuesta: en Vercel una promesa
+  // pendiente después de res.json() puede congelarse con la instancia y perder la fila. registrarBusqueda nunca
+  // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
+  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, ip, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
+  const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
   if (!answers.length) {
     const r = rapido(text);
-    if (r) return res.status(200).json({ ruta: r, ms: Date.now() - t0 });
+    if (r) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: r, ms: Date.now() - t0, id: rid }); }
   }
   // Respaldo cuando el modelo no está disponible (sin clave, cuota agotada, saturado, error): el índice con las palabras que entiende
-  const respaldo = (status, error) => {
+  const respaldo = async (status, error) => {
     const r = !answers.length && rapido(text, { laxo: true });
-    if (r) { console.error('respaldo indice', error); return res.status(200).json({ ruta: { ...r, respaldo: true, motivo: error }, ms: Date.now() - t0 }); }
+    if (r) {
+      console.error('respaldo indice', error);
+      await registrar({ resultado: 'respaldo', motivoRespaldo: error });
+      return res.status(200).json({ ruta: { ...r, respaldo: true, motivo: error }, ms: Date.now() - t0, id: rid });
+    }
+    await registrar({ resultado: 'error', motivoRespaldo: error });
     return res.status(status).json({ error });
   };
   if (!NV_KEYS.length && !GM_KEYS.length) return respaldo(500, 'sampling_disabled');
@@ -161,7 +177,8 @@ module.exports = async (req, res) => {
   const clave = t => tokens(t).join(' ');
   const key = clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
   const hit = await cacheGet(key);
-  if (hit) return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0 });
+  // proveedor no se guarda en la caché: el registro de un acierto de caché lo deja en null
+  if (hit) { await registrar({ resultado: 'modelo' }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
   if (await limitado(ip)) return respaldo(429, 'rate_limited');
   const ans = answers.length ? `\n\nRespuestas del cliente a preguntas anteriores:\n${answers.map(a => `- ${a.q} → ${a.a}`).join('\n')}` : '';
 
@@ -176,11 +193,14 @@ module.exports = async (req, res) => {
       catch (e) { console.error('recorte clave', i + 1, e && e.message); if (!/embed (401|403|429)/.test(String(e && e.message))) break; }
     }
     // 1) NVIDIA; 2) Gemini como respaldo (si hay clave y queda tiempo)
+    let proveedor = null; // solo para el registro del servidor; no viaja en la respuesta ni en la caché
     let { out, fallo } = await llamarNvidia(sys, user, t0, malas);
+    if (out) proveedor = 'nvidia';
     if (!out && GM_KEYS.length && DEADLINE_MS - (Date.now() - t0) > 5000) {
       const g = await llamarGemini(sys, user, t0, malas);
       if (g.refused) return respaldo(200, 'refused');
       out = g.out;
+      if (out) proveedor = 'gemini';
       if (g.fallo) fallo = g.fallo;
     }
     // ia_ocupada: ninguna IA respondió por cuota, saturación o tiempo (la app lo explica y deja reintentar)
@@ -195,7 +215,8 @@ module.exports = async (req, res) => {
     if (ruta && ruta.decision !== 'directo') ruta.pregunta = ruta.decision === 'preguntar' ? '¿Cuál de estos buscas?' : '¿Para qué lo necesitas?';
     const v = { plan, ruta, catalogo: recorte ? { segmentos: recorte.segs, ms: recorte.ms } : 'completo' };
     await cacheSet(key, v);
-    return res.status(200).json({ ...v, ms: Date.now() - t0 });
+    await registrar({ resultado: 'modelo', proveedor });
+    return res.status(200).json({ ...v, ms: Date.now() - t0, id: rid });
   } catch (e) {
     console.error('sample', e && e.message);
     return respaldo(502, 'error');
