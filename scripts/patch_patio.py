@@ -1,4 +1,4 @@
-"""Agrega al plano de public/index.html la salida a Patio Constructor como destino recorrible ("patio").
+"""Agrega al plano de frontend/public/index.html la salida a Patio Constructor como destino recorrible ("patio").
 
 La salida está en el muro derecho de la tienda (en pantalla), entre Plomería y Ferretería: el pasillo transversal
 que termina justo arriba del lateral 04L · Ferretería. Las ubicaciones con prefijo P (01P, 02P…, Zona P) se guían

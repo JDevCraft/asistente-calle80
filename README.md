@@ -45,7 +45,8 @@ Sin ninguna clave, la función responde solo con el índice cuando la consulta e
 ## Despliegue
 
 ```
-npx vercel --prod
+cd backend && npx vercel --prod   # proyecto backend
+cd frontend && npx vercel --prod  # proyecto frontend
 ```
 
 ## Índice de destinos

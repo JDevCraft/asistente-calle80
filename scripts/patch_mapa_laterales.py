@@ -1,4 +1,4 @@
-"""Agrega al plano de public/index.html los laterales (01L, 02L, 03L, 04L por segmento), el bloque 08R
+"""Agrega al plano de frontend/public/index.html los laterales (01L, 02L, 03L, 04L por segmento), el bloque 08R
 (máquina de cables) y las góndolas 12A y 13A, tomando el dibujo del SVG exportado y editado a mano.
 
 Uso (desde la carpeta del proyecto):

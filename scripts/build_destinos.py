@@ -1,9 +1,9 @@
-"""Genera el índice de destinos (api/_destinos.json) a partir del Excel del catálogo y del plano.
+"""Genera el índice de destinos (backend/api/_destinos.json) a partir del Excel del catálogo y del plano.
 
 Uso (desde la carpeta del proyecto):
     python -X utf8 scripts/build_destinos.py
 
-Volver a correr cada vez que cambie el Excel o el plano (public/index.html).
+Volver a correr cada vez que cambie el Excel o el plano (frontend/public/index.html).
 
 Qué produce:
 - pasillos: cada pasillo del catálogo, si está dibujado en el mapa y sus vecinos (pasillos contiguos).
@@ -152,7 +152,7 @@ def main():
             if tipo:
                 tipos[norm(tipo)][key][a] += w
 
-    # --- Segmentos del catálogo de la IA (mismo orden que api/_catalog.js) ---
+    # --- Segmentos del catálogo de la IA (mismo orden que backend/api/_catalog.js) ---
     segs = json.loads((ROOT / 'frontend' / 'public' / 'ai.json').read_text(encoding='utf8'))['segs']
     seg_id = {f'{s[0]}>{s[1]}': i for i, s in enumerate(segs)}
 

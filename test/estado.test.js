@@ -1,4 +1,4 @@
-// Pruebas de api/_estado.js (caché y rate limit compartidos vía Upstash Redis), con fetch simulado.
+// Pruebas de backend/api/_estado.js (caché y rate limit compartidos vía Upstash Redis), con fetch simulado.
 process.env.KV_REST_API_URL = 'https://fake-redis.test';
 process.env.KV_REST_API_TOKEN = 'tok-test';
 const test = require('node:test'), assert = require('node:assert');

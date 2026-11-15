@@ -1,13 +1,13 @@
-// Convierte cada segmento del catálogo (api/_catalog.js) en un vector con el modelo de embeddings de NVIDIA y los guarda
-// para que la función /api/sample le mande al modelo solo los segmentos parecidos a la pregunta (ver api/_recorte.js).
+// Convierte cada segmento del catálogo (backend/api/_catalog.js) en un vector con el modelo de embeddings de NVIDIA y los guarda
+// para que la función /api/sample le mande al modelo solo los segmentos parecidos a la pregunta (ver backend/api/_recorte.js).
 //
 // Uso (desde la carpeta del proyecto), con la clave en una variable de entorno:
 //   NVIDIA_API_KEY=nvapi-... node scripts/build_vectores.js
 // Volver a correrlo cada vez que cambie el catálogo (después de scripts/build_destinos.py). Tarda ~1 minuto.
 //
 // Salida:
-//   api/_vectores.bin   N × DIM bytes (int8): cada vector normalizado y escalado a [-127, 127]
-//   api/_vectores.json  { modelo, dim, segs: [números de segmento en el mismo orden], fecha }
+//   backend/api/_vectores.bin   N × DIM bytes (int8): cada vector normalizado y escalado a [-127, 127]
+//   backend/api/_vectores.json  { modelo, dim, segs: [números de segmento en el mismo orden], fecha }
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const { CATALOG } = require(path.join(ROOT, 'backend', 'api', '_catalog'));
