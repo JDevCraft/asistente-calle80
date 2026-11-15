@@ -559,7 +559,7 @@ function initTracking(){
     gtag('js', new Date()); gtag('config', GA4_ID);
     // web-vitals reporta vía GA4, así que sigue a GA4_ID
     const s2 = document.createElement('script'); s2.src = 'https://cdn.jsdelivr.net/npm/web-vitals@4.2.4/dist/web-vitals.iife.js'; s2.dataset.tracking = '1';
-    s2.onload = () => { webVitals.onCLS(reportVital); webVitals.onINP(reportVital); webVitals.onLCP(reportVital); };
+    s2.onload = () => { if (lsGet('calle80_tracking_rechazado')) return; webVitals.onCLS(reportVital); webVitals.onINP(reportVital); webVitals.onLCP(reportVital); };
     document.head.appendChild(s2);
   }
   if (real(CLARITY_ID)){
@@ -570,7 +570,7 @@ function initTracking(){
   if (real(SENTRY_DSN)){
     const s3 = document.createElement('script'); s3.src = 'https://browser.sentry-cdn.com/11.12.0/bundle.min.js'; s3.dataset.tracking = '1';
     s3.integrity = 'sha384-fpjRzLWxkdRneAxDGo5pt5gKsjCWYV5ksPD+S1lx80QHBhs6Oe58hf8sKUKubCES'; s3.crossOrigin = 'anonymous';
-    s3.onload = () => { Sentry.init({ dsn: SENTRY_DSN }); };
+    s3.onload = () => { if (!lsGet('calle80_tracking_rechazado')) Sentry.init({ dsn: SENTRY_DSN }); }; // re-check: el usuario pudo rechazar mientras cargaba
     document.head.appendChild(s3);
   }
 }
