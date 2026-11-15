@@ -535,11 +535,24 @@ function initConsentBar(){
   const bar = document.getElementById('consentBar'); if (!bar) return;
   bar.hidden = false;
   document.getElementById('consentOk').onclick = () => { lsSet('calle80_banner_visto','1'); bar.hidden = true; };
-  document.getElementById('consentOff').onclick = () => { lsSet('calle80_banner_visto','1'); lsSet('calle80_tracking_rechazado','1'); bar.hidden = true; };
+  document.getElementById('consentOff').onclick = () => { lsSet('calle80_banner_visto','1'); lsSet('calle80_tracking_rechazado','1'); stopTracking(); bar.hidden = true; };
 }
+// IDs de seguimiento: públicos, visibles en el cliente (no son secretos, a diferencia de toda variable de entorno del repo)
+const GA4_ID = 'G-XXXXXXX';
+// Apaga los trackers ya iniciados (opt-out en la primera visita, tras initTracking). Tarea 7 añade Clarity y Sentry.
+function stopTracking(){
+  window['ga-disable-' + GA4_ID] = true; // flag documentada de Google para desactivar GA4
+}
+function reportVital(m){ if (window.gtag) gtag('event', 'web_vital', { metric: m.name, value: Math.round(m.value), id: m.id }); }
 function initTracking(){
   if (lsGet('calle80_tracking_rechazado')) return;
-  // Inyección de GA4/web-vitals/Sentry/Clarity: Tareas 6 y 7
+  const s1 = document.createElement('script'); s1.async = true; s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID; s1.dataset.tracking = '1'; document.head.appendChild(s1);
+  window.dataLayer = window.dataLayer || []; window.gtag = function(){ dataLayer.push(arguments); };
+  gtag('js', new Date()); gtag('config', GA4_ID);
+  const s2 = document.createElement('script'); s2.src = 'https://cdn.jsdelivr.net/npm/web-vitals@4.2.4/dist/web-vitals.iife.js'; s2.dataset.tracking = '1';
+  s2.onload = () => { webVitals.onCLS(reportVital); webVitals.onINP(reportVital); webVitals.onLCP(reportVital); };
+  document.head.appendChild(s2);
+  // Sentry/Clarity: Tarea 7
 }
 // Los datos viven en data.json y ai.json (antes iban dentro del HTML, 3,8 MB)
 Promise.all(['data.json','ai.json'].map(u=>fetch(u).then(r=>{ if(!r.ok) throw new Error(u+' '+r.status); return r.json(); }))).then(function(datos){
@@ -574,7 +587,7 @@ const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(
 const segKey=new Map(SEGS.map(s=>[s.fam+'>'+s.name,s.id]));
 const segSkus=SEGS.map(()=>[]);
 for(const s of SKU){ const c=CONJ[s.c]; const id=segKey.get(c.fam+'>'+c.name); if(id!=null) segSkus[id].push(s); }
-const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false};
+const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false};
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -824,6 +837,8 @@ function renderPlan(){
     // UX-07: el mensaje es siempre "Selecciona la categoría de … que buscas" (ya no se lista el pasillo ni lo que hay)
     hint(pideCategoria()+fueraTxt(fuera),'info');
   } else if(ru.decision==='directo'||sel){
+    // una vez por búsqueda (renderPlan se repite al refinar, cargar recetas o elegir); Tarea 8 reutiliza A.rutaVista
+    if(!A.rutaVista){ A.rutaVista=true; if(window.gtag) gtag('event','route_view',{}); }
     const d=sel||ds[0], otros=enMapa.filter(x=>x!==d);
     if(rutaAisle(d)){
       openDest(d,null);
@@ -1037,6 +1052,7 @@ async function ask(){
   const text=A.text.trim(); if(!text) { setStatus('Escribe primero qué necesitas.',true); return; }
   if(!sampleFn){ setStatus('La búsqueda con IA no está disponible en este momento.',true); return; }
   A.busy=true; $('askBtn').disabled=true; $('stopBtn').hidden=false;
+  if(window.gtag) gtag('event','search_submit',{canal:window.__canalBusqueda||'texto'});
   hideRoute(); hint(''); // búsqueda nueva: fuera la ruta y las etiquetas de la anterior
   const t0=Date.now(); let ti=0; setStatus(THINK[0],false,true);
   timer=setInterval(()=>{ ti=Math.min(ti+1,THINK.length-1); const tx=document.querySelector('#aiStatus .think-txt'); if(tx) tx.textContent=THINK[ti]; },2600);
@@ -1051,9 +1067,10 @@ async function ask(){
       await new Promise((ok,no)=>{ const t=setTimeout(ok,1500); ctl.signal.addEventListener('abort',()=>{ clearTimeout(t); no({code:'cancelled'}); },{once:true}); });
       j=await sampleFn.json({signal:ctl.signal});
     }
-    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; renderPlan();
+    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; renderPlan();
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
     const dt=Date.now()-t0;
+    if(window.gtag) gtag('event','search_result',{resultado:A.ruta&&A.ruta.respaldo?'respaldo':(A.ruta&&A.ruta.fuente==='indice'?'indice':'modelo'),canal:window.__canalBusqueda||'texto',ms:dt});
     // UX-07: el resultado se explica en la línea bajo el mapa; si respondió el índice porque la IA no pudo, se avisa
     if(ok&&A.ruta&&A.ruta.respaldo) setStatus('El asistente no pudo armar recomendaciones ahora; te mostramos dónde está «'+(A.ruta.consulta||text)+'».');
     else setStatus(ok?'':'No encontramos productos de la tienda para esta necesidad.');
@@ -1061,7 +1078,8 @@ async function ask(){
     { const n=$('need'); if(n.value.trim()===text) n.value=''; }
   }catch(e){
     if(e&&e.code==='cancelled') setStatus('Consulta detenida.');
-    else { const m=ERR[e&&e.code]||'No se pudo completar la consulta.'+SUGERIR; if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')){ setStatus(m,true); sampleFn=null; } else setError(m); }
+    else {
+      if(window.gtag) gtag('event','search_result',{resultado:'error',canal:window.__canalBusqueda||'texto',ms:Date.now()-t0}); const m=ERR[e&&e.code]||'No se pudo completar la consulta.'+SUGERIR; if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')){ setStatus(m,true); sampleFn=null; } else setError(m); }
   }finally{ clearInterval(timer); A.busy=false; $('askBtn').disabled=false; $('stopBtn').hidden=true; }
 }
 function answer(q,o){
