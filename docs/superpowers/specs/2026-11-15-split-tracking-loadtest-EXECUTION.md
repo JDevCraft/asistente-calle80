@@ -33,13 +33,13 @@ sesión pudo ejecutar.
 
 ## Frentes
 
-- [ ] Separar frontend/backend en dos proyectos Vercel + rewrite — código
+- [x] Separar frontend/backend en dos proyectos Vercel + rewrite — desplegado y verificado con `curl` (2026-11-15); falta solo el cutover del dominio real. Código
       mergeado a `main` (Tareas 1-3); faltan Tareas 4-7 (alta de proyectos
       Vercel + Protection Bypass + cutover), ver entrada 2026-11-15 arriba.
 - [x] Rate limiting compartido — implementado en Redis (`api/_estado.js`), no
       en `@vercel/firewall`: ver desviación 2026-11-15 abajo.
 - [x] Caché compartido (Upstash Redis, Marketplace)
-- [ ] Trusted Sources / Protection Bypass entre los dos proyectos
+- [-] Trusted Sources / Protection Bypass entre los dos proyectos — no se usa: ver entrada 2026-11-15 de Vercel
 - [x] Log estructurado de búsquedas en Postgres (texto, destino, proveedor,
       canal voz/texto, tiempo de respuesta) — código en `feat/tracking-beta`;
       falta crear el proyecto Neon y aplicar el esquema (Tarea 10)
@@ -57,6 +57,19 @@ sesión pudo ejecutar.
       trabajo técnico)
 
 ## Entradas
+
+### 2026-11-15 — Backend y frontend desplegados en Vercel
+
+Creados `asistente-calle80-backend` (Root Directory `backend/`) y `asistente-calle80-frontend` (Root Directory `frontend/`) en el equipo Hobby `jdevcrafts-projects`, desplegando `main` por Git. Neon (Washington D.C., Auth y Realtime apagados, rama por Preview, Production sin rama) y Upstash (us-east-1) instalados desde el Marketplace y conectados solo al backend. El esquema `backend/sql/001_busquedas.sql` está aplicado y una búsqueda real escribió su fila en `busquedas`.
+
+Verificado con `curl` contra el frontend: `/api/sample` por ruta rápida y por el modelo de IA, `/api/encuesta`, 405 y 400, caché de Redis (`"cache":true`), y headers de seguridad también en `/api`. `npm test`: 49/49.
+
+Desviaciones del plan del split, todas por ruling:
+- El diseño con `rewrites` + `transforms` de headers es inválido: el esquema de Vercel solo admite `request.path` en `transforms` de `rewrites`.
+- `routes` con `transforms` y `${BACKEND_URL}` en `dest` validaba contra el esquema pero devolvió 404 en el deploy. Lo que funciona es `headers` + `rewrites` con el destino del backend fijo en `frontend/vercel.json`. Por eso `BACKEND_URL` y `BACKEND_BYPASS_SECRET` ya no se usan (siguen creadas en el proyecto frontend y se pueden borrar), y no se envía bypass: el alias de producción del backend no tiene Deployment Protection.
+- Equipo Hobby: Vercel solo despliega commits del dueño del equipo; hay que configurar `git config user.email` con su email verificado antes de commitear, también para `vercel --prod` desde la CLI.
+
+Pendiente: probar el cliente en el navegador (búsqueda por texto y por voz, mapa, consola sin violaciones de CSP); IDs reales de GA4, Clarity y Sentry en `frontend/public/index.html`; revisión legal del banner; cutover del dominio real con el proyecto estable como rollback; BigQuery y Looker Studio; después del beta, refactor del frontend (mover la selección de SKUs al backend y quitar `'unsafe-inline'` de la CSP).
 
 ### 2026-11-15 — Tracking de beta: código en `feat/tracking-beta`
 
