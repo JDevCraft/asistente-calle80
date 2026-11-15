@@ -65,6 +65,84 @@ function extractJson(text) {
   try { return JSON.parse(text.slice(a, b + 1)); } catch { return null; }
 }
 
+// NVIDIA: por cada modelo prueba las claves en orden. Devuelve { out, fallo }: out es un texto con JSON válido o null.
+// `malas` acumula las claves rechazadas (401/403) para no repetirlas con otro modelo ni con Gemini.
+async function llamarNvidia(sys, user, t0, malas) {
+  let fallo = null;
+  for (const [modelo, ms] of NV_MODELOS) {
+    for (const [i, k] of NV_KEYS.entries()) {
+      const left = DEADLINE_MS - (Date.now() - t0); if (left < 5000) break;
+      if (malas.has(k)) continue;
+      try {
+        const nr = await fetch(NV_URL, {
+          method: 'POST',
+          signal: AbortSignal.timeout(Math.min(ms, left)),
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${k}` },
+          body: JSON.stringify({ model: modelo, temperature: 0.1, max_tokens: 2048,
+            chat_template_kwargs: { thinking: false, enable_thinking: false },
+            messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] })
+        });
+        if (nr.ok) {
+          const nj = await nr.json();
+          const out = ((((nj.choices || [])[0] || {}).message || {}).content) || null;
+          if (extractJson(out || '')) return { out, fallo };
+          console.error('nvidia', modelo, 'json invalido'); fallo = 'invalid_json'; break;
+        }
+        console.error('nvidia', modelo, 'clave', i + 1, nr.status, (await nr.text()).slice(0, 200));
+        fallo = [429, 503].includes(nr.status) ? 'ia_ocupada' : 'error';
+        if (nr.status !== 429 && CAMBIA_CLAVE.includes(nr.status)) malas.add(k);
+        if (!CAMBIA_CLAVE.includes(nr.status)) break; // otro error: siguiente modelo
+      } catch (e) { console.error('nvidia', modelo, 'clave', i + 1, e && e.name); fallo = 'ia_ocupada'; break; } // lento: siguiente modelo
+    }
+  }
+  return { out: null, fallo };
+}
+
+// Gemini: hasta 2 rondas por los modelos. Si todos están sin cuota (429), saturados (503) o lentos, espera un poco
+// y lo intenta una vez más (la cuota gratuita es por minuto). Devuelve { out } con el texto, { refused: true } si bloqueó
+// la respuesta, o { fallo } si no respondió.
+async function llamarGemini(sys, user, t0, malas) {
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: sys }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 }
+  });
+  let r = null, ocupada = false;
+  for (let ronda = 0; ronda < 2 && !(r && r.ok); ronda++) {
+    if (ronda) { if (!ocupada || DEADLINE_MS - (Date.now() - t0) < 15000) break; await new Promise(z => setTimeout(z, 2000)); }
+    ocupada = false;
+    modelos: for (const model of MODELS) { // si un modelo está saturado, lento o no existe, prueba el siguiente
+      for (const [i, k] of GM_KEYS.entries()) { // con cuota agotada o clave inválida, prueba la siguiente clave
+        const left = DEADLINE_MS - (Date.now() - t0);
+        if (left < 3000) break modelos;
+        if (malas.has(k)) continue;
+        try {
+          r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            signal: AbortSignal.timeout(Math.min(ATTEMPT_MS, left)),
+            headers: { 'content-type': 'application/json', 'x-goog-api-key': k },
+            body: payload
+          });
+        } catch (e) { console.error('gemini', model, 'clave', i + 1, e && e.name); r = null; ocupada = true; continue modelos; }
+        if (r.ok) break modelos;
+        console.error('gemini', model, 'clave', i + 1, ronda, r.status, (await r.text()).slice(0, 200));
+        if ([429, 503].includes(r.status)) ocupada = true;
+        if (r.status !== 429 && CAMBIA_CLAVE.includes(r.status)) malas.add(k);
+        if (CAMBIA_CLAVE.includes(r.status)) continue;
+        if (![404, 500, 503].includes(r.status)) break modelos;
+        continue modelos;
+      }
+    }
+  }
+  if (r && r.ok) {
+    const j = await r.json();
+    if (j.promptFeedback && j.promptFeedback.blockReason) return { refused: true };
+    const cand = (j.candidates || [])[0] || {};
+    return { out: ((cand.content && cand.content.parts) || []).map(p => p.text || '').join('') };
+  }
+  return { fallo: !r || [429, 503].includes(r.status) ? 'ia_ocupada' : 'error' };
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
@@ -107,72 +185,13 @@ module.exports = async (req, res) => {
       try { recorte = await catalogoPara([text, ...answers.map(a => a.a)].join('. '), k); if (recorte) sys = sistema(recorte.cat); break; }
       catch (e) { console.error('recorte clave', i + 1, e && e.message); if (!/embed (401|403|429)/.test(String(e && e.message))) break; }
     }
-    let out = null, fallo = null;
-    // 1) NVIDIA: por cada modelo, prueba las claves en orden
-    for (const [NV_MODEL, NV_MS] of NV_MODELOS) {
-      if (out) break;
-      for (const [i, k] of NV_KEYS.entries()) {
-        const left = DEADLINE_MS - (Date.now() - t0); if (left < 5000) break;
-        if (malas.has(k)) continue;
-        try {
-          const nr = await fetch(NV_URL, {
-            method: 'POST',
-            signal: AbortSignal.timeout(Math.min(NV_MS, left)),
-            headers: { 'content-type': 'application/json', authorization: `Bearer ${k}` },
-            body: JSON.stringify({ model: NV_MODEL, temperature: 0.1, max_tokens: 2048,
-              chat_template_kwargs: { thinking: false, enable_thinking: false },
-              messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] })
-          });
-          if (nr.ok) { const nj = await nr.json(); out = ((((nj.choices || [])[0] || {}).message || {}).content) || null; if (!extractJson(out || '')) { console.error('nvidia', NV_MODEL, 'json invalido'); out = null; fallo = 'invalid_json'; } break; }
-          console.error('nvidia', NV_MODEL, 'clave', i + 1, nr.status, (await nr.text()).slice(0, 200));
-          fallo = [429, 503].includes(nr.status) ? 'ia_ocupada' : 'error';
-          if (nr.status !== 429 && CAMBIA_CLAVE.includes(nr.status)) malas.add(k);
-          if (!CAMBIA_CLAVE.includes(nr.status)) break; // otro error: siguiente modelo
-        } catch (e) { console.error('nvidia', NV_MODEL, 'clave', i + 1, e && e.name); fallo = 'ia_ocupada'; break; } // lento: siguiente modelo
-      }
-    }
-    // 2) Gemini como respaldo (si hay clave y queda tiempo)
+    // 1) NVIDIA; 2) Gemini como respaldo (si hay clave y queda tiempo)
+    let { out, fallo } = await llamarNvidia(sys, user, t0, malas);
     if (!out && GM_KEYS.length && DEADLINE_MS - (Date.now() - t0) > 5000) {
-    const payload = JSON.stringify({
-      systemInstruction: { parts: [{ text: sys }] },
-      contents: [{ role: 'user', parts: [{ text: `NECESIDAD DEL CLIENTE:\n${text}${ans}` }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.1, maxOutputTokens: 4096 }
-    });
-    let r = null, ocupada = false;
-    // Hasta 2 rondas por los modelos: si todos están sin cuota (429), saturados (503) o lentos, se espera un poco
-    // y se intenta una vez más antes de rendirse (la cuota gratuita de Gemini es por minuto)
-    for (let ronda = 0; ronda < 2 && !(r && r.ok); ronda++) {
-      if (ronda) { if (!ocupada || DEADLINE_MS - (Date.now() - t0) < 15000) break; await new Promise(z => setTimeout(z, 2000)); }
-      ocupada = false;
-      modelos: for (const model of MODELS) { // si un modelo está saturado, lento o no existe, prueba el siguiente
-        for (const [i, k] of GM_KEYS.entries()) { // con cuota agotada o clave inválida, prueba la siguiente clave
-          const left = DEADLINE_MS - (Date.now() - t0);
-          if (left < 3000) break modelos;
-          if (malas.has(k)) continue;
-          try {
-            r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-              method: 'POST',
-              signal: AbortSignal.timeout(Math.min(ATTEMPT_MS, left)),
-              headers: { 'content-type': 'application/json', 'x-goog-api-key': k },
-              body: payload
-            });
-          } catch (e) { console.error('gemini', model, 'clave', i + 1, e && e.name); r = null; ocupada = true; continue modelos; }
-          if (r.ok) break modelos;
-          console.error('gemini', model, 'clave', i + 1, ronda, r.status, (await r.text()).slice(0, 200));
-          if ([429, 503].includes(r.status)) ocupada = true;
-          if (r.status !== 429 && CAMBIA_CLAVE.includes(r.status)) malas.add(k);
-          if (CAMBIA_CLAVE.includes(r.status)) continue;
-          if (![404, 500, 503].includes(r.status)) break modelos;
-          continue modelos;
-        }
-      }
-    }
-    if (r && r.ok) {
-      const j = await r.json();
-      if (j.promptFeedback && j.promptFeedback.blockReason) return respaldo(200, 'refused');
-      const cand = (j.candidates || [])[0] || {};
-      out = ((cand.content && cand.content.parts) || []).map(p => p.text || '').join('');
-    } else fallo = !r || [429, 503].includes(r.status) ? 'ia_ocupada' : 'error';
+      const g = await llamarGemini(sys, user, t0, malas);
+      if (g.refused) return respaldo(200, 'refused');
+      out = g.out;
+      if (g.fallo) fallo = g.fallo;
     }
     // ia_ocupada: ninguna IA respondió por cuota, saturación o tiempo (la app lo explica y deja reintentar)
     if (!out) return respaldo(fallo === 'ia_ocupada' ? 503 : 502, fallo || 'ia_ocupada');

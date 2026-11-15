@@ -6,7 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/engine.test.js",
+    "test": "node --test",
     "build:destinos": "python -X utf8 scripts/build_destinos.py",
     "build:vectores": "node scripts/build_vectores.js"
   }

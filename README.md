@@ -17,6 +17,7 @@ scripts/
   build_vectores.js  Genera api/_vectores.* (requiere NVIDIA_API_KEY)
 test/
   engine.test.js     Pruebas del motor de destinos (npm test)
+  sample.test.js     Pruebas del handler de /api/sample con fetch simulado (cadena NVIDIA → Gemini → respaldo)
 public/
   index.html     Página única (UI, SKUs, plano SVG, ranking y ruta)
   data.json      SKUs, familias y estadísticas (se carga con fetch al abrir la página)
