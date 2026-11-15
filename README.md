@@ -7,11 +7,16 @@ Búsqueda inteligente de productos: el cliente describe qué necesita (texto o v
 ```
 backend/
   vercel.json  Proyecto Vercel del API: duración de la función (60 s) e includeFiles
+  package.json   Única dependencia: @neondatabase/serverless (versión fija); se instala con `cd backend && npm install`
+  sql/
+    001_busquedas.sql  Esquema de la tabla de búsquedas (se aplica a mano en Postgres/Neon)
   api/
     sample.js      Función serverless: camino rápido por índice o prompt + IA (NVIDIA, respaldo Gemini)
     _engine.js     Reglas de destino: directo / preguntar / genérico
     _destinos.json Índice de destinos (generado, no editar a mano)
     _catalog.js    Catálogo completo de segmentos (el modelo recibe una versión recortada)
+    _tracking.js   Log de búsquedas en Postgres (Neon, HTTP); no bloquea si falla
+    encuesta.js    Función serverless: micro-encuesta (`POST {id, util}`)
     _recorte.js    Recorta el catálogo a los segmentos parecidos a la pregunta (embeddings)
     _vectores.*    Vectores precalculados de los segmentos (generado por build_vectores.js)
 frontend/
@@ -39,10 +44,15 @@ data/
 | `GEMINI_API_KEY` | Respaldo. Sin saltos de línea ni BOM. Admite varias claves separadas por coma. |
 | `NVIDIA_MODEL` | Opcional. Fuerza un modelo de NVIDIA en lugar de la lista por defecto. |
 | `GEMINI_MODEL` | Opcional. Modelo de Gemini a probar primero. |
+| `POSTGRES_URL` / `DATABASE_URL` | Cadena de conexión a Postgres (Neon) para el log de búsquedas y la micro-encuesta. Se lee `POSTGRES_URL` primero y `DATABASE_URL` de respaldo. Solo vive en el servidor. Sin ella no se registra nada y la app sigue funcionando. |
 
 Sin ninguna clave, la función responde solo con el índice cuando la consulta es un producto.
 
+Los IDs públicos de seguimiento (GA4, Clarity, Sentry DSN) no son variables de entorno: son constantes en `initTracking()` de `frontend/public/index.html`. Los datos de beta viven en Postgres (búsquedas y encuesta), GA4 y las consolas de Clarity y Sentry.
+
 ## Despliegue
+
+Instalación (una vez, y en CI): `cd backend && npm install`. Sin esto, `npm test` desde la raíz falla con `MODULE_NOT_FOUND` en `test/tracking.test.js`.
 
 ```
 cd backend && npx vercel --prod   # proyecto backend
