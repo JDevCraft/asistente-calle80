@@ -25,7 +25,7 @@ import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
 XLSX = ROOT / 'data' / 'Segmentacion_Productos_Calle80.xlsx'
-HTML = ROOT / 'public' / 'index.html'
+HTML = ROOT / 'frontend' / 'public' / 'index.html'
 MANUAL = ROOT / 'data' / 'pasillo_destino.json'
 LATERALES = ROOT / 'data' / 'laterales.json'
 OUT = ROOT / 'backend' / 'api' / '_destinos.json'
@@ -153,7 +153,7 @@ def main():
                 tipos[norm(tipo)][key][a] += w
 
     # --- Segmentos del catálogo de la IA (mismo orden que api/_catalog.js) ---
-    segs = json.loads((ROOT / 'public' / 'ai.json').read_text(encoding='utf8'))['segs']
+    segs = json.loads((ROOT / 'frontend' / 'public' / 'ai.json').read_text(encoding='utf8'))['segs']
     seg_id = {f'{s[0]}>{s[1]}': i for i, s in enumerate(segs)}
 
     # --- Espacio validado / nombre para cliente (si categorías ya lo llenó) ---

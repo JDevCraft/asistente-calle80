@@ -15,7 +15,7 @@ from collections import deque
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-HTML = ROOT / 'public' / 'index.html'
+HTML = ROOT / 'frontend' / 'public' / 'index.html'
 ID = 'patio'
 # Puerta dibujada sobre el muro (coordenadas del plano) y punto de la salida al que llega la ruta
 BBOX = [1224.3, 1556.5, 1290.0, 1576.5]  # mismo alto y fila que los laterales 04L

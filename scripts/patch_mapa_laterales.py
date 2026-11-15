@@ -21,7 +21,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
-HTML = ROOT / 'public' / 'index.html'
+HTML = ROOT / 'frontend' / 'public' / 'index.html'
 NS = '{http://www.w3.org/2000/svg}'
 
 # id -> caras que dan al pasillo (la ruta llega a la celda libre frente a esa cara)
