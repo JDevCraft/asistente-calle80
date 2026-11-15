@@ -1025,7 +1025,7 @@ async function ask(){
     try{ j=await sampleFn.json({signal:ctl.signal}); }
     catch(e){
       // un reintento automático si la IA estuvo ocupada, falló o se cortó la conexión (no si el cliente la detuvo)
-      if(!e||!['ia_ocupada','error','invalid_json','network','timeout'].includes(e.code)) throw e;
+      if(!e||e.code!=='network') throw e;
       clearInterval(timer); setStatus(e.code==='network'?'Reconectando con el asistente…':'El asistente está ocupado, lo intentamos de nuevo…',false,true);
       await new Promise((ok,no)=>{ const t=setTimeout(ok,1500); ctl.signal.addEventListener('abort',()=>{ clearTimeout(t); no({code:'cancelled'}); },{once:true}); });
       j=await sampleFn.json({signal:ctl.signal});

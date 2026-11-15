@@ -1,17 +1,22 @@
 # Asistente de necesidades – Calle 80
 
-Búsqueda inteligente de productos: el cliente describe qué necesita (texto o voz), Gemini elige segmentos del catálogo y la página muestra productos reales con ruta guiada en el plano de la tienda.
+Búsqueda inteligente de productos: el cliente describe qué necesita (texto o voz), un modelo de IA (NVIDIA, con Gemini de respaldo) elige segmentos del catálogo y la página muestra productos reales con ruta guiada en el plano de la tienda.
 
 ## Estructura
 
 ```
 api/
-  sample.js      Función serverless: camino rápido por índice o prompt + Gemini (usa GEMINI_API_KEY)
+  sample.js      Función serverless: camino rápido por índice o prompt + IA (NVIDIA, respaldo Gemini)
   _engine.js     Reglas de destino: directo / preguntar / genérico
   _destinos.json Índice de destinos (generado, no editar a mano)
-  _catalog.js    Catálogo de segmentos enviado a Gemini
+  _catalog.js    Catálogo completo de segmentos (el modelo recibe una versión recortada)
+  _recorte.js    Recorta el catálogo a los segmentos parecidos a la pregunta (embeddings)
+  _vectores.*    Vectores precalculados de los segmentos (generado por build_vectores.js)
 scripts/
   build_destinos.py  Genera api/_destinos.json desde el Excel y el plano
+  build_vectores.js  Genera api/_vectores.* (requiere NVIDIA_API_KEY)
+test/
+  engine.test.js     Pruebas del motor de destinos (npm test)
 public/
   index.html     Página única (UI, SKUs, plano SVG, ranking y ruta)
   empleada-inicio.jpg   Imagen del inicio
@@ -24,9 +29,12 @@ vercel.json      Carpeta pública y duración de la función (60 s)
 
 | Variable | Uso |
 |---|---|
-| `GEMINI_API_KEY` | Obligatoria. Solo vive en el servidor. Sin saltos de línea ni BOM. Admite varias claves separadas por coma. |
-| `NVIDIA_API_KEY` | Modelo principal. Admite varias claves separadas por coma. |
-| `GEMINI_MODEL` | Opcional. Modelo a probar primero. |
+| `NVIDIA_API_KEY` | Modelo principal y embeddings del recorte. Solo vive en el servidor. Admite varias claves separadas por coma. |
+| `GEMINI_API_KEY` | Respaldo. Sin saltos de línea ni BOM. Admite varias claves separadas por coma. |
+| `NVIDIA_MODEL` | Opcional. Fuerza un modelo de NVIDIA en lugar de la lista por defecto. |
+| `GEMINI_MODEL` | Opcional. Modelo de Gemini a probar primero. |
+
+Sin ninguna clave, la función responde solo con el índice cuando la consulta es un producto.
 
 ## Despliegue
 
@@ -45,7 +53,7 @@ Correr cada vez que cambie el Excel o el plano. Si existe `data/pasillo_destino.
 ## Flujo
 
 1. Consulta de producto ("tapete", "tapete para baño"): `/api/sample` responde desde el índice, sin modelo, con `ruta.decision` y `ruta.destinos`.
-2. Necesidad abierta ("impermeabilizar la pared"): Gemini arma el plan; los destinos salen de los segmentos del grupo principal. Respuesta en caché por consulta normalizada.
+2. Necesidad abierta ("impermeabilizar la pared"): el modelo de IA arma el plan; los destinos salen de los segmentos del grupo principal. Respuesta en caché por consulta normalizada.
 3. La pantalla muestra el destino (o una opción por destino), traza una sola ruta e ilumina todos sus pasillos. Los productos quedan en "Ver ejemplos".
 
 Flujo anterior:
@@ -105,15 +113,15 @@ Las búsquedas que el índice no entiende completas (p. ej. "jarra de jugo": el 
 
 - **Servidor** (`api/sample.js`): si todos los modelos de Gemini fallan por cuota (429), saturación (503) o tiempo agotado, espera 2 s y hace una segunda ronda (si quedan 15 s o más del plazo). Si sigue sin responder, usa el respaldo del índice (`respaldo: true`, `motivo`) o devuelve `503 {"error":"ia_ocupada"}`.
 - **App** (`ask` y `sampleFn` en `public/index.html`):
-  - Reintenta sola una vez a los 1,5 s si la IA estuvo ocupada, falló, se cortó la conexión o pasaron 55 s. Mientras tanto muestra "El asistente está ocupado, lo intentamos de nuevo…" o "Reconectando con el asistente…".
+  - Reintenta sola una vez a los 1,5 s solo si se cortó la conexión (`network`); con errores del proveedor no reintenta, porque el servidor ya probó varios modelos y claves. Mientras tanto muestra "Reconectando con el asistente…".
   - Si vuelve a fallar, muestra un mensaje según el caso (`ERR`: `ia_ocupada`, `error`, `network`, `timeout`) que sugiere escribir solo el producto, con un botón **Reintentar** (`setError`).
   - Si respondió el índice porque la IA no pudo, avisa: "El asistente no pudo armar recomendaciones ahora; te mostramos dónde está «…»".
   - "Detener" cancela también la espera del reintento.
 
 ### Modelo de IA: NVIDIA (principal) y Gemini (respaldo)
 
-- **Principal**: NVIDIA, API compatible con OpenAI (`https://integrate.api.nvidia.com/v1/chat/completions`), modelo `minimaxai/minimax-m3.1-flash` sin razonamiento (`chat_template_kwargs.thinking=false`). Clave en la variable de entorno `NVIDIA_API_KEY` de Vercel (Production y Preview); el modelo se puede cambiar con `NVIDIA_MODEL`. Límite de 38 s por intento (`NV_MS`).
-- **Respaldo**: si NVIDIA falla, tarda más de 38 s o devuelve JSON inválido, se usa Gemini (`GEMINI_API_KEY`) con sus dos rondas, si queda tiempo; si tampoco, el índice (`respaldo: true`).
+- **Principal**: NVIDIA, API compatible con OpenAI (`https://integrate.api.nvidia.com/v1/chat/completions`), sin razonamiento (`chat_template_kwargs.thinking=false`). Modelos y límites por intento en `NV_MODELOS` (ver la sección del catálogo recortado). Clave en `NVIDIA_API_KEY` de Vercel (Production y Preview); `NVIDIA_MODEL` fuerza un modelo.
+- **Respaldo**: si NVIDIA falla, supera el límite de tiempo o devuelve JSON inválido, se usa Gemini (`GEMINI_API_KEY`) con sus dos rondas, si queda tiempo; si tampoco, el índice (`respaldo: true`).
 - **Varias claves**: `NVIDIA_API_KEY` y `GEMINI_API_KEY` aceptan varias claves separadas por coma (`nvapi-a,nvapi-b`), y además se leen `NVIDIA_API_KEY_2` … `_9` y `GEMINI_API_KEY_2` … `_9` (una clave extra por variable). Se usa la principal y luego las numeradas en orden; si responde 429 (cuota agotada) o 401/403 (inválida), se prueba la siguiente con el mismo modelo. Las inválidas no se reintentan en esa petición. Los embeddings del recorte rotan igual. `scripts/build_vectores.js` usa solo la primera.
 - **Prueba de modelos (2026-11-12)**, mismo prompt del asistente (~28 mil tokens por el catálogo): minimax-m3.1-flash 17–23 s con JSON válido; nemotron-3-ultra-550b 32 s; nemotron-3.5-lightning 38 s con JSON inválido; deepseek-v4.1-flash, glm-5.3-flash, gpt-oss-20b y mistral-large-4 pasaron de 40–45 s. Muchos modelos de la lista no están habilitados para la cuenta (404). Gemini, cuando tiene cuota, responde en 2–3 s.
 

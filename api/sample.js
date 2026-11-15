@@ -169,7 +169,7 @@ module.exports = async (req, res) => {
     }
     if (r && r.ok) {
       const j = await r.json();
-      if (j.promptFeedback && j.promptFeedback.blockReason) return res.status(200).json({ error: 'refused' });
+      if (j.promptFeedback && j.promptFeedback.blockReason) return respaldo(200, 'refused');
       const cand = (j.candidates || [])[0] || {};
       out = ((cand.content && cand.content.parts) || []).map(p => p.text || '').join('');
     } else fallo = !r || [429, 503].includes(r.status) ? 'ia_ocupada' : 'error';
