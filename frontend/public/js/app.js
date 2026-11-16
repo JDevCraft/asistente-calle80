@@ -382,7 +382,8 @@ function paintSteps(){
 function setPaso(i){ R.paso=i; paintSteps(); caption(R.pasos[i]); }
 function endGuide(){ R.guiando=false; R.mr=null; R.proj=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
 function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.guiando){ endGuide(); if(R.fit&&!keepView) setVB(R.fit); } }
-function tweenVB(a,b,dur,tk){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*ease(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
+const easeOut=u=>1-Math.pow(1-u,3);
+function tweenVB(a,b,dur,tk,fn=ease){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*fn(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
 async function guided(){
   if(!R.ruta||!trail()) return;
   const V=1.5; // velocidad del recorrido guiado
@@ -390,13 +391,12 @@ async function guided(){
   const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
   caption('Así llegas a tu producto desde la entrada.');
-  await wait(1100/V); if(tk!==R.token) return;
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
-  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200/V,tk); if(tk!==R.token) return;
+  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),900,tk,easeOut); if(tk!==R.token) return; // el zoom arranca ya, rápido, y frena al llegar al punto de partida
   setPaso(0);
   const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
   let cc=null, tp=0; // cámara con seguimiento suavizado (media exponencial, ~200 ms de retraso)
-  await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*u; const pt=place(len);
+  await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*(.5*u+.5*ease(u)); /* arranque y llegada suaves, sin parar en seco */ const pt=place(len);
       if(pt){ const g=toSvg(pt); if(cc){ const k=1-Math.exp(-(t-tp)/200); cc=[cc[0]+(g[0]-cc[0])*k,cc[1]+(g[1]-cc[1])*k]; } else cc=g; tp=t; setVB(camAt(cc,W)); }
       const i=stepAt(len); if(i!==R.paso) setPaso(i);
       if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); });
@@ -453,7 +453,7 @@ function openRoute(s,aisle,btn,dest){
     R.pasos.forEach((t,i)=>{ const li=el('li',null,t); li.onclick=()=>goStep(i); ol.appendChild(li); });
     $('rutaPlay').disabled=false;
   }
-  if(R.ruta) setTimeout(()=>{ if(R.ruta===r) guided(); },450);
+  if(R.ruta) setTimeout(()=>{ if(R.ruta===r) guided(); },120);
   $('rutaModal').scrollIntoView({behavior:REDUCE?'auto':'smooth',block:'nearest'});
 }
 $('rutaCerrar').onclick=()=>{ const b=document.querySelector('.sel .go'); hideRoute(); if(b) b.focus(); };
