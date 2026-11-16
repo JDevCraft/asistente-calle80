@@ -332,8 +332,9 @@ footer{font-size:13px;color:var(--muted)}
   body:has(#start) header.top,body:has(#start) .appbar{flex:none}
   body:has(#start) .wrap{flex:1 1 auto;min-height:0;width:100%;padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));gap:0}
   body:has(#start) #v-asistente{flex:1 1 auto;min-height:0;gap:0!important}
-  #start{flex:1 1 auto;min-height:0;gap:8px}
-  #start .hero-bg{flex:1 1 0;min-height:140px;display:flex;flex-direction:column}
+  #start{flex:1 1 auto;min-height:0;gap:0}
+  #start .hero-bg{flex:1 1 0;min-height:140px;display:flex;flex-direction:column;margin-inline:-16px}
+  #start .hero-bg .maphint{margin-inline:16px}
   #start #rutaModal{flex:1 1 auto;min-height:0;gap:0}
   #start .hero-bg .ruta-body{flex:1 1 auto;height:auto;min-height:0;aspect-ratio:auto}
   #start .ask{flex:none}
