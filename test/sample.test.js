@@ -40,9 +40,9 @@ global.fetch = async (url, opts) => {
   llamadas[k]++;
   return sc[k]();
 };
-const run = async (text, { ip = 'ip-' + text, method = 'POST', answers, canal, rechazado } = {}) => {
+const run = async (text, { ip = 'ip-' + text, method = 'POST', answers, canal, rechazado, sesionId } = {}) => {
   const res = { h: {}, setHeader() {}, status(c) { this.code = c; return this; }, json(b) { this.body = JSON.parse(JSON.stringify(b)); return this; } }; // como en el cable: undefined desaparece
-  await handler({ method, headers: { 'x-forwarded-for': ip }, body: { text, answers, canal, rechazado } }, res);
+  await handler({ method, headers: { 'x-forwarded-for': ip }, body: { text, answers, canal, rechazado, sesionId } }, res);
   return res;
 };
 const escenario = s => { sc = { emb: () => resp(500, {}), nv: nvOk, gm: gmOk, ...s }; llamadas = { emb: 0, nv: 0, gm: 0 }; redisStore = new Map(); registros = []; };
@@ -110,8 +110,8 @@ test('más de 20 consultas por IP → 429 rate_limited', async () => {
 });
 
 // --- Registro estructurado (Task 4). Los params son posicionales, en el orden del INSERT de _tracking.js:
-// [id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms] (sin IP: privacidad)
-const reg = q => { const [id, texto, canal, resultado, proveedor, motivoRespaldo, ms] = q.params; return { id, texto, canal, resultado, proveedor, motivoRespaldo, ms }; };
+// [id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id] (sin IP: privacidad)
+const reg = q => { const [id, texto, canal, resultado, proveedor, motivoRespaldo, ms, sesionId] = q.params; return { id, texto, canal, resultado, proveedor, motivoRespaldo, ms, sesionId }; };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // "pintura" la entiende el índice (camino rápido); 'zzqx qwv' no, ni siquiera en modo laxo
 const IDX = 'pintura';
@@ -130,6 +130,19 @@ test('canal "voz" se propaga al registro; un valor desconocido cae a texto', asy
   escenario({});
   await run(Q('c3'), { canal: 'hackeo' });
   assert.strictEqual(reg(registros[0]).canal, 'texto');
+});
+test('sesionId válido se propaga al registro; uno inválido se guarda como NULL sin afectar la respuesta', async () => {
+  const SES = '7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+  escenario({});
+  await run(Q('s1'), { sesionId: SES });
+  assert.strictEqual(reg(registros[0]).sesionId, SES);
+  escenario({});
+  const r = await run(Q('s2'), { sesionId: 'no-es-uuid' });
+  assert.strictEqual(r.code, 200);
+  assert.strictEqual(reg(registros[0]).sesionId, null);
+  escenario({});
+  await run(Q('s3'));
+  assert.strictEqual(reg(registros[0]).sesionId, null);
 });
 test('respuesta exitosa incluye "id" (UUID) igual al del registro, con texto y tiempo (sin IP)', async () => {
   escenario({});

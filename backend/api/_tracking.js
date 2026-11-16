@@ -17,15 +17,20 @@ const consultar = (texto, params, extra = {}) =>
 
 const nulo = v => (v === undefined ? null : v);
 
+// Motivos cerrados del «No» en la micro-encuesta (deben coincidir con el CHECK de backend/sql/003_sesion.sql).
+const MOTIVOS = ['no_era', 'no_encontre', 'ruta_confusa', 'otro'];
+const MAX_COMENTARIO = 140;
+const uuidONulo = v => (typeof v === 'string' && UUID_RE.test(v) ? v : null);
+
 async function registrarBusqueda(datos) {
   if (!CONN) return;
   try {
     // La IP no se guarda: solo la usa api/_estado.js para el límite de tasa (con hash).
-    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs } = datos || {};
+    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs, sesionId } = datos || {};
     await consultar(
-      'INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms) ' +
-      'VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [id, texto, canal, resultado, nulo(proveedor), nulo(motivoRespaldo), nulo(tiempoRespuestaMs)]
+      'INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [id, texto, canal, resultado, nulo(proveedor), nulo(motivoRespaldo), nulo(tiempoRespuestaMs), uuidONulo(sesionId)]
     );
   } catch (e) { console.error('tracking registrarBusqueda', e && e.message); }
 }
@@ -39,6 +44,21 @@ async function registrarEncuesta(id, util) {
   } catch (e) { console.error('tracking registrarEncuesta', e && e.message); }
 }
 
+// Motivo del «No» (opcional): solo sobre una fila ya valorada con util = false y sin motivo previo.
+// El motivo debe estar en la lista cerrada; el comentario es texto libre opcional recortado a 140 caracteres.
+async function registrarMotivo(id, motivo, comentario) {
+  if (!CONN) return;
+  try {
+    if (typeof id !== 'string' || !UUID_RE.test(id)) return;
+    if (!MOTIVOS.includes(motivo)) return;
+    const c = typeof comentario === 'string' ? comentario.trim().slice(0, MAX_COMENTARIO) : '';
+    await consultar(
+      'UPDATE busquedas SET motivo = $1, comentario = $2 WHERE id = $3 AND util = false AND motivo IS NULL',
+      [motivo, c || null, id]
+    );
+  } catch (e) { console.error('tracking registrarMotivo', e && e.message); }
+}
+
 // Retención: borra búsquedas más antiguas que `dias` (30 por defecto). Devuelve filas borradas o null si falla.
 async function purgarBusquedas(dias = 30) {
   if (!CONN) return null;
@@ -49,4 +69,4 @@ async function purgarBusquedas(dias = 30) {
   } catch (e) { console.error('tracking purgarBusquedas', e && e.message); return null; }
 }
 
-module.exports = { registrarBusqueda, registrarEncuesta, purgarBusquedas };
+module.exports = { registrarBusqueda, registrarEncuesta, registrarMotivo, purgarBusquedas, UUID_RE };

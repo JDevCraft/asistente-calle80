@@ -142,6 +142,9 @@ footer{font-size:13px;color:var(--muted)}
 #survey .sv-q{font-weight:700;margin-right:auto}
 #survey button{min-height:40px;min-width:64px;padding:8px 14px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--accent);background:#fff;color:var(--accent)}
 #survey button:hover{background:var(--accent-soft)}
+#survey .sv-in{flex:1 1 180px;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;color:var(--ink)}
+#survey .sv-err{flex:1 1 100%;color:var(--danger,#C60202);font-size:.9em}
+#survey .sv-err:empty{display:none}
 .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .ruta{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
 .ruta-top{display:flex;align-items:flex-start;gap:8px}
