@@ -190,7 +190,9 @@ function layoutCallouts(){
     const choca=(X,Y)=>puestos.concat(ocup).find(p=>X<p[0]+p[2]+3&&X+w+3>p[0]&&Y<p[1]+p[3]+3&&Y+h+3>p[1]);
     // Posiciones pegadas al pasillo, en orden: derecha, izquierda, arriba, abajo (centradas y corridas a los lados)
     const cx=(l+r)/2-w/2, cy=t+Math.min((bo-t)/2,22)-h/2, g=4;
-    const cand=[[r+pad,cy],[l-w-pad,cy],[cx,t-h-g],[cx,bo+g],[l,t-h-g],[r-w,t-h-g],[l,bo+g],[r-w,bo+g]]
+    // pasillos de la mitad de la tienda: al acercar la cámara la etiqueta de la derecha se sale del encuadre; va primero a la izquierda
+    const vb=getVB(), mx=vb[0]+((l+r)/2)*vb[2]/W, centro=x.kind==='sel'&&mx>STORE[0]+STORE[2]*.28&&mx<STORE[0]+STORE[2]*.72;
+    const cand=(centro?[[l-w-pad,cy],[r+pad,cy]]:[[r+pad,cy],[l-w-pad,cy]]).concat([[cx,t-h-g],[cx,bo+g],[l,t-h-g],[r-w,t-h-g],[l,bo+g],[r-w,bo+g]])
       .map(([X,Y])=>[Math.min(Math.max(pad,X),W-w-pad),Math.min(Math.max(pad,Y),H-h-pad)]);
     let libre=cand.find(([X,Y])=>!choca(X,Y));
     if(!libre){
@@ -205,6 +207,7 @@ function layoutCallouts(){
       libre=mas.reduce((a,b)=>costo(b)<costo(a)?b:a);
     }
     let [x0,y0]=libre;
+    b.dataset.izq=(centro&&x0+w<=l+2)?'1':''; // anclaje por el borde derecho durante el recorrido
     puestos.push([x0,y0,w,h]);
     b.style.left=x0+'px'; b.style.top=y0+'px';
   });
@@ -335,11 +338,11 @@ function clampVB(v){
 // Recorrido: cada etiqueta se ancla a un punto del plano y se proyecta con el viewBox actual en cada fotograma
 // (sin leer el layout): se mueve con la cámara y sin saltos
 function anclar(){
-  const W=R.mr.width, v=getVB(), k=v[2]/W; R.proj=[...$('callouts').children].filter(e=>e.style.display!=='none').map(e=>({e,w:e.offsetWidth,h:e.offsetHeight,ax:v[0]+(parseFloat(e.style.left)||0)*k,ay:v[1]+(parseFloat(e.style.top)||0)*k}));
+  const W=R.mr.width, v=getVB(), k=v[2]/W; R.proj=[...$('callouts').children].filter(e=>e.style.display!=='none').map(e=>({e,w:e.offsetWidth,h:e.offsetHeight,izq:e.dataset.izq==='1',ax:v[0]+((parseFloat(e.style.left)||0)+(e.dataset.izq==='1'?e.offsetWidth:0))*k,ay:v[1]+(parseFloat(e.style.top)||0)*k}));
 }
 function proyectar(c){
   const W=R.mr.width, H=R.mr.height, sc=W/c[2];
-  R.proj.forEach(p=>{ const x=(p.ax-c[0])*sc, y=(p.ay-c[1])*sc; p.e.style.left=x+'px'; p.e.style.top=y+'px'; p.e.style.visibility=(x+p.w<0||x>W||y+p.h<0||y>H)?'hidden':''; });
+  R.proj.forEach(p=>{ const x=(p.ax-c[0])*sc-(p.izq?p.w:0), y=(p.ay-c[1])*sc; p.e.style.left=x+'px'; p.e.style.top=y+'px'; p.e.style.visibility=(x+p.w<0||x>W||y+p.h<0||y>H)?'hidden':''; });
 }
 function setVB(v){ const c=clampVB(v); $('mapa').setAttribute('viewBox',c.map(n=>n.toFixed(1)).join(' '));
   if(R.guiando){ if(R.proj) proyectar(c); return; }
