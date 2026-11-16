@@ -1,7 +1,7 @@
 :root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* HC-HEADER: nav visual de Homecenter (demo, sin links). Mobile-first. */
 :root{--hc-blue:#0072ce;--hc-red:#dd0021;--hc-text:#3d3c3c;--hc-bg:#f3f3f3;--hc-line:#e0e0e0}
 .hc-top{background:#fff;color:var(--hc-text);font-family:var(--body);border-bottom:1px solid var(--hc-line)}
-.hc-main{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:"menu logo cart user" "search search search search";align-items:center;gap:10px 12px;padding:10px 16px}
+.hc-main{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:"menu logo cart user";align-items:center;gap:10px 12px;padding:10px 16px}
 .hc-menu{grid-area:menu}
 .hc-menu svg{width:30px;height:30px;display:block}
 .hc-logo{grid-area:logo;display:flex;align-items:center;gap:6px}
@@ -10,10 +10,6 @@
 .hc-logo .word i{font-style:normal;font-weight:900;font-size:8px;color:var(--hc-red);margin-top:2px}
 .hc-logo .word{display:none}
 .hc-logo svg{width:40px;height:30px}
-.hc-search{grid-area:search;display:flex;align-items:center;justify-content:space-between;height:34px;border:1px solid #bdbdbd;border-radius:3px;background:#fff;padding:0 10px;font:400 13px var(--body);color:#717171}
-.hc-search i{font-style:normal;display:inline-flex;margin-left:8px}
-.hc-search i svg{width:18px;height:18px}
-.hc-search i:first-of-type{margin-left:auto}
 .hc-cart{grid-area:cart;position:relative}
 .hc-cart svg{width:26px;height:26px}
 .hc-badge{display:inline-flex;align-items:center;position:absolute;top:-8px;right:-8px;background:var(--hc-red);color:#fff;font-size:11px;border-radius:50%;width:17px;height:17px;justify-content:center}
@@ -21,15 +17,14 @@
 .hc-acc svg{width:28px;height:28px}
 .hc-acc > span,.hc-catbtn,.hc-loc,.hc-cmrp{display:none}
 @media (min-width:901px){
-  .hc-main{grid-template-columns:auto auto 260px auto auto auto auto;grid-template-areas:"logo catbtn search loc cart cmrp acc";padding:0 24px;min-height:76px;gap:18px;justify-content:center}
+  .hc-main{grid-template-columns:auto auto auto auto auto auto;grid-template-areas:"logo catbtn loc cart cmrp acc";padding:0 24px;min-height:76px;gap:18px;justify-content:center}
   .hc-catbtn{grid-area:catbtn;display:inline-flex;align-items:center;gap:8px;border:1px solid #6b6b6b;border-radius:4px;padding:8px 12px;font:700 14px var(--body);background:#fff;color:var(--hc-text)}
   .hc-catbtn svg{width:16px;height:16px}
   .hc-menu{display:none}
   .hc-logo{grid-area:logo}
   .hc-logo .word{display:flex}
   .hc-logo svg{width:40px;height:30px}
-  .hc-search{grid-area:search;height:36px;width:260px;padding:0 6px 0 10px;font-size:13px}
-  .hc-loc{grid-area:loc;display:inline-flex;font-size:12px;gap:6px;color:var(--hc-blue);text-decoration:underline}
+    .hc-loc{grid-area:loc;display:inline-flex;font-size:12px;gap:6px;color:var(--hc-blue);text-decoration:underline}
   .hc-loc svg{width:20px;height:20px;color:#555}
   .hc-cart{grid-area:cart}
   .hc-cmrp{grid-area:cmrp;display:inline-flex;gap:6px;font-size:10px;line-height:1.15}
