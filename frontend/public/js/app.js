@@ -392,7 +392,10 @@ async function guided(){
   p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
   caption('Así llegas a tu producto desde la entrada.');
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
-  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1300,tk,easeOut); if(tk!==R.token) return; // acercamiento inicial a velocidad normal (sin V): da tiempo a ver el pasillo y su etiqueta
+  // 1) acercamiento al pasillo de destino (velocidad normal, con pausa para leer la etiqueta); 2) traslado al punto de partida; 3) recorrido a 1.5x
+  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(R.L)),W),1300,tk,easeOut); if(tk!==R.token) return;
+  await wait(700); if(tk!==R.token) return;
+  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200,tk); if(tk!==R.token) return;
   setPaso(0);
   const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
   let cc=null, tp=0; // cámara con seguimiento suavizado (media exponencial, ~200 ms de retraso)
