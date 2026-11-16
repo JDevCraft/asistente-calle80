@@ -31,6 +31,31 @@ verificación extremo a extremo, cutover de producción) — son pasos
 manuales de dashboard/CLI de Vercel, fuera del alcance de lo que esta
 sesión pudo ejecutar.
 
+## Estado actual (2026-11-15) y próxima sesión
+
+Hecho y verificado: backend y frontend desplegados en Vercel (Hobby), Neon y
+Upstash conectados al backend, log de búsquedas escribiendo, caché y rate
+limit en Redis, tracking con IDs reales (GA4, Clarity, Sentry), un error de
+prueba llegó a Sentry, y GA4 y Clarity confirmados. `npm test`: 49/49.
+
+Aplazado a propósito: BigQuery y Looker Studio (después del beta). Conviene
+vincular GA4 con BigQuery pronto, porque la exportación no recupera datos
+anteriores a la vinculación.
+
+Bloquea abrir el beta: revisión legal del texto del banner, y el cutover del
+dominio real. El banner **no menciona Sentry** ni la grabación de sesiones de
+Clarity, y no ofrece forma de reabrir la decisión; el brief de la próxima
+sesión lo detalla.
+
+Próxima sesión: refactor del frontend y rediseño con el banner en cuenta. Ver
+`2026-11-15-frontend-refactor-brief.md` (orden recomendado: mover la selección
+de SKUs al backend, quitar `'unsafe-inline'` de la CSP, y luego rediseño).
+
+Cierre pendiente de la sesión de 2026-11-15, todo menor: borrar la fila de
+prueba de `busquedas` (`id = 'e45ea84a-3ff3-47d4-bd0b-d83badb3c22a'`), las
+variables sin uso `BACKEND_URL` y `BACKEND_BYPASS_SECRET` del proyecto
+frontend, y las ramas locales `backup/*`.
+
 ## Frentes
 
 - [x] Separar frontend/backend en dos proyectos Vercel + rewrite — desplegado y verificado con `curl` (2026-11-15); falta solo el cutover del dominio real. Código
@@ -57,7 +82,7 @@ sesión pudo ejecutar.
       rompe: solo se dejan de recibir errores.
 - [x] Banner de tratamiento de datos (aviso + opción de rechazar)
 - [x] Micro-encuesta "¿te ayudó?" (respuesta → Postgres)
-- [ ] Export de GA4 a BigQuery
+- [ ] Export de GA4 a BigQuery — aplazado por el usuario; vincular pronto (no recupera histórico)
 - [ ] Panel en Looker Studio (Postgres + BigQuery)
 - [-] Prueba de carga (k6/Artillery) contra preview — descartada por el usuario el 2026-11-15
 - [ ] Revisión legal del texto del banner (negocio/abogado, fuera de este
