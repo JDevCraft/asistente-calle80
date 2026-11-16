@@ -3,7 +3,7 @@
 //
 // Uso (desde la carpeta del proyecto), con la clave en una variable de entorno:
 //   NVIDIA_API_KEY=nvapi-... node scripts/build_vectores.js
-// Volver a correrlo cada vez que cambie el catálogo (después de scripts/build_destinos.py). Tarda ~1 minuto.
+// Volver a correrlo cada vez que cambie el catálogo (solo lee backend/api/_catalog.js, no depende de build_destinos.py). Tarda ~1 minuto.
 //
 // Salida:
 //   backend/api/_vectores.bin   N × DIM bytes (int8): cada vector normalizado y escalado a [-127, 127]

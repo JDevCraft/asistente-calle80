@@ -262,4 +262,4 @@ function desdeSegmentos(segs) {
   return decidir(destinos(entradas));
 }
 
-module.exports = { rapido, desdeSegmentos, tokens, decidir, destinos };
+module.exports = { rapido, desdeSegmentos, tokens, destinos };

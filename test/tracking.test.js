@@ -36,14 +36,15 @@ test('registrarBusqueda feliz: un INSERT parametrizado con los campos dados', as
   assert.match(body.query, /tiempo_respuesta_ms/);
   assert.ok(!body.query.includes('pintura'), 'el texto no debe interpolarse en el SQL');
   // El driver serializa los valores con prepareValue de pg: números → string, null → null.
-  assert.deepStrictEqual(body.params, [ID, 'pintura para baño', 'texto', 'modelo', 'nvidia', null, '1234', '1.2.3.4']);
+  assert.deepStrictEqual(body.params, [ID, 'pintura para baño', 'texto', 'modelo', 'nvidia', null, '1234']);
+  assert.ok(!/\bip\b/.test(body.query), 'el INSERT no debe incluir la columna ip (privacidad)');
 });
 
 test('registrarBusqueda: campos opcionales ausentes → NULL', async () => {
   reset();
   await registrarBusqueda({ id: ID, texto: 'x', canal: 'voz', resultado: 'error' });
   const body = JSON.parse(llamadas[0].opts.body);
-  assert.deepStrictEqual(body.params, [ID, 'x', 'voz', 'error', null, null, null, null]);
+  assert.deepStrictEqual(body.params, [ID, 'x', 'voz', 'error', null, null, null]);
 });
 
 test('registrarEncuesta feliz: un UPDATE parametrizado con [util, id]', async () => {
