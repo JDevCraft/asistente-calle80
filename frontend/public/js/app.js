@@ -26,7 +26,7 @@ function pretty(s){
 
 // ================= ASISTENTE DE NECESIDADES =================
 const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(name)}));
-const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,lastSearchId:null};
+const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null};
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -259,7 +259,7 @@ function renderPlan(){
     hint(pideCategoria()+fueraTxt(fuera),'info');
   } else if(ru.decision==='directo'||sel){
     // una vez por búsqueda (renderPlan se repite al refinar, cargar recetas o elegir); Tarea 8 reutiliza A.rutaVista
-    if(!A.rutaVista){ A.rutaVista=true; if(window.gtag) gtag('event','route_view',{}); showSurvey(); }
+    if(!A.rutaVista){ A.rutaVista=true; if(window.gtag) gtag('event','route_view',{}); }
     const d=sel||ds[0], otros=enMapa.filter(x=>x!==d);
     if(rutaAisle(d)){
       openDest(d,null);
@@ -389,6 +389,7 @@ async function guided(){
       if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); });
   if(tk!==R.token) return;
   setPaso(R.pasos.length-1);
+  if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
   await wait(900); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300,tk); if(tk!==R.token) return;
   endGuide();
@@ -477,7 +478,7 @@ async function ask(){
       await new Promise((ok,no)=>{ const t=setTimeout(ok,1500); ctl.signal.addEventListener('abort',()=>{ clearTimeout(t); no({code:'cancelled'}); },{once:true}); });
       j=await sampleFn.json({signal:ctl.signal});
     }
-    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.lastSearchId=j.id||null; renderPlan();
+    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null; renderPlan();
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
     const dt=Date.now()-t0;
     if(window.gtag) gtag('event','search_result',{resultado:A.ruta&&A.ruta.respaldo?'respaldo':(A.ruta&&A.ruta.fuente==='indice'?'indice':'modelo'),canal:window.__canalBusqueda||'texto',ms:dt});
