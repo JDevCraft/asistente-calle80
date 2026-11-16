@@ -189,7 +189,10 @@ function layoutCallouts(){
     const w=b.offsetWidth, h=b.offsetHeight;
     const choca=(X,Y)=>puestos.concat(ocup).find(p=>X<p[0]+p[2]+3&&X+w+3>p[0]&&Y<p[1]+p[3]+3&&Y+h+3>p[1]);
     // Posiciones pegadas al pasillo, en orden: derecha, izquierda, arriba, abajo (centradas y corridas a los lados)
-    const cx=(l+r)/2-w/2, cy=t+Math.min((bo-t)/2,22)-h/2, g=4;
+    let cx=(l+r)/2-w/2, cy=t+Math.min((bo-t)/2,22)-h/2; const g=4;
+    // con ruta, la etiqueta del seleccionado se alinea con el punto donde llega la guía (dentro del pasillo), no con su borde
+    if(x.kind==='sel'&&R.ruta){ const tr=trail(); if(tr) try{ const pe=tr.getPointAtLength(R.L), s=new DOMPoint(pe.x,pe.y).matrixTransform(tr.getScreenCTM());
+      cx=Math.min(Math.max(s.x-cr.left,l),r)-w/2; cy=Math.min(Math.max(s.y-cr.top,t),bo)-h/2; }catch(e){} }
     const cand=[[r+pad,cy],[l-w-pad,cy],[cx,t-h-g],[cx,bo+g],[l,t-h-g],[r-w,t-h-g],[l,bo+g],[r-w,bo+g]]
       .map(([X,Y])=>[Math.min(Math.max(pad,X),W-w-pad),Math.min(Math.max(pad,Y),H-h-pad)]);
     let libre=cand.find(([X,Y])=>!choca(X,Y));
