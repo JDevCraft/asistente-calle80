@@ -332,10 +332,17 @@ function clampVB(v){
   y=Math.min(Math.max(cy-h/2,STORE[1]),STORE[1]+STORE[3]-h);
   return [x,y,w,h];
 }
-let svbT=0;
-function setVB(v){ $('mapa').setAttribute('viewBox',clampVB(v).map(n=>n.toFixed(1)).join(' '));
-  // en el recorrido las etiquetas se reubican como máximo cada 90 ms: hacerlo en cada fotograma traba el móvil
-  if(R.guiando){ const n=performance.now(); if(n-svbT<90) return; svbT=n; }
+// Recorrido: cada etiqueta se ancla a un punto del plano y se proyecta con el viewBox actual en cada fotograma
+// (sin leer el layout): se mueve con la cámara y sin saltos
+function anclar(){
+  const W=R.mr.width, v=getVB(), k=v[2]/W; R.proj=[...$('callouts').children].filter(e=>e.style.display!=='none').map(e=>({e,w:e.offsetWidth,h:e.offsetHeight,ax:v[0]+(parseFloat(e.style.left)||0)*k,ay:v[1]+(parseFloat(e.style.top)||0)*k}));
+}
+function proyectar(c){
+  const W=R.mr.width, H=R.mr.height, sc=W/c[2];
+  R.proj.forEach(p=>{ const x=(p.ax-c[0])*sc, y=(p.ay-c[1])*sc; p.e.style.left=x+'px'; p.e.style.top=y+'px'; p.e.style.visibility=(x+p.w<0||x>W||y+p.h<0||y>H)?'hidden':''; });
+}
+function setVB(v){ const c=clampVB(v); $('mapa').setAttribute('viewBox',c.map(n=>n.toFixed(1)).join(' '));
+  if(R.guiando){ if(R.proj) proyectar(c); return; }
   if(MAPA.items.length||MAPA.here) layoutCallouts(); }
 // Vista inicial: plano completo sin recorte (el SVG lo encaja en el espacio disponible)
 $('mapa').setAttribute('viewBox',STORE.join(' ')); window.VB0=$('mapa').getAttribute('viewBox');
@@ -373,7 +380,7 @@ function paintSteps(){
   $('rutaPrev').disabled=R.paso<=0; $('rutaNext').disabled=R.paso>=n-1;
 }
 function setPaso(i){ R.paso=i; paintSteps(); caption(R.pasos[i]); }
-function endGuide(){ R.guiando=false; R.mr=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
+function endGuide(){ R.guiando=false; R.mr=null; R.proj=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
 function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.guiando){ endGuide(); if(R.fit&&!keepView) setVB(R.fit); } }
 function tweenVB(a,b,dur,tk){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*ease(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
 async function guided(){
@@ -381,7 +388,7 @@ async function guided(){
   const V=1.5; // velocidad del recorrido guiado
   cancelAnimationFrame(R.anim);
   const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
-  p.style.opacity='.22'; place(0); setPaso(0); setVB(R.fit);
+  p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
   caption('Así llegas a tu producto desde la entrada.');
   await wait(1100/V); if(tk!==R.token) return;
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
