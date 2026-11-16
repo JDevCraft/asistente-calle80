@@ -388,8 +388,9 @@ async function guided(){
   await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200/V,tk); if(tk!==R.token) return;
   setPaso(0);
   const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
+  let cc=null, tp=0; // cámara con seguimiento suavizado (media exponencial, ~200 ms de retraso)
   await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*u; const pt=place(len);
-      if(pt) setVB(camAt(toSvg(pt),W));
+      if(pt){ const g=toSvg(pt); if(cc){ const k=1-Math.exp(-(t-tp)/200); cc=[cc[0]+(g[0]-cc[0])*k,cc[1]+(g[1]-cc[1])*k]; } else cc=g; tp=t; setVB(camAt(cc,W)); }
       const i=stepAt(len); if(i!==R.paso) setPaso(i);
       if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); });
   if(tk!==R.token) return;
