@@ -373,16 +373,17 @@ function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.gu
 function tweenVB(a,b,dur,tk){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*ease(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
 async function guided(){
   if(!R.ruta||!trail()) return;
+  const V=1.5; // velocidad del recorrido guiado
   cancelAnimationFrame(R.anim);
   const tk=++R.token, p=rutaPath(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); setVB(R.fit);
   caption('Así llegas a tu producto desde la entrada.');
-  await wait(1100); if(tk!==R.token) return;
+  await wait(1100/V); if(tk!==R.token) return;
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
-  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200,tk); if(tk!==R.token) return;
-  await wait(500); if(tk!==R.token) return;
+  await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200/V,tk); if(tk!==R.token) return;
+  await wait(500/V); if(tk!==R.token) return;
   setPaso(0);
-  const dur=Math.max(5000,Math.min(16000,R.L*9)), t0=performance.now();
+  const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
   await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*u; const pt=place(len);
       if(pt) setVB(camAt(toSvg(pt),W));
       const i=stepAt(len); if(i!==R.paso) setPaso(i);
@@ -390,8 +391,8 @@ async function guided(){
   if(tk!==R.token) return;
   setPaso(R.pasos.length-1);
   if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
-  await wait(900); if(tk!==R.token) return;
-  await tweenVB(getVB(),R.fit,1300,tk); if(tk!==R.token) return;
+  await wait(900/V); if(tk!==R.token) return;
+  await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
   endGuide();
 }
 function goStep(i){
