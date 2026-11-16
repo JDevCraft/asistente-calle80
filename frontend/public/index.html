@@ -544,9 +544,9 @@ function initConsentBar(){
   document.getElementById('consentOff').onclick = () => { lsSet('calle80_banner_visto','1'); lsSet('calle80_tracking_rechazado','1'); stopTracking(); bar.hidden = true; };
 }
 // IDs de seguimiento: públicos, visibles en el cliente (no son secretos, a diferencia de toda variable de entorno del repo)
-const GA4_ID = 'G-XXXXXXX';
-const CLARITY_ID = 'XXXXXXXXXX'; // ID de proyecto de Clarity: público, visible en el cliente
-const SENTRY_DSN = 'https://REEMPLAZAR@oXXXXXX.ingest.us.sentry.io/XXXXXXX'; // DSN de Sentry: público, no secreto
+const GA4_ID = 'G-0YE9GH8L7X';
+const CLARITY_ID = 'zea1biij2f'; // ID de proyecto de Clarity: público, visible en el cliente
+const SENTRY_DSN = 'https://d2116e478076aa595232a53fe40719c5@o4512438471950336.ingest.us.sentry.io/4512438492266496'; // DSN de Sentry: público, no secreto
 // Un ID que sigue siendo placeholder no se inyecta: evita mandar basura a los vendors antes de tener los IDs reales
 const real = v => v && !/X{4,}|REEMPLAZAR/.test(v);
 // Apaga los trackers ya iniciados (opt-out en la primera visita, tras initTracking)

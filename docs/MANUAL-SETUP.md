@@ -2,7 +2,7 @@
 
 Este documento reúne todo lo que hay que hacer a mano (cuentas, dashboards, keys) para que el programa funcione completo. El código ya está listo y está en `main`. Cada paso indica dónde vive el valor y si es secreto.
 
-Regla general: los secretos viven solo en el proyecto Vercel del backend. El proyecto del frontend recibe únicamente `BACKEND_URL` y `BACKEND_BYPASS_SECRET`. Los IDs públicos de GA4, Clarity y Sentry van escritos en el código del frontend, porque están pensados para el navegador.
+Regla general: los secretos viven solo en el proyecto Vercel del backend. El proyecto del frontend no necesita variables de entorno: el destino del backend está fijo en `frontend/vercel.json`. Los IDs públicos de GA4, Clarity y Sentry van escritos en el código del frontend, porque están pensados para el navegador.
 
 ## Qué funciona sin nada configurado
 
@@ -14,7 +14,7 @@ Sin ninguna key, `/api/sample` responde las búsquedas de producto desde el índ
 2. Cuentas de datos: Upstash Redis y Neon Postgres (hecho, falta aplicar el esquema)
 3. Keys de IA: NVIDIA y Gemini
 4. Proyecto Vercel del backend (Tarea 4 del plan del split)
-5. Protection Bypass y variables del frontend (Tarea 5)
+5. Protection Bypass (ya no se usa, ver nota)
 6. Proyecto Vercel del frontend y verificación en Preview (Tarea 6)
 7. Cuentas de tracking: GA4, Clarity, Sentry, y cambio de IDs en el código
 8. BigQuery y Looker Studio
@@ -79,22 +79,22 @@ No hace falta. Sin variables, el backend funciona en local con todo fail-open (f
 | `POSTGRES_URL` | Marketplace (ya inyectada) | sí |
 
 3. Desplegar y comprobar que el deploy no está roto. Si Deployment Protection responde con un 401 o un reto, es lo esperado hasta el paso 5.
-4. Rama a desplegar: `origin/main` todavía tiene el layout viejo, sin `backend/`. Si no hay rama con el split en GitHub, el deploy no encuentra el Root Directory. Pushear una rama aparte (`split-vercel`) y usarla como Production Branch del proyecto, sin tocar `main`.
+4. Rama desplegada: `main`, que ya contiene el split. Backend verificado con `curl` el 2026-11-15, incluida la escritura en Postgres.
 
-## 5. Protection Bypass y variables del frontend (Tarea 5)
+## 5. Protection Bypass (no se usa hoy)
 
-1. En el proyecto backend: Settings → Deployment Protection → Protection Bypass for Automation → generar el secreto. Vercel lo expone en el backend como `VERCEL_AUTOMATION_BYPASS_SECRET`.
-2. En el proyecto frontend, crear `BACKEND_BYPASS_SECRET` con ese mismo valor (Production y Preview). El nombre es distinto a propósito, para no chocar con la variable que Vercel pone en el frontend.
-3. Crear `BACKEND_URL` en el frontend:
-   - Production: `https://asistente-calle80-backend.vercel.app`.
-   - Preview: `https://asistente-calle80-backend-git-<rama>-jdevcrafts-projects.vercel.app` (confirmar el alias exacto en el dashboard) (alias fijo por rama).
-4. Auditoría: en el frontend no debe haber `NVIDIA_API_KEY`, `GEMINI_API_KEY`, variables de Redis ni `POSTGRES_URL`.
+Se probó un diseño con `BACKEND_URL` y `BACKEND_BYPASS_SECRET` en el frontend y un header inyectado desde `vercel.json`. No funcionó: `rewrites` no admite `transforms` de headers, y `routes` con `transforms` y `${BACKEND_URL}` devolvió 404 en el deploy real. Hoy el frontend usa `rewrites` con el destino fijo, sin variables, y el alias de producción del backend no tiene Deployment Protection, así que no hace falta el bypass.
+
+Las variables `BACKEND_URL` y `BACKEND_BYPASS_SECRET` que ya existen en el proyecto frontend no se usan y se pueden borrar. Si un día se protege el backend o se prueba contra un Preview protegido, el bypass se puede pasar como parámetro en el destino (`?x-vercel-protection-bypass=<secreto>`), sabiendo que el secreto queda visible en los logs de URL.
+
+Auditoría: en el frontend no debe haber `NVIDIA_API_KEY`, `GEMINI_API_KEY`, variables de Redis ni `POSTGRES_URL`.
 
 ## 6. Proyecto Vercel del frontend y verificación (Tarea 6)
 
-1. Add New Project → mismo repo → Root Directory `frontend/` → nombre `calle80-frontend`. Las variables del paso 5 deben existir antes del primer deploy.
+1. Hecho: proyecto `asistente-calle80-frontend` con Root Directory `frontend/`, Framework Preset "Other", Output Directory `public`. Dominio: `https://asistente-calle80-frontend.vercel.app`. No requiere variables de entorno.
 2. Verificar con los `curl` y el navegador descritos en la Tarea 6 del plan `2026-11-15-split-frontend-backend-trusted-sources.md`. El resultado esperado es un 200 con JSON real, no HTML de reto.
-3. No hacer `git push origin main` ni cutover hasta que este paso pase. Si el proyecto Vercel único actual sigue conectado a `main`, un push prematuro rompe producción, porque ya no existe `vercel.json` en la raíz.
+3. Verificado el 2026-11-15 con `curl` contra el frontend: `/api/sample` (ruta rápida y camino de IA), `/api/encuesta`, 405 y 400, caché de Redis (`"cache":true`), y headers de seguridad en las respuestas de `/api`. Falta la prueba del cliente en el navegador.
+4. Equipo Hobby: Vercel solo despliega commits cuyo autor sea el dueño del equipo. Antes de commitear, configurar `git config user.email` con el email verificado de la cuenta de GitHub vinculada a Vercel. De lo contrario el deploy falla con `TEAM_ACCESS_REQUIRED`, también si se despliega con la CLI.
 
 ## 7. Cuentas de tracking
 
@@ -149,9 +149,6 @@ Backend (solo ahí):
 - `KV_REST_API_URL` y `KV_REST_API_TOKEN`, o `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`
 - `POSTGRES_URL` (o `DATABASE_URL`)
 
-Frontend (solo estas dos):
-
-- `BACKEND_URL`
-- `BACKEND_BYPASS_SECRET`
+Frontend: ninguna.
 
 En el código del frontend, públicos: `GA4_ID`, `CLARITY_ID`, `SENTRY_DSN`.
