@@ -155,7 +155,7 @@ module.exports = async (req, res) => {
   // Único punto de registro de la búsqueda. Se espera (await) antes de cada respuesta: en Vercel una promesa
   // pendiente después de res.json() puede congelarse con la instancia y perder la fila. registrarBusqueda nunca
   // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
-  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, ip, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
+  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
   const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
   if (!answers.length) {
     const r = rapido(text);
@@ -223,4 +223,3 @@ module.exports = async (req, res) => {
   }
 };
 
-module.exports.SYSTEM = SYSTEM;

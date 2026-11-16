@@ -22,8 +22,9 @@ backend/
 frontend/
   vercel.json  Proyecto Vercel del sitio: carpeta pública, cabeceras de seguridad y el rewrite de /api/* al backend
   public/
-    index.html     Página única (UI, SKUs, plano SVG, ranking y ruta)
-    data.json      SKUs, familias y estadísticas (se carga con fetch al abrir la página)
+    index.html     Marcado de la página (sin JS ni CSS inline)
+    css/app.css    Estilos (header estilo Homecenter, asistente, mapa)
+    js/            Módulos ES: app.js (entrada), tracking.js, ruta.js (plano y ruta), vendor/web-vitals (copia local)
     ai.json        Segmentos del catálogo para la IA (los lee también build_destinos.py)
     empleada-inicio.jpg   Imagen del inicio
 scripts/

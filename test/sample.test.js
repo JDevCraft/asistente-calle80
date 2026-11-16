@@ -110,8 +110,8 @@ test('más de 20 consultas por IP → 429 rate_limited', async () => {
 });
 
 // --- Registro estructurado (Task 4). Los params son posicionales, en el orden del INSERT de _tracking.js:
-// [id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, ip]
-const reg = q => { const [id, texto, canal, resultado, proveedor, motivoRespaldo, ms, ip] = q.params; return { id, texto, canal, resultado, proveedor, motivoRespaldo, ms, ip }; };
+// [id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms] (sin IP: privacidad)
+const reg = q => { const [id, texto, canal, resultado, proveedor, motivoRespaldo, ms] = q.params; return { id, texto, canal, resultado, proveedor, motivoRespaldo, ms }; };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // "pintura" la entiende el índice (camino rápido); 'zzqx qwv' no, ni siquiera en modo laxo
 const IDX = 'pintura';
@@ -131,7 +131,7 @@ test('canal "voz" se propaga al registro; un valor desconocido cae a texto', asy
   await run(Q('c3'), { canal: 'hackeo' });
   assert.strictEqual(reg(registros[0]).canal, 'texto');
 });
-test('respuesta exitosa incluye "id" (UUID) igual al del registro, con texto, ip y tiempo', async () => {
+test('respuesta exitosa incluye "id" (UUID) igual al del registro, con texto y tiempo (sin IP)', async () => {
   escenario({});
   const r = await run(Q('c4'), { ip: '9.9.9.9' });
   assert.strictEqual(r.code, 200);
@@ -139,7 +139,7 @@ test('respuesta exitosa incluye "id" (UUID) igual al del registro, con texto, ip
   const g = reg(registros[0]);
   assert.strictEqual(g.id, r.body.id);
   assert.strictEqual(g.texto, Q('c4'));
-  assert.strictEqual(g.ip, '9.9.9.9');
+  assert.ok(!/\bip\b/.test(registros[0].query), 'el registro no guarda la IP');
   assert.strictEqual(g.resultado, 'modelo');
   assert.strictEqual(g.motivoRespaldo, null);
   assert.ok(Number(g.ms) >= 0);

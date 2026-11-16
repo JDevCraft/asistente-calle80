@@ -59,7 +59,7 @@ test('un comando del pipeline devuelve {error} en vez de {result} → no crashea
 });
 test('valor corrupto (no-JSON) en caché → cacheGet devuelve null', async () => {
   reset();
-  store.set('c:x', 'no es json{');
+  store.set('c:' + require('crypto').createHash('sha256').update('|x').digest('hex'), 'no es json{');
   assert.strictEqual(await estado.cacheGet('x'), null);
 });
 test('pipeline() pasa un signal de timeout a fetch (para no colgar si Redis no responde)', async () => {

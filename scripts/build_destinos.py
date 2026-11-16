@@ -3,7 +3,7 @@
 Uso (desde la carpeta del proyecto):
     python -X utf8 scripts/build_destinos.py
 
-Volver a correr cada vez que cambie el Excel o el plano (frontend/public/index.html).
+Volver a correr cada vez que cambie el Excel o el plano (frontend/public/js/ruta.js).
 
 Qué produce:
 - pasillos: cada pasillo del catálogo, si está dibujado en el mapa y sus vecinos (pasillos contiguos).
@@ -25,7 +25,7 @@ import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
 XLSX = ROOT / 'data' / 'Segmentacion_Productos_Calle80.xlsx'
-HTML = ROOT / 'frontend' / 'public' / 'index.html'
+HTML = ROOT / 'frontend' / 'public' / 'js' / 'ruta.js'  # bundle del mapa: contiene el plano (bboxes e ids)
 MANUAL = ROOT / 'data' / 'pasillo_destino.json'
 LATERALES = ROOT / 'data' / 'laterales.json'
 OUT = ROOT / 'backend' / 'api' / '_destinos.json'
