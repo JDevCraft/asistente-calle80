@@ -322,8 +322,9 @@ function rutaPath(){ const j=rutaGrupo(); return j?j.querySelectorAll('path')[1]
 function getVB(){ return $('mapa').getAttribute('viewBox').split(/[\s,]+/).map(Number); }
 // Límites de la tienda en coordenadas del SVG: la vista nunca muestra espacio fuera del plano
 const STORE=[-44,-6,1410.3,1747.7];
+function mapRect(){ return (R.guiando&&R.mr)||$('mapa').getBoundingClientRect(); }
 function clampVB(v){
-  const r=$('mapa').getBoundingClientRect(); if(!r.width||!r.height) return v;
+  const r=mapRect(); if(!r.width||!r.height) return v;
   const a=r.height/r.width; let [x,y,w,h]=v; const cx=x+w/2, cy=y+h/2;
   if(h/w<a) h=w*a; else w=h/a;
   const k=Math.min(1,STORE[2]/w,STORE[3]/h); w*=k; h*=k;
@@ -331,11 +332,15 @@ function clampVB(v){
   y=Math.min(Math.max(cy-h/2,STORE[1]),STORE[1]+STORE[3]-h);
   return [x,y,w,h];
 }
-function setVB(v){ $('mapa').setAttribute('viewBox',clampVB(v).map(n=>n.toFixed(1)).join(' ')); if(MAPA.items.length||MAPA.here) layoutCallouts(); }
+let svbT=0;
+function setVB(v){ $('mapa').setAttribute('viewBox',clampVB(v).map(n=>n.toFixed(1)).join(' '));
+  // en el recorrido las etiquetas se reubican como máximo cada 90 ms: hacerlo en cada fotograma traba el móvil
+  if(R.guiando){ const n=performance.now(); if(n-svbT<90) return; svbT=n; }
+  if(MAPA.items.length||MAPA.here) layoutCallouts(); }
 // Vista inicial: plano completo sin recorte (el SVG lo encaja en el espacio disponible)
 $('mapa').setAttribute('viewBox',STORE.join(' ')); window.VB0=$('mapa').getAttribute('viewBox');
 function toSvg(pt){ const m=rutaGrupo().transform.baseVal.consolidate().matrix; return [m.a*pt.x+m.c*pt.y+m.e, m.b*pt.x+m.d*pt.y+m.f]; }
-function camAt(c,w){ const r=$('mapa').getBoundingClientRect(); const h=w*((r.height/r.width)||1); return [c[0]-w/2,c[1]-h/2,w,h]; }
+function camAt(c,w){ const r=mapRect(); const h=w*((r.height/r.width)||1); return [c[0]-w/2,c[1]-h/2,w,h]; }
 function trail(){
   if(R.trail&&R.trail.isConnected) return R.trail;
   const p=rutaPath(); if(!p) return null;
@@ -368,20 +373,19 @@ function paintSteps(){
   $('rutaPrev').disabled=R.paso<=0; $('rutaNext').disabled=R.paso>=n-1;
 }
 function setPaso(i){ R.paso=i; paintSteps(); caption(R.pasos[i]); }
-function endGuide(){ R.guiando=false; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
+function endGuide(){ R.guiando=false; R.mr=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
 function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.guiando){ endGuide(); if(R.fit&&!keepView) setVB(R.fit); } }
 function tweenVB(a,b,dur,tk){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*ease(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
 async function guided(){
   if(!R.ruta||!trail()) return;
   const V=1.5; // velocidad del recorrido guiado
   cancelAnimationFrame(R.anim);
-  const tk=++R.token, p=rutaPath(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
+  const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); setVB(R.fit);
   caption('Así llegas a tu producto desde la entrada.');
   await wait(1100/V); if(tk!==R.token) return;
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
   await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200/V,tk); if(tk!==R.token) return;
-  await wait(500/V); if(tk!==R.token) return;
   setPaso(0);
   const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
   await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*u; const pt=place(len);
