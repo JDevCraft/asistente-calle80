@@ -41,13 +41,20 @@ sesión pudo ejecutar.
 - [x] Caché compartido (Upstash Redis, Marketplace)
 - [-] Trusted Sources / Protection Bypass entre los dos proyectos — no se usa: ver entrada 2026-11-15 de Vercel
 - [x] Log estructurado de búsquedas en Postgres (texto, destino, proveedor,
-      canal voz/texto, tiempo de respuesta) — código en `feat/tracking-beta`;
-      falta crear el proyecto Neon y aplicar el esquema (Tarea 10)
-- [ ] Microsoft Clarity — código listo, falta ID real (Tarea 10)
-- [ ] Google Analytics 4 (+ Core Web Vitals vía `web-vitals`) — código listo,
-      falta ID real (Tarea 10)
-- [ ] Captura de errores de cliente (Sentry u otra) — código listo, falta ID
-      real y host de ingest en CSP (Tarea 10)
+      canal voz/texto, tiempo de respuesta) — Neon creado, esquema aplicado y
+      fila de prueba verificada (2026-11-15)
+- [x] Microsoft Clarity — ID real puesto (`zea1biij2f`); falta confirmar la
+      sesión en la consola de Clarity y poner el masking en Strict
+- [x] Google Analytics 4 (+ Core Web Vitals vía `web-vitals`) — ID real puesto
+      (`G-0YE9GH8L7X`); falta confirmar la visita en Tiempo real
+- [x] Captura de errores de cliente (Sentry SaaS) — proyecto
+      `juan-moreno-4e/calle80-frontend`, DSN puesto, un error de prueba llegó
+      (`CALLE80-FRONTEND-1`); host `ingest.us.sentry.io` ya está en la CSP
+- [ ] **Sentry: la prueba de Business vence el 2026-11-28.** Revisar
+      Settings → Subscription ese día; si no pasa solo a Developer (gratis),
+      bajar el plan o cancelar antes de que venza. No agregar tarjeta durante
+      la prueba. Team (29 USD/mes) no es necesario. Sin plan, el sitio no se
+      rompe: solo se dejan de recibir errores.
 - [x] Banner de tratamiento de datos (aviso + opción de rechazar)
 - [x] Micro-encuesta "¿te ayudó?" (respuesta → Postgres)
 - [ ] Export de GA4 a BigQuery
@@ -57,6 +64,16 @@ sesión pudo ejecutar.
       trabajo técnico)
 
 ## Entradas
+
+### 2026-11-15 — IDs de tracking puestos y Sentry verificado
+
+Puestos en `frontend/public/index.html:547-549`: `GA4_ID`, `CLARITY_ID` y `SENTRY_DSN`. Sentry se configuró con el CLI (v0.49.0, organización `juan-moreno-4e`), proyecto `calle80-frontend` (plataforma javascript). Se mantuvo el esquema existente (bundle del CDN con SRI y `Sentry.init({ dsn })`); no se instaló el SDK por npm porque no hay bundler. El aviso "instalar el SDK" del dashboard de Sentry desaparece solo con el primer evento; un error de prueba lanzado desde la consola en incógnito llegó y se ve con `sentry issue list`.
+
+El mensaje de consola `Connecting to '.../bundle.min.js.map' violates ... connect-src` es el source map del SDK que pide DevTools; no afecta a usuarios. Se decidió no ampliar la CSP por eso. El `Unchecked runtime.lastError` de la consola viene de una extensión del navegador, no del código.
+
+Equipo Hobby: el autor de los commits debe ser el dueño del equipo; los commits se re-firman antes del push.
+
+Pendiente: confirmar GA4 (Tiempo real) y Clarity (sesión); en Clarity, masking en Strict; en Sentry, Allowed Domains en Client Keys y un límite de eventos por minuto; el vencimiento de la prueba el 2026-11-28 (arriba); revisión legal del banner; cutover del dominio real; borrar la fila de prueba de `busquedas` (`id = 'e45ea84a-3ff3-47d4-bd0b-d83badb3c22a'`); borrar las variables sin uso `BACKEND_URL` y `BACKEND_BYPASS_SECRET` del proyecto frontend; borrar las ramas locales `backup/*`; BigQuery y Looker Studio.
 
 ### 2026-11-15 — Backend y frontend desplegados en Vercel
 

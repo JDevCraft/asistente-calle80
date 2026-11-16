@@ -96,7 +96,9 @@ Auditoría: en el frontend no debe haber `NVIDIA_API_KEY`, `GEMINI_API_KEY`, var
 3. Verificado el 2026-11-15 con `curl` contra el frontend: `/api/sample` (ruta rápida y camino de IA), `/api/encuesta`, 405 y 400, caché de Redis (`"cache":true`), y headers de seguridad en las respuestas de `/api`. Falta la prueba del cliente en el navegador.
 4. Equipo Hobby: Vercel solo despliega commits cuyo autor sea el dueño del equipo. Antes de commitear, configurar `git config user.email` con el email verificado de la cuenta de GitHub vinculada a Vercel. De lo contrario el deploy falla con `TEAM_ACCESS_REQUIRED`, también si se despliega con la CLI.
 
-## 7. Cuentas de tracking
+## 7. Cuentas de tracking (hecho el 2026-11-15)
+
+Los tres IDs ya están puestos en el código: GA4 `G-0YE9GH8L7X`, Clarity `zea1biij2f` y Sentry (proyecto `juan-moreno-4e/calle80-frontend`, región `us`). Un error de prueba llegó a Sentry. Pendiente: confirmar GA4 y Clarity en sus consolas, masking Strict en Clarity, Allowed Domains en Sentry, y revisar el plan de Sentry el 2026-11-28 (la prueba de Business vence; no agregar tarjeta, ver `EXECUTION.md`). Lo que sigue describe cómo se crearon.
 
 Estos tres IDs son públicos y se escriben en `frontend/public/index.html`, líneas 547-549, como constantes dentro de `initTracking()`:
 
