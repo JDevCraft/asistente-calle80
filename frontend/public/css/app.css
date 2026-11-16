@@ -331,20 +331,22 @@ footer{font-size:13px;color:var(--muted)}
 .ia-note .think-txt{font-weight:700}
 .ia-note:has(.status:empty){visibility:hidden}
 /* /UX-06 estado IA */
-/* UX-06 primera vista sin scroll (móvil): el mapa ocupa el espacio libre y el input queda siempre visible */
+/* UX-06 vista única sin scroll (móvil), también con resultado: el mapa ocupa el espacio libre y el input queda siempre visible */
 @media (max-width:760px){
-  body:has(#start:not(.has-res)){display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0}
-  body:has(#start:not(.has-res)) header.top,body:has(#start:not(.has-res)) .appbar{flex:none}
-  body:has(#start:not(.has-res)) .wrap{flex:1 1 auto;min-height:0;width:100%;padding-top:12px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));gap:0}
-  body:has(#start:not(.has-res)) #v-asistente{flex:1 1 auto;min-height:0;gap:0!important}
-  #start:not(.has-res){flex:1 1 auto;min-height:0;gap:8px}
-  #start:not(.has-res) .hero-bg{flex:1 1 0;min-height:140px;display:flex;flex-direction:column}
-  #start:not(.has-res) #rutaModal{flex:1 1 auto;min-height:0;gap:0}
-  #start:not(.has-res) .hero-bg .ruta-body{flex:1 1 auto;height:auto;min-height:0;aspect-ratio:auto}
-  #start:not(.has-res) .ask{flex:none}
-  #start:not(.has-res) .ask .askbox{margin-top:18px}
-  #start:not(.has-res) #result:empty{display:none}
-  #start:not(.has-res) #cont{background:#fff}
+  body:has(#start){display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0}
+  body:has(#start) header.top,body:has(#start) .appbar{flex:none}
+  body:has(#start) .wrap{flex:1 1 auto;min-height:0;width:100%;padding-top:12px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));gap:0}
+  body:has(#start) #v-asistente{flex:1 1 auto;min-height:0;gap:0!important}
+  #start{flex:1 1 auto;min-height:0;gap:8px}
+  #start .hero-bg{flex:1 1 0;min-height:140px;display:flex;flex-direction:column}
+  #start #rutaModal{flex:1 1 auto;min-height:0;gap:0}
+  #start .hero-bg .ruta-body{flex:1 1 auto;height:auto;min-height:0;aspect-ratio:auto}
+  #start .ask{flex:none}
+  #start .ask .askbox{margin-top:12px}
+  #start .ia-note:has(.status:empty){display:none}
+  #start .hero-bg .maphint{margin-top:4px;font-size:14px;line-height:18px}
+  #start #result:empty{display:none}
+  #start #cont{background:#fff}
 }
 /* /UX-06 primera vista */
 /* UX-06 micrófono siempre azul al presionar/grabar (sin estado rojo intermedio) */
@@ -388,7 +390,7 @@ footer{font-size:13px;color:var(--muted)}
 .maphint[hidden]{display:none}
 .maphint svg{width:20px;height:20px;flex:none;margin-top:1px}
 .maphint.ok{color:#0072ce}
-@media (max-width:760px){ #start:not(.has-res) .hero-bg .maphint{flex:none;max-height:7.5em;overflow:auto} }
+@media (max-width:760px){ #start .hero-bg .maphint{flex:none;max-height:7.5em;overflow:auto} }
 @media (prefers-reduced-motion:reduce){ .callout{transition:none} }
 .callouts.guiando .k-alt{opacity:0;pointer-events:none}
 /* Patio Constructor (ubicaciones P): la salida se dibuja como un lateral más (gris); solo se alumbra en amarillo cuando el resultado lleva al patio */
