@@ -68,3 +68,23 @@ test('cuerpo como texto JSON se interpreta igual; texto inválido → 200 sin co
   assert.strictEqual(r2.code, 200);
   assert.strictEqual(neon.length, 0);
 });
+
+test('{id, motivo, comentario} → 200 {} y un UPDATE de motivo con [motivo, comentario, id]', async () => {
+  const r = await run({ id: ID, motivo: 'otro', comentario: 'no había el modelo' });
+  assert.strictEqual(r.code, 200);
+  assert.deepStrictEqual(r.body, {});
+  assert.strictEqual(neon.length, 1);
+  assert.match(neon[0].query, /UPDATE busquedas SET motivo = \$1, comentario = \$2 WHERE id = \$3 AND util = false/);
+  assert.deepStrictEqual(neon[0].params, ['otro', 'no había el modelo', ID]);
+});
+test('motivo fuera de la lista, no texto, o sin id → 200 {} sin consultar Neon', async () => {
+  for (const body of [{ id: ID, motivo: 'hackeo' }, { id: ID, motivo: 5 }, { motivo: 'otro' }]) {
+    const r = await run(body);
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(neon.length, 0, JSON.stringify(body));
+  }
+});
+test('comentario de más de 140 caracteres se recorta', async () => {
+  await run({ id: ID, motivo: 'otro', comentario: 'y'.repeat(500) });
+  assert.strictEqual(neon[0].params[1].length, 140);
+});

@@ -12,12 +12,13 @@ let llamadas;
 const ok = () => ({ ok: true, status: 200, json: async () => ({ fields: [], rows: [] }), text: async () => '' });
 global.fetch = async (url, opts) => { llamadas.push({ url: String(url), opts }); return ok(); };
 const reset = () => { llamadas = []; };
-const { registrarBusqueda, registrarEncuesta } = require('../backend/api/_tracking');
+const { registrarBusqueda, registrarEncuesta, registrarMotivo } = require('../backend/api/_tracking');
 
 const ID = '3f1c2a4e-8b7d-4c6a-9e5f-1a2b3c4d5e6f';
+const SES = '7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
 const DATOS = {
   id: ID, texto: 'pintura para baño', canal: 'texto', resultado: 'modelo', proveedor: 'nvidia',
-  motivoRespaldo: null, tiempoRespuestaMs: 1234, ip: '1.2.3.4'
+  motivoRespaldo: null, tiempoRespuestaMs: 1234, sesionId: SES, ip: '1.2.3.4'
 };
 
 test('registrarBusqueda feliz: un INSERT parametrizado con los campos dados', async () => {
@@ -36,7 +37,8 @@ test('registrarBusqueda feliz: un INSERT parametrizado con los campos dados', as
   assert.match(body.query, /tiempo_respuesta_ms/);
   assert.ok(!body.query.includes('pintura'), 'el texto no debe interpolarse en el SQL');
   // El driver serializa los valores con prepareValue de pg: números → string, null → null.
-  assert.deepStrictEqual(body.params, [ID, 'pintura para baño', 'texto', 'modelo', 'nvidia', null, '1234']);
+  assert.match(body.query, /sesion_id/);
+  assert.deepStrictEqual(body.params, [ID, 'pintura para baño', 'texto', 'modelo', 'nvidia', null, '1234', SES]);
   assert.ok(!/\bip\b/.test(body.query), 'el INSERT no debe incluir la columna ip (privacidad)');
 });
 
@@ -44,7 +46,7 @@ test('registrarBusqueda: campos opcionales ausentes → NULL', async () => {
   reset();
   await registrarBusqueda({ id: ID, texto: 'x', canal: 'voz', resultado: 'error' });
   const body = JSON.parse(llamadas[0].opts.body);
-  assert.deepStrictEqual(body.params, [ID, 'x', 'voz', 'error', null, null, null]);
+  assert.deepStrictEqual(body.params, [ID, 'x', 'voz', 'error', null, null, null, null]);
 });
 
 test('registrarEncuesta feliz: un UPDATE parametrizado con [util, id]', async () => {
@@ -119,4 +121,35 @@ test('DATABASE_URL sirve de respaldo cuando falta POSTGRES_URL', async () => {
     process.env.POSTGRES_URL = 'postgresql://u:p@fake-neon.test/db';
     delete require.cache[require.resolve('../backend/api/_tracking')];
   }
+});
+
+test('registrarBusqueda: sesionId que no es UUID se guarda como NULL', async () => {
+  reset();
+  await registrarBusqueda({ id: ID, texto: 'x', canal: 'texto', resultado: 'indice', sesionId: 'no-es-uuid' });
+  assert.strictEqual(JSON.parse(llamadas[0].opts.body).params[7], null);
+});
+
+test('registrarMotivo feliz: UPDATE parametrizado solo sobre filas con util = false y sin motivo', async () => {
+  reset();
+  await registrarMotivo(ID, 'otro', '  no había el modelo  ');
+  assert.strictEqual(llamadas.length, 1);
+  const body = JSON.parse(llamadas[0].opts.body);
+  assert.match(body.query, /UPDATE busquedas SET motivo = \$1, comentario = \$2 WHERE id = \$3 AND util = false AND motivo IS NULL/);
+  assert.deepStrictEqual(body.params, ['otro', 'no había el modelo', ID]);
+});
+
+test('registrarMotivo: comentario se recorta a 140 y vacío → NULL', async () => {
+  reset();
+  await registrarMotivo(ID, 'otro', 'x'.repeat(300));
+  assert.strictEqual(JSON.parse(llamadas[0].opts.body).params[1].length, 140);
+  reset();
+  await registrarMotivo(ID, 'no_era', '   ');
+  assert.strictEqual(JSON.parse(llamadas[0].opts.body).params[1], null);
+});
+
+test('registrarMotivo: motivo fuera de la lista o id no-UUID → no consulta ni lanza', async () => {
+  reset();
+  await assert.doesNotReject(registrarMotivo(ID, 'hackeo', 'x'));
+  await assert.doesNotReject(registrarMotivo('no-es-uuid', 'otro', 'x'));
+  assert.strictEqual(llamadas.length, 0);
 });

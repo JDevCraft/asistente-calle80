@@ -1,4 +1,5 @@
 import { initTracking } from './tracking.js';
+import { normalizarPasillo } from './pasillo.js';
 
 // Segmentos del asistente (ai.json, generado desde el Excel). Los SKUs no se usan en el cliente.
 let AI;
@@ -26,7 +27,7 @@ function pretty(s){
 
 // ================= ASISTENTE DE NECESIDADES =================
 const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(name)}));
-const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null};
+const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',proxOrigen:''};
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -221,21 +222,96 @@ function pideCategoria(){
   const q=String(ru.consulta||(pr&&pr.titulo)||A.text||'').trim().replace(/[.?!¿¡]+/g,'').toLowerCase();
   return q&&q.length<=40?'Selecciona la categoría de '+q+' que buscas':'Selecciona la categoría que buscas';
 }
-// micro-encuesta: una sola vez por búsqueda, solo si la búsqueda se registró (hay id)
-function hideSurvey(){ const e=$('survey'); e.hidden=true; e.textContent=''; }
+// Id de sesión: UUID aleatorio en sessionStorage (dura lo que la pestaña; sin IP ni identidad). Solo agrupa búsquedas.
+// Si el almacenamiento falla, queda en memoria; si no hay crypto.randomUUID, null (el servidor guarda NULL).
+let SES=null;
+function sesionId(){
+  if(SES) return SES;
+  try{ SES=sessionStorage.getItem('sesionId'); }catch(e){}
+  if(!SES){ try{ SES=crypto.randomUUID(); }catch(e){ return null; } try{ sessionStorage.setItem('sesionId',SES); }catch(e){} }
+  return SES;
+}
+// micro-encuesta: una sola vez por búsqueda, solo si la búsqueda se registró (hay id). Pasos: ¿te ayudó? →
+// (si fue «No») motivo → «¿Necesitas algo más?». svTok invalida los temporizadores de una encuesta que ya se ocultó.
+let svTok=0;
+const MOTIVOS=[['no_era','No era lo que buscaba'],['no_encontre','No encontré el producto'],['ruta_confusa','La ruta no es clara'],['otro','Otro…']];
+function hideSurvey(){ svTok++; const e=$('survey'); e.hidden=true; e.textContent=''; }
+function svBtn(txt,fn){ const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.addEventListener('click',fn); return b; }
+function postEncuesta(cuerpo){ fetch('/api/encuesta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cuerpo)}).catch(()=>{}); }
 function showSurvey(){
-  if(!A.lastSearchId) return;
-  const e=$('survey'); e.textContent='';
-  const q=document.createElement('span'); q.className='sv-q'; q.textContent='¿Esto te ayudó?';
-  const mk=(t,v)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t; b.addEventListener('click',()=>sendSurvey(v)); return b; };
-  e.append(q,mk('Sí',true),mk('No',false)); e.hidden=false;
+  if(!A.lastSearchId){ showContinuar(); return; } // sin registro no hay encuesta, pero sí la invitación a seguir
+  const e=$('survey'); e.textContent=''; svTok++;
+  e.append(el('span','sv-q','¿Esto te ayudó?'),svBtn('Sí',()=>sendSurvey(true)),svBtn('No',()=>sendSurvey(false))); e.hidden=false;
 }
 function sendSurvey(util){
-  if(!A.lastSearchId) return;
-  fetch('/api/encuesta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:A.lastSearchId,util:util===true})}).catch(()=>{});
-  if(window.gtag) gtag('event','survey_response',{util:util===true});
-  A.lastSearchId=null;
-  const e=$('survey'); e.textContent='¡Gracias!'; setTimeout(()=>{ if(!A.lastSearchId) hideSurvey(); },1500);
+  const id=A.lastSearchId; if(!id) return;
+  A.lastSearchId=null; // una sola respuesta por búsqueda
+  postEncuesta({id,util:util===true});
+  if(window.gtag) gtag('event','survey_response',{util:util===true,sesion_id:sesionId()});
+  if(util===true) showContinuar(); else showMotivos(id);
+}
+// Tras un «No»: motivo de un toque; «Otro» abre un campo opcional de 140 caracteres. Sin respuesta en 8 s pasa al siguiente paso.
+function showMotivos(id){
+  const e=$('survey'), tk=++svTok; e.textContent='';
+  const enviar=(motivo,comentario)=>{ postEncuesta(comentario?{id,motivo,comentario}:{id,motivo}); showContinuar(); };
+  e.append(el('span','sv-q','¿Qué pasó?'));
+  const t=setTimeout(()=>{ if(tk===svTok) showContinuar(); },8000);
+  MOTIVOS.forEach(([cod,txt])=>e.append(svBtn(txt,()=>{
+    clearTimeout(t);
+    if(cod!=='otro'){ enviar(cod); return; }
+    e.textContent='';
+    const inp=document.createElement('input'); inp.type='text'; inp.maxLength=140; inp.className='sv-in'; inp.placeholder='Cuéntanos qué pasó'; inp.setAttribute('aria-label','Cuéntanos qué pasó'); inp.setAttribute('data-clarity-mask','True');
+    const ok=()=>enviar('otro',inp.value.trim());
+    inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') ok(); });
+    e.append(inp,svBtn('Enviar',ok)); inp.focus({preventScroll:true});
+  })));
+  e.hidden=false;
+}
+// Cierre: invita a seguir. No se asume que el cliente llegó al pasillo del destino (no hay check-in real): si quiere
+// seguir, se le pregunta en qué pasillo está y la próxima ruta se calcula desde ahí. La respuesta vale solo para la
+// próxima búsqueda (ask() la activa) y nunca se aplica por defecto.
+function showContinuar(){
+  const e=$('survey'), tk=++svTok; e.textContent='';
+  const seguir=origen=>{ A.proxOrigen=origen; hideSurvey(); try{ $('need').focus({preventScroll:true}); }catch(_){} };
+  e.append(el('span','sv-q','¿Necesitas algo más?'));
+  e.append(svBtn('Buscar otra cosa',()=>{ svTok++; preguntarPasillo(seguir); }));
+  e.hidden=false;
+  setTimeout(()=>{ if(tk===svTok) hideSurvey(); },8000);
+}
+// Segundo paso: ¿en qué pasillo estás? Texto o voz. La voz solo transcribe en el campo; el cliente revisa y envía.
+function preguntarPasillo(seguir){
+  const e=$('survey'); e.textContent='';
+  const ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
+  e.append(el('span','sv-q','¿En qué pasillo estás?'));
+  const inp=document.createElement('input'); inp.type='text'; inp.maxLength=30; inp.className='sv-in'; inp.placeholder='Ej. 13B'; inp.setAttribute('aria-label','Número del pasillo donde estás'); inp.setAttribute('data-clarity-mask','True');
+  const err=el('span','sv-err'); err.setAttribute('role','alert');
+  const ok=()=>{
+    const r=normalizarPasillo(inp.value,ids);
+    if(r.id){ seguir(r.id); return; }
+    err.textContent=r.error==='ambiguo'?'¿Cuál de estos? '+r.opciones.join(', ')+'. Escribe el número con la letra.'
+      :r.error==='vacio'?'Escribe el número del pasillo, como aparece en el letrero.'
+      :'No encuentro ese pasillo. Escríbelo como aparece en el letrero, por ejemplo 13B.';
+    inp.focus();
+  };
+  inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') ok(); });
+  e.append(inp);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){
+    let rec=null;
+    const mic=svBtn('🎤 Dictar',()=>{
+      if(rec){ rec.stop(); return; }
+      rec=new SR(); rec.lang='es-CO'; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+      mic.textContent='Escuchando…'; err.textContent='';
+      rec.onresult=ev=>{ inp.value=[...ev.results].map(r=>r[0].transcript).join(' ').trim(); };
+      rec.onerror=()=>{ err.textContent='No pude escucharte. Escribe el número del pasillo.'; };
+      rec.onend=()=>{ rec=null; mic.textContent='🎤 Dictar'; inp.focus(); };
+      try{ rec.start(); }catch(_){ rec=null; mic.textContent='🎤 Dictar'; }
+    });
+    mic.setAttribute('aria-label','Dictar el número del pasillo');
+    e.append(mic);
+  }
+  e.append(svBtn('Usar este pasillo',ok),svBtn('Estoy en la entrada',()=>seguir('')),err);
+  e.hidden=false; inp.focus({preventScroll:true});
 }
 function renderPlan(){
   hideRoute();
@@ -262,7 +338,7 @@ function renderPlan(){
     hint(pideCategoria()+fueraTxt(fuera),'info');
   } else if(ru.decision==='directo'||sel){
     // una vez por búsqueda (renderPlan se repite al refinar, cargar recetas o elegir); Tarea 8 reutiliza A.rutaVista
-    if(!A.rutaVista){ A.rutaVista=true; if(window.gtag) gtag('event','route_view',{}); }
+    if(!A.rutaVista){ A.rutaVista=true; if(window.gtag) gtag('event','route_view',{sesion_id:sesionId()}); }
     const d=sel||ds[0], otros=enMapa.filter(x=>x!==d);
     if(rutaAisle(d)){
       openDest(d,null);
@@ -393,7 +469,7 @@ async function guided(){
   cancelAnimationFrame(R.anim);
   const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
-  caption('Así llegas a tu producto desde la entrada.');
+  caption('Así llegas a tu producto '+(R.origenTxt||'desde la entrada')+'.');
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
   // 1) acercamiento al pasillo de destino (velocidad normal, con pausa para leer la etiqueta); 2) traslado al punto de partida; 3) recorrido a 1.5x
   await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(R.L)),W),1300,tk,easeOut); if(tk!==R.token) return;
@@ -445,7 +521,11 @@ function openRoute(s,aisle,btn,dest){
   $('rutaProducto').textContent=s.d+(s.sku?' · SKU '+s.sku:'');
   window.ultimaRuta=null; R.marker=null; R.trail=null; R.len=0; R.paso=-1;
   clearDest();
-  const sel=$('destino'); sel.value=aisle; $('desde').value=''; if(sel.onchange) sel.onchange();
+  // Origen: solo si el cliente eligió «desde donde estoy» y ese pasillo existe en el select y no es el destino; si no, la entrada.
+  let des=A.origen&&A.origen!==aisle?A.origen:''; $('desde').value=des; if($('desde').value!==des) des='';
+  const nom=dest&&dest.lugar?'el '+dest.lugar.toLowerCase()+' '+dest.rango:'el pasillo '+aisle.toUpperCase();
+  R.origenTxt=des?'desde el pasillo '+des.toUpperCase():'desde la entrada';
+  const sel=$('destino'); sel.value=aisle; if(sel.onchange) sel.onchange();
   const r=window.ultimaRuta, ol=$('rutaPasos'); ol.innerHTML=''; caption('');
   if(!r||r.destino!==aisle){
     R.ruta=null; ol.appendChild(el('li',null,'No pudimos trazar la ruta a este pasillo. Pide ayuda a un asesor de la tienda.'));
@@ -453,7 +533,8 @@ function openRoute(s,aisle,btn,dest){
   } else {
     R.ruta=r; R.fit=STORE.slice(); setVB(R.fit); styleRoute(r);
     if(dest) paint(dest.pasillos.map(x=>x.toLowerCase()).filter(x=>MAPIDS.has(x)&&x!==aisle),'dest');
-    R.pasos=['Empiezas en la entrada principal.',...r.instrucciones];
+    // El motor genera giro por giro desde la entrada y desde cualquier pasillo; el primer paso nombra el origen.
+    R.pasos=[des?'Empiezas en el pasillo '+des.toUpperCase()+'.':'Empiezas en la entrada principal.',...r.instrucciones];
     R.dist=[0,...(r.tramos||[]).slice(0,r.instrucciones.length)];
     while(R.dist.length<R.pasos.length) R.dist.push(r.largo);
     R.pasos.forEach((t,i)=>{ const li=el('li',null,t); li.onclick=()=>goStep(i); ol.appendChild(li); });
@@ -481,8 +562,9 @@ async function ask(){
   const text=A.text.trim(); if(!text) { setStatus('Escribe primero qué necesitas.',true); return; }
   if(!sampleFn){ setStatus('La búsqueda con IA no está disponible en este momento.',true); return; }
   A.busy=true; $('askBtn').disabled=true; $('stopBtn').hidden=false;
-  if(window.gtag) gtag('event','search_submit',{canal:window.__canalBusqueda||'texto'});
+  if(window.gtag) gtag('event','search_submit',{canal:window.__canalBusqueda||'texto',sesion_id:sesionId()});
   hideSurvey(); A.lastSearchId=null; // un aviso viejo nunca puede responder a otra búsqueda
+  A.origen=A.proxOrigen; A.proxOrigen=''; // «desde donde estoy» vale solo para esta búsqueda
   hideRoute(); hint(''); // búsqueda nueva: fuera la ruta y las etiquetas de la anterior
   const t0=Date.now(); let ti=0; setStatus(THINK[0],false,true);
   timer=setInterval(()=>{ ti=Math.min(ti+1,THINK.length-1); const tx=document.querySelector('#aiStatus .think-txt'); if(tx) tx.textContent=THINK[ti]; },2600);
@@ -500,7 +582,7 @@ async function ask(){
     A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null; renderPlan();
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
     const dt=Date.now()-t0;
-    if(window.gtag) gtag('event','search_result',{resultado:A.ruta&&A.ruta.respaldo?'respaldo':(A.ruta&&A.ruta.fuente==='indice'?'indice':'modelo'),canal:window.__canalBusqueda||'texto',ms:dt});
+    if(window.gtag) gtag('event','search_result',{resultado:A.ruta&&A.ruta.respaldo?'respaldo':(A.ruta&&A.ruta.fuente==='indice'?'indice':'modelo'),canal:window.__canalBusqueda||'texto',ms:dt,sesion_id:sesionId()});
     // UX-07: el resultado se explica en la línea bajo el mapa; si respondió el índice porque la IA no pudo, se avisa
     if(ok&&A.ruta&&A.ruta.respaldo) setStatus('El asistente no pudo armar recomendaciones ahora; te mostramos dónde está «'+(A.ruta.consulta||text)+'».');
     else setStatus(ok?'':'No encontramos productos de la tienda para esta necesidad.');
@@ -509,7 +591,7 @@ async function ask(){
   }catch(e){
     if(e&&e.code==='cancelled') setStatus('Consulta detenida.');
     else {
-      if(window.gtag) gtag('event','search_result',{resultado:'error',canal:window.__canalBusqueda||'texto',ms:Date.now()-t0}); const m=ERR[e&&e.code]||'No se pudo completar la consulta.'+SUGERIR; if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')){ setStatus(m,true); sampleFn=null; } else setError(m); }
+      if(window.gtag) gtag('event','search_result',{resultado:'error',canal:window.__canalBusqueda||'texto',ms:Date.now()-t0,sesion_id:sesionId()}); const m=ERR[e&&e.code]||'No se pudo completar la consulta.'+SUGERIR; if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')){ setStatus(m,true); sampleFn=null; } else setError(m); }
   }finally{ clearInterval(timer); A.busy=false; $('askBtn').disabled=false; $('stopBtn').hidden=true; }
 }
 // Canal de la búsqueda para el registro: 'voz' solo si este clic lo disparó el dictado (submit() del micrófono
@@ -684,7 +766,7 @@ $('stopBtn').onclick=()=>ctl&&ctl.abort();
 sampleFn={ async json(opts){
   // límite de 55 s por consulta (la función del servidor corta a los 60 s)
   const lim=new AbortController(), tl=setTimeout(()=>lim.abort(),55000), sg=opts&&opts.signal; if(sg) sg.addEventListener('abort',()=>lim.abort(),{once:true});
-  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers,canal:window.__canalBusqueda||'texto'}),signal:lim.signal}); }
+  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers,canal:window.__canalBusqueda||'texto',sesionId:sesionId()}),signal:lim.signal}); }
   catch(e){ throw {code:(sg&&sg.aborted)?'cancelled':(e&&e.name==='AbortError')?'timeout':'network'}; }
   finally{ clearTimeout(tl); }
   let j=null; try{ j=await r.json(); }catch(e){}

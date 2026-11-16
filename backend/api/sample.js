@@ -6,7 +6,7 @@ const { CATALOG, ESPS } = require('./_catalog');
 const { rapido, desdeSegmentos, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
 const { limitado, cacheGet, cacheSet } = require('./_estado');
-const { registrarBusqueda } = require('./_tracking');
+const { registrarBusqueda, UUID_RE } = require('./_tracking');
 const { randomUUID } = require('crypto');
 
 // Varias claves por proveedor, separadas por coma en la misma variable (NVIDIA_API_KEY=nvapi-a,nvapi-b). Se usa la primera;
@@ -146,6 +146,8 @@ module.exports = async (req, res) => {
   // Canal de entrada (voz/texto) y exclusión voluntaria del registro (barra de consentimiento del navegador)
   const canal = body.canal === 'voz' ? 'voz' : 'texto';
   const rechazado = !!body.rechazado;
+  // Id de sesión del navegador (UUID aleatorio, solo agrupa búsquedas): si no es un UUID válido se guarda NULL, nunca se rechaza la búsqueda
+  const sesionId = typeof body.sesionId === 'string' && UUID_RE.test(body.sesionId) ? body.sesionId : null;
   const answers = (Array.isArray(body.answers) ? body.answers : []).slice(0, MAX_ANSWERS)
     .map(a => ({ q: String((a && a.q) || '').slice(0, MAX_ANSWER_LEN), a: String((a && a.a) || '').slice(0, MAX_ANSWER_LEN) }))
     .filter(a => a.q && a.a);
@@ -155,7 +157,7 @@ module.exports = async (req, res) => {
   // Único punto de registro de la búsqueda. Se espera (await) antes de cada respuesta: en Vercel una promesa
   // pendiente después de res.json() puede congelarse con la instancia y perder la fila. registrarBusqueda nunca
   // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
-  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
+  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, sesionId, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
   const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
   if (!answers.length) {
     const r = rapido(text);
