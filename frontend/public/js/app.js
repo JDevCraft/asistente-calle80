@@ -273,7 +273,13 @@ function preguntarInicio(prod){
   return new Promise(res=>{
     const d=$('inicioModal'), inp=$('inicioPasillo'), err=$('inicioErr'), ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
     inp.value=''; err.textContent=''; $('inicioProd').textContent=prod;
-    const fin=v=>{ d.onclose=null; if(d.open) d.close(); res(v); };
+    // El teclado móvil achica el viewport visual pero no el de diseño: se centra el modal en el área visible.
+    const vv=window.visualViewport, fit=()=>{
+      if(!vv) return; d.style.maxHeight=(vv.height-16)+'px'; d.style.bottom='auto'; d.style.marginBlock='0';
+      d.style.top=Math.max(8,vv.offsetTop+(vv.height-d.offsetHeight)/2)+'px';
+    };
+    if(vv){ vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit); }
+    const fin=v=>{ d.onclose=null; if(vv){ vv.removeEventListener('resize',fit); vv.removeEventListener('scroll',fit); } d.style.cssText=''; if(d.open) d.close(); res(v); };
     inp.oninput=()=>{ err.textContent=''; };
     const ok=()=>{
       const r=normalizarPasillo(inp.value,ids);
@@ -288,7 +294,7 @@ function preguntarInicio(prod){
     $('inicioEntrada').onclick=()=>fin('');
     $('inicioNo').onclick=()=>fin(null);
     d.onclose=()=>fin(null); // Esc
-    d.showModal();
+    d.showModal(); fit();
   });
 }
 function renderPlan(){

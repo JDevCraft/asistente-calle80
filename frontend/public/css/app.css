@@ -402,7 +402,7 @@ footer{font-size:13px;color:var(--muted)}
 
 /* modal de punto de partida */
 #inicioModal{border:0;border-radius:16px;padding:22px 20px 14px;width:min(92vw,380px);box-shadow:0 12px 40px rgba(0,0,0,.28);color:var(--ink);background:#fff}
-#inicioModal[open]{display:flex;flex-direction:column}
+#inicioModal[open]{display:flex;flex-direction:column;overflow-y:auto}
 #inicioModal::backdrop{background:rgba(0,30,70,.45)}
 #inicioModal h2{margin:0 0 10px;font-size:22px;line-height:1.2;color:#003b6f}
 #inicioModal .sub{margin:0 0 14px;font-size:15px;line-height:1.4}
