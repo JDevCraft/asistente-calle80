@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=5">
+<link rel="stylesheet" href="css/app.css?v=6">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -42,6 +42,7 @@
         </div>
         </div></div>
       </div>
+      <div id="survey" role="status" hidden></div>
       <p class="heard" id="heard" hidden></p>
     </section>
     <div id="result"></div>
@@ -57,7 +58,6 @@
         <div id="cont">
           <svg id="mapa" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de la tienda con la ruta al pasillo"></svg>
           <div class="callouts" id="callouts" role="group" aria-label="Opciones en el mapa"></div>
-          <div id="survey" role="status" hidden></div>
         </div>
       </div>
       <div hidden><p id="rutaCaption"></p><button id="rutaPlay" type="button"></button><p id="rutaProg"></p><button id="rutaPrev" type="button"></button><button id="rutaNext" type="button"></button><button id="verTodo" type="button"></button><ol id="rutaPasos"></ol><select id="destino"><option value="">—</option></select><select id="desde"><option value="">Entrada</option></select><div id="info"></div></div>
