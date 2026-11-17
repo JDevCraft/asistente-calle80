@@ -11,6 +11,10 @@ const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 // ---------- presentación de nombres ----------
 const FIX={BANO:'BAÑO',BANOS:'BAÑOS',NINO:'NIÑO',NINOS:'NIÑOS',PANOS:'PAÑOS',PANO:'PAÑO',DISENO:'DISEÑO',DISENOS:'DISEÑOS',PEQUENAS:'PEQUEÑAS',PEQUENOS:'PEQUEÑOS',TAMANOS:'TAMAÑOS',SENAL:'SEÑAL',ANO:'AÑO',ALGODON:'ALGODÓN',SINTETICOS:'SINTÉTICOS',SINTETICO:'SINTÉTICO',DECORACION:'DECORACIÓN',BASICOS:'BÁSICOS',QUIMICOS:'QUÍMICOS',ORGANIZACION:'ORGANIZACIÓN',ILUMINACION:'ILUMINACIÓN',HIGIENICO:'HIGIÉNICO',ELECTRICOS:'ELÉCTRICOS',ELECTRICAS:'ELÉCTRICAS',PLASTICOS:'PLÁSTICOS',PLASTICO:'PLÁSTICO',METALICOS:'METÁLICOS',CERAMICA:'CERÁMICA',ACCS:'ACCS.',MENSULAS:'MÉNSULAS',FERRETERIA:'FERRETERÍA',JARDIN:'JARDÍN',PLOMERIA:'PLOMERÍA',GASFITERIA:'GASFITERÍA',AUTOMOVILES:'AUTOMÓVILES',ENTRETENCION:'ENTRETENCIÓN',CAMPANA:'CAMPANA'};
 const SMALL=new Set(['de','del','la','el','los','las','y','o','a','en','para','con','sin','por']);
+// Nombres cortos y claros de cada grupo del catálogo (data/nombres_cortos.json, editable); sin la tabla se usa el nombre crudo
+let CORTOS={};
+fetch('data/nombres_cortos.json').then(r=>r.ok?r.json():{}).then(j=>{ CORTOS=j||{}; }).catch(()=>{});
+function corto(c){ return CORTOS[String(c).trim()]||pretty(String(c)); }
 function pretty(s){
   return s.split(/(\s+|\/|-)/).map(w=>{
     if(!/[A-Z]/.test(w)) return w;
@@ -132,8 +136,9 @@ function subDe(d,pares){
   if(us.filter(v=>v===mio).length===1&&mio.toLowerCase()!==zona.toLowerCase()) return mio;
   const nk=c=>norm(String(c)).replace(/PULG(ADAS?)?|["”]/g,'').replace(/[^A-Z0-9]+/g,'');
   const propio=y=>{ const otros=new Set(pares.filter(z=>z!==y).flatMap(z=>(z.conjuntos||[]).map(nk)));
-    const c=(y.conjuntos||[]).find(c=>!/^OTROS?$/i.test(String(c).trim())&&!otros.has(nk(c))); return c?pretty(String(c)):''; };
+    const c=(y.conjuntos||[]).find(c=>!/^OTROS?$/i.test(String(c).trim())&&!otros.has(nk(c))); return c?corto(c):''; };
   let t=propio(d); if(!t) return '';
+  if(Object.keys(CORTOS).length) return t; // el nombre corto ya es claro: no se recorta
   const ws=t.split(/\s+/), resto=pares.filter(y=>y!==d).map(propio).filter(Boolean).map(v=>v.split(/\s+/));
   let k=0; for(const o of resto){ let n=0; while(n<ws.length-1&&n<o.length&&ws[n].toLowerCase()===o[n].toLowerCase()) n++; k=Math.max(k,n); }
   // sin recortar si lo que queda empieza por un conector ("Y Pedestales…", "De colgar…")
