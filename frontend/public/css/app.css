@@ -451,35 +451,3 @@ footer{font-size:13px;color:var(--muted)}
 .maphint.pregunta svg{display:none}
 .maphint.pregunta span::first-line{font-weight:900;font-size:20px;line-height:26px;color:#1a1a1a}
 .chips-nota{flex:1 1 100%;margin:2px 0 0;font:400 13px/18px var(--body);color:#767676}
-/* VISTA C · CONVERSACIÓN (móvil, con resultado): burbuja del cliente → burbuja del asistente (mensaje + chips) → mapa en tarjeta → buscador abajo */
-.yo{display:none}
-@media (max-width:760px){
-  body:has(#start.has-res),body:has(#start.has-res) .wrap{background:#f6f7f9}
-  #start.has-res .hero-bg .yo:not(.vacio){display:block;order:-3;align-self:flex-end;max-width:75%;margin:8px 16px 10px;padding:10px 14px;background:#0072ce;color:#fff;border-radius:16px 16px 4px 16px;font:400 16px/22px var(--body);overflow-wrap:anywhere}
-  #start.has-res .hero-bg .maphint{order:-2;margin:0 32px 0 16px;padding:14px 14px 10px;background:#fff;border:1px solid #e3e7ec;border-bottom:0;border-radius:16px 16px 0 0;font-size:16px;line-height:22px;color:#333}
-  #start.has-res .hero-bg .maphint:has(+ .chips.vacio){border-bottom:1px solid #e3e7ec;border-radius:16px 16px 16px 4px;margin-bottom:12px}
-  #start.has-res .hero-bg .maphint.vacio{padding:0;border:0;margin:0}
-  #start.has-res .hero-bg .chips{order:-1;margin:0 32px 12px 16px;padding:0 14px 14px;background:#fff;border:1px solid #e3e7ec;border-top:0;border-radius:0 0 16px 4px}
-  #start.has-res .hero-bg .chips.vacio{padding:0;border:0;margin:0}
-  #start.has-res .chip{background:#fff;color:#0072ce;border:1px solid #0072ce;box-shadow:none}
-  #start.has-res .chip:hover{background:#f3f8fd}
-  #start.has-res #rutaModal{margin:0 16px;padding:10px;background:#fff;border:1px solid #e3e7ec;border-radius:12px;box-sizing:border-box}
-  #start.has-res .hero-bg .ruta-body{border:1px solid #e3e7ec;border-radius:8px}
-}
-/* VISTA C · buscador compacto (móvil, todas las vistas): campo redondeado + micrófono + lupa, en una franja blanca */
-@media (max-width:760px){
-  #start .ask{margin:0 -16px -8px;padding:10px 16px 16px;background:#fff;border-top:1px solid #e3e7ec}
-  #start .ask .askbox{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;min-height:0;margin-top:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
-  #start .ask .askbox:focus-within{box-shadow:none}
-  #start .askbox .fl{display:none}
-  #start .askbox #need{flex:1 1 auto;width:auto;min-width:0;height:48px;min-height:48px;max-height:48px;box-sizing:border-box;padding:13px 16px;border:1px solid #767676;border-radius:24px;background:#fff;font:400 16px/20px var(--body);resize:none;overflow-y:auto}
-  #start .askbox #need:focus{outline:none;border-color:#0072ce;box-shadow:0 0 0 1px #0072ce}
-  #start .askbox .row{flex:none;gap:8px}
-  #start .askbox .mic{width:48px;height:48px;border:1px solid #e3e7ec;box-shadow:none}
-  #start .askbox .mic svg{width:20px;height:20px}
-  #start .askbox .actions .primary{width:48px;height:48px;padding:0;border-radius:50%;justify-content:center;font-size:0}
-  #start .askbox .primary svg{display:block;width:20px;height:20px}
-  #start .ask .askbox.listening{flex-wrap:wrap}
-  #start .askbox.listening #need{flex-basis:100%}
-  #start .askbox.listening .row{flex:1 1 100%}
-}

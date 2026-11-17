@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=27">
+<link rel="stylesheet" href="css/app.css?v=24">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -34,7 +34,7 @@
       <h1>¿Qué estás buscando?</h1>
       <p class="ia-note"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4.2l1.3 3.6 3.6 1.3-3.6 1.3L8 14l-1.3-3.6L3.1 9.1l3.6-1.3z" fill="#0072ce"/><path d="M15.2 1.7l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="#0072ce"/><path d="M15 13l.5 1.4 1.4.5-1.4.5L15 16.8l-.5-1.4-1.4-.5 1.4-.5z" fill="#a6a6a6"/></svg><span class="status" id="aiStatus" role="status"></span></p>
       <div class="askbox"><label class="fl" for="need">¿Qué estás buscando?</label><svg class="spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.300 1.700L12 18l-2.200-6.300L3.500 10l6.300-1.700z"/><path d="M19 15l.9 2.600 2.600.9-2.600.9L19 22l-.9-2.600-2.600-.9 2.600-.9z"/></svg>
-        <textarea id="need" rows="2" data-clarity-unmask="True" aria-label="Describe tu necesidad" placeholder="¿Qué estás buscando?"></textarea>
+        <textarea id="need" rows="2" data-clarity-unmask="True" aria-label="Describe tu necesidad" placeholder="Escribe el producto que deseas encontrar en tienda"></textarea>
         <div class="row"><button class="qa x lst" id="micCancel" type="button" aria-label="Cancelar dictado" title="Cancelar dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button><span class="hold-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>Desliza para cancelar</span><span class="wave lst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><div class="grp"><button class="qa sq lst" id="micStop" type="button" aria-label="Detener dictado" title="Detener dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg></button><button class="mic" id="micBtn" type="button" aria-label="Dictar con la voz" title="Dictar con la voz" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
         <div class="actions">
           <button class="ghost" id="stopBtn" type="button" hidden>Detener</button>
@@ -48,7 +48,6 @@
     <div id="result"></div>
     <!-- TODO(Task 10): copy NOT legally reviewed (Ley 1581 de 2012, habeas data). Must not ship to real beta traffic unchanged without business/legal sign-off. -->
     <div class="hero-bg">
-    <p class="yo vacio" id="tuConsulta"></p>
 
     <section class="ruta idle" id="rutaModal" aria-labelledby="rutaTitulo">
       <div class="ruta-top">
