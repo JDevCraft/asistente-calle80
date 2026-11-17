@@ -468,7 +468,7 @@ async function guided(){
       if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); });
   if(tk!==R.token) return;
   setPaso(R.pasos.length-1);
-  if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
+  // ENCUESTA DESACTIVADA mientras se rediseña: if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
   await wait(900/V); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
   endGuide();
