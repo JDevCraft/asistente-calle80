@@ -466,20 +466,20 @@ footer{font-size:13px;color:var(--muted)}
   #start.has-res #rutaModal{margin:0 16px;padding:10px;background:#fff;border:1px solid #e3e7ec;border-radius:12px;box-sizing:border-box}
   #start.has-res .hero-bg .ruta-body{border:1px solid #e3e7ec;border-radius:8px}
 }
-/* VISTA C · buscador compacto (móvil, con resultado): campo redondeado + micrófono + lupa, en una franja blanca */
+/* VISTA C · buscador compacto (móvil, todas las vistas): campo redondeado + micrófono + lupa, en una franja blanca */
 @media (max-width:760px){
-  #start.has-res .ask{margin:0 -16px -8px;padding:10px 16px 16px;background:#fff;border-top:1px solid #e3e7ec}
-  #start.has-res .ask .askbox{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;min-height:0;margin-top:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
-  #start.has-res .ask .askbox:focus-within{box-shadow:none}
-  #start.has-res .askbox .fl{display:none}
-  #start.has-res .askbox #need{flex:1 1 auto;width:auto;min-width:0;height:48px;min-height:48px;max-height:48px;box-sizing:border-box;padding:13px 16px;border:1px solid #767676;border-radius:24px;background:#fff;font:400 16px/20px var(--body);resize:none;overflow-y:auto}
-  #start.has-res .askbox #need:focus{outline:none;border-color:#0072ce;box-shadow:0 0 0 1px #0072ce}
-  #start.has-res .askbox .row{flex:none;gap:8px}
-  #start.has-res .askbox .mic{width:48px;height:48px;border:1px solid #e3e7ec;box-shadow:none}
-  #start.has-res .askbox .mic svg{width:20px;height:20px}
-  #start.has-res .askbox .actions .primary{width:48px;height:48px;padding:0;border-radius:50%;justify-content:center;font-size:0}
-  #start.has-res .askbox .primary svg{display:block;width:20px;height:20px}
-  #start.has-res .ask .askbox.listening{flex-wrap:wrap}
-  #start.has-res .askbox.listening #need{flex-basis:100%}
-  #start.has-res .askbox.listening .row{flex:1 1 100%}
+  #start .ask{margin:0 -16px -8px;padding:10px 16px 16px;background:#fff;border-top:1px solid #e3e7ec}
+  #start .ask .askbox{flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;min-height:0;margin-top:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+  #start .ask .askbox:focus-within{box-shadow:none}
+  #start .askbox .fl{display:none}
+  #start .askbox #need{flex:1 1 auto;width:auto;min-width:0;height:48px;min-height:48px;max-height:48px;box-sizing:border-box;padding:13px 16px;border:1px solid #767676;border-radius:24px;background:#fff;font:400 16px/20px var(--body);resize:none;overflow-y:auto}
+  #start .askbox #need:focus{outline:none;border-color:#0072ce;box-shadow:0 0 0 1px #0072ce}
+  #start .askbox .row{flex:none;gap:8px}
+  #start .askbox .mic{width:48px;height:48px;border:1px solid #e3e7ec;box-shadow:none}
+  #start .askbox .mic svg{width:20px;height:20px}
+  #start .askbox .actions .primary{width:48px;height:48px;padding:0;border-radius:50%;justify-content:center;font-size:0}
+  #start .askbox .primary svg{display:block;width:20px;height:20px}
+  #start .ask .askbox.listening{flex-wrap:wrap}
+  #start .askbox.listening #need{flex-basis:100%}
+  #start .askbox.listening .row{flex:1 1 100%}
 }
