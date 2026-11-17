@@ -146,6 +146,7 @@ function etiquetaInfo(d){
   return {nombre,rep,txt:(rep?subDe(d,pares):'')||nombre};
 }
 function drawCallouts(items,here){
+  const chips=$('chips'), chipsNuevos=[], vistos=new Set();
   const c=$('callouts');
   // de varias categorías a una: las demás etiquetas se desvanecen y la elegida no vuelve a aparecer con fade
   // renderPlan vacía las etiquetas justo antes de dibujar: se usan las que clearCallouts apartó hace un instante
@@ -168,9 +169,15 @@ function drawCallouts(items,here){
     if(x.kind==='sel') b.setAttribute('aria-pressed','true');
     else b.onclick=()=>{ A.sel=x.d.id; renderPlan(); };
     if(eligiendo) b.classList.add('sigue');
+    // chip tocable con el mismo texto, ícono y acción que la etiqueta del mapa
+    if(x.kind==='opt'&&!vistos.has(txt)){ vistos.add(txt); const ch=b.cloneNode(true); ch.className='chip'; ch.onclick=b.onclick; chipsNuevos.push(ch); }
     c.appendChild(b);
   });
   if(here){ const h=el('span','aqui','Tú estás aquí'); c.appendChild(h); }
+  // chips: solo con 2 o más categorías distintas por elegir; al elegir una se pliegan y luego se vacían
+  clearTimeout(MAPA.chT);
+  if(chipsNuevos.length>1){ chips.replaceChildren(...chipsNuevos); chips.classList.remove('vacio'); }
+  else { chips.classList.add('vacio'); MAPA.chT=setTimeout(()=>chips.replaceChildren(),600); }
   layoutCallouts();
 }
 function layoutCallouts(){
@@ -229,6 +236,9 @@ function pideCategoria(){
   const ru=A.ruta||{}, p=A.plan, gs=(p&&p.grupos)||[];
   const pr=gs.find(g=>/^principal/i.test(String(g.rol||'')))||gs[0];
   const q=String(ru.consulta||(pr&&pr.titulo)||A.text||'').trim().replace(/[.?!¿¡]+/g,'').toLowerCase();
+  // varias categorías por elegir: se dice qué buscó y cuántas categorías se ofrecen (los chips bajo el mapa las listan)
+  const n=new Set(MAPA.items.filter(x=>x.kind==='opt').map(x=>etiquetaInfo(x.d).txt)).size;
+  if(n>1&&q&&q.length<=40) return 'Buscaste «'+q+'»: tenemos '+n+' categorías para ti. Toca una para ver cómo llegar.';
   return q&&q.length<=40?'Selecciona la categoría de '+q+' que buscas':'Selecciona la categoría que buscas';
 }
 // Id de sesión: UUID aleatorio en sessionStorage (dura lo que la pestaña; sin IP ni identidad). Solo agrupa búsquedas.
