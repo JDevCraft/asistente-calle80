@@ -121,7 +121,7 @@ function hint(txt,tipo){
   h.querySelector('.i-info').style.display=tipo==='ok'?'none':'';
   h.querySelector('.i-ia').style.display=tipo==='ok'?'':'none';
 }
-function clearCallouts(){ const c=$('callouts'); if(c){ c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
+function clearCallouts(){ const c=$('callouts'); if(c){ MAPA.prev=[...c.querySelectorAll('.callout:not(.saliendo)')]; MAPA.prevT=performance.now(); c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
 // items: [{d, kind:'opt'|'sel'|'alt'}]
 // Subcategoría para distinguir opciones de la misma zona: el uso (Sala, Baño…) o, si el uso coincide,
 // el grupo de productos que solo tiene esa opción, sin las palabras que comparte con las demás (Madera / Resina)
@@ -148,9 +148,10 @@ function etiquetaInfo(d){
 function drawCallouts(items,here){
   const c=$('callouts');
   // de varias categorías a una: las demás etiquetas se desvanecen y la elegida no vuelve a aparecer con fade
-  const prev=[...c.querySelectorAll('.callout:not(.saliendo)')], eligiendo=items.length===1&&items[0].kind==='sel'&&prev.some(b=>b.classList.contains('k-opt'));
+  // renderPlan vacía las etiquetas justo antes de dibujar: se usan las que clearCallouts apartó hace un instante
+  const prev=(MAPA.prev&&performance.now()-MAPA.prevT<300?MAPA.prev:[...c.querySelectorAll('.callout:not(.saliendo)')]), eligiendo=items.length===1&&items[0].kind==='sel'&&prev.some(b=>b.classList.contains('k-opt'));
   const txtSel=eligiendo?etiquetaInfo(items[0].d).txt:null;
-  c.innerHTML=''; MAPA.items=items; MAPA.here=here;
+  c.innerHTML=''; MAPA.prev=null; MAPA.items=items; MAPA.here=here;
   if(eligiendo) prev.forEach(b=>{ if(b.querySelector('.ct').textContent===txtSel) return; b.classList.add('saliendo'); b.disabled=true; b.addEventListener('animationend',()=>b.remove(),{once:true}); c.appendChild(b); });
   if(items.length) $('mapa').classList.add('con-opciones');
   $('mapa').classList.toggle('elige',items.some(x=>x.kind==='opt')); // sin número de pasillo hasta elegir categoría
