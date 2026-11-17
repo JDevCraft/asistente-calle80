@@ -389,6 +389,8 @@ const REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R={ruta:null,pasos:[],dist:[],paso:0,len:0,anim:0,token:0,marker:null,trail:null,fit:null,L:0,guiando:false};
 const ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+// El motor dibuja una pastilla «Estás aquí»; se quita porque ya existe la etiqueta «Tú estás aquí» (más grande)
+function sinPastillaAqui(){ const j=rutaGrupo(); if(j) j.querySelectorAll('text').forEach(t=>{ if(/^Est[aá]s aqu[ií]$/.test(t.textContent.trim())&&t.parentElement!==j) t.parentElement.remove(); }); }
 function rutaGrupo(){ const gs=$('mapa').querySelectorAll(':scope > g'); return gs[gs.length-1]||null; }
 function rutaPath(){ const j=rutaGrupo(); return j?j.querySelectorAll('path')[1]||null:null; }
 function getVB(){ return $('mapa').getAttribute('viewBox').split(/[\s,]+/).map(Number); }
@@ -524,7 +526,7 @@ function openRoute(s,aisle,btn,dest){
     R.ruta=null; ol.appendChild(el('li',null,'No pudimos trazar la ruta a este pasillo. Pide ayuda a un asesor de la tienda.'));
     $('rutaProg').textContent=''; ['rutaPlay','rutaPrev','rutaNext'].forEach(id=>$(id).disabled=true);
   } else {
-    R.ruta=r; R.fit=STORE.slice(); setVB(R.fit); styleRoute(r);
+    R.ruta=r; R.fit=STORE.slice(); setVB(R.fit); styleRoute(r); sinPastillaAqui();
     if(dest) paint(dest.pasillos.map(x=>x.toLowerCase()).filter(x=>MAPIDS.has(x)&&x!==aisle),'dest');
     // El motor genera giro por giro desde la entrada y desde cualquier pasillo; el primer paso nombra el origen.
     R.pasos=[des?'Empiezas en el pasillo '+des.toUpperCase()+'.':'Empiezas en la entrada principal.',...r.instrucciones];
@@ -640,7 +642,7 @@ $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.pr
     bars.forEach(b=>{ b.style.transform=''; }); wv&&wv.classList.remove('voz');
   }
   // click() es síncrono: onclick lee __vozPendiente y luego se limpia aunque el botón estuviera deshabilitado y no corriera
-  function submit(){ const q=box.value.trim(); if(!q) return; window.__vozPendiente=true; try{ $('askBtn').click(); }finally{ window.__vozPendiente=false; } box.value=''; showHeard(q); }
+  function submit(){ const q=box.value.trim(); if(!q) return; window.__vozPendiente=true; try{ $('askBtn').click(); }finally{ window.__vozPendiente=false; } box.value=''; /* «Buscaste: …» desactivado: showHeard(q); */ }
   // Modos: toque = escucha hasta que la persona calla y envía solo ('auto').
   //        mantener presionado = escucha mientras el dedo esté abajo; al soltar envía ('hold'); deslizar a la izquierda cancela.
   let holding=false, holdT=0, x0=0, out=false, fine=false, done=true, guardT=0;
