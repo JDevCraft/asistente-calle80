@@ -149,7 +149,12 @@ function subDe(d,pares){
 function etiquetaInfo(d){
   const todos=(((A.ruta&&A.ruta.destinos)||[]).filter(y=>rutaAisle(y)));
   const nombre=nombreCorto(d), pares=todos.filter(y=>nombreCorto(y)===nombre), rep=pares.length>1;
-  return {nombre,rep,txt:(rep?subDe(d,pares):'')||nombre};
+  let txt=(rep?subDe(d,pares):'')||nombre;
+  // la etiqueta no repite lo que buscó el cliente («Muebles» al buscar muebles): se usa el uso (Sala…) o el nombre corto de su grupo
+  const q=consulta();
+  if(q&&txt.toLowerCase()===q){ const u=String(d.etiqueta||'').split(/[:,]/)[0].trim(), c=(d.conjuntos||[]).find(c=>!/^OTROS?$/i.test(String(c).trim()));
+    txt=u&&u.toLowerCase()!==q?u:(c?corto(c):txt); }
+  return {nombre,rep,txt};
 }
 function drawCallouts(items,here){
   const chips=$('chips'), chipsNuevos=[], vistos=new Set();
@@ -238,10 +243,14 @@ function layoutCallouts(){
 if(window.ResizeObserver) new ResizeObserver(()=>layoutCallouts()).observe($('cont'));
 // "Selecciona la categoría de sillas que buscas": nombre del producto buscado
 // (índice: el tipo de producto; IA: el título del grupo principal; si no, el texto escrito)
-function pideCategoria(){
+// producto buscado (índice: el tipo de producto; IA: el título del grupo principal; si no, el texto escrito), en minúsculas
+function consulta(){
   const ru=A.ruta||{}, p=A.plan, gs=(p&&p.grupos)||[];
   const pr=gs.find(g=>/^principal/i.test(String(g.rol||'')))||gs[0];
-  const q=String(ru.consulta||(pr&&pr.titulo)||A.text||'').trim().replace(/[.?!¿¡]+/g,'').toLowerCase();
+  return String(ru.consulta||(pr&&pr.titulo)||A.text||'').trim().replace(/[.?!¿¡]+/g,'').toLowerCase();
+}
+function pideCategoria(){
+  const q=consulta();
   // varias categorías por elegir: se dice qué buscó y cuántas categorías se ofrecen (los chips bajo el mapa las listan)
   const n=new Set(MAPA.items.filter(x=>x.kind==='opt').map(x=>etiquetaInfo(x.d).txt)).size;
   // pregunta directa: primera línea el producto (en negrita por CSS), segunda la pregunta; los chips son las respuestas
