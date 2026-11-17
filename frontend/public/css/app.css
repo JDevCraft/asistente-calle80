@@ -417,9 +417,14 @@ footer{font-size:13px;color:var(--muted)}
 .callout .chev{width:14px;height:14px;margin-left:-2px}
 .callout.k-alt .chev{width:12px;height:12px}
 /* mientras se elige categoría no se muestran los números de pasillo */
-#mapa.elige #etiquetas .pl.dest{display:none}
+#mapa.elige #etiquetas .pl.dest{opacity:0;pointer-events:none}
 /* transición suave: los nombres de zona se desvanecen, los pasillos cambian de color y las etiquetas aparecen después (solo fundidos, sin movimiento) */
 #mapa #zonas-nombre{transition:opacity .9s ease}
 #mapa #gondolas rect{transition:fill .9s ease,stroke .9s ease}
 @keyframes calloutIn{from{opacity:0}to{opacity:1}}
 .callout.k-opt,.callout.k-sel{animation:calloutIn .7s ease .6s both}
+/* de varias categorías a una: las otras etiquetas se desvanecen, la elegida se queda y el número del pasillo aparece */
+@keyframes calloutOut{from{opacity:1}to{opacity:0}}
+.callout.saliendo{animation:calloutOut .6s ease both;pointer-events:none}
+.callout.k-sel.sigue{animation:none}
+#mapa #etiquetas .pl{transition:opacity .9s ease}

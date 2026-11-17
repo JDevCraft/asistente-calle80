@@ -146,7 +146,12 @@ function etiquetaInfo(d){
   return {nombre,rep,txt:(rep?subDe(d,pares):'')||nombre};
 }
 function drawCallouts(items,here){
-  const c=$('callouts'); c.innerHTML=''; MAPA.items=items; MAPA.here=here;
+  const c=$('callouts');
+  // de varias categorías a una: las demás etiquetas se desvanecen y la elegida no vuelve a aparecer con fade
+  const prev=[...c.querySelectorAll('.callout:not(.saliendo)')], eligiendo=items.length===1&&items[0].kind==='sel'&&prev.some(b=>b.classList.contains('k-opt'));
+  const txtSel=eligiendo?etiquetaInfo(items[0].d).txt:null;
+  c.innerHTML=''; MAPA.items=items; MAPA.here=here;
+  if(eligiendo) prev.forEach(b=>{ if(b.querySelector('.ct').textContent===txtSel) return; b.classList.add('saliendo'); b.disabled=true; b.addEventListener('animationend',()=>b.remove(),{once:true}); c.appendChild(b); });
   if(items.length) $('mapa').classList.add('con-opciones');
   $('mapa').classList.toggle('elige',items.some(x=>x.kind==='opt')); // sin número de pasillo hasta elegir categoría
   const uso=d=>String(d.etiqueta).split(/[:,]/)[0].trim();
@@ -161,6 +166,7 @@ function drawCallouts(items,here){
     b.setAttribute('aria-label',(x.kind==='sel'?'Seleccionado: ':'Ver cómo llegar a ')+txt);
     if(x.kind==='sel') b.setAttribute('aria-pressed','true');
     else b.onclick=()=>{ A.sel=x.d.id; renderPlan(); };
+    if(eligiendo) b.classList.add('sigue');
     c.appendChild(b);
   });
   if(here){ const h=el('span','aqui','Tú estás aquí'); c.appendChild(h); }
@@ -179,7 +185,7 @@ function layoutCallouts(){
       aq.style.left=x0+'px'; aq.style.top=y0+'px'; aq.style.display=''; puestos.push([x0-14,y0-6,w+20,h+12]); ok=true;
     }catch(e){}
     if(!ok) aq.style.display='none'; }
-  const btns=[...c.querySelectorAll('.callout')];
+  const btns=[...c.querySelectorAll('.callout:not(.saliendo)')];
   // Las etiquetas no tapan los pasillos marcados: cada pasillo de un resultado es un obstáculo
   const ocup=[];
   MAPA.items.forEach(x=>mapIds(x.d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(q.width||q.height) ocup.push([q.left-cr.left-2,q.top-cr.top-2,q.width+4,q.height+4]); })));
