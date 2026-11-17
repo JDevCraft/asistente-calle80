@@ -121,7 +121,7 @@ function hint(txt,tipo){
   h.querySelector('.i-info').style.display=tipo==='ok'?'none':'';
   h.querySelector('.i-ia').style.display=tipo==='ok'?'':'none';
 }
-function clearCallouts(){ const c=$('callouts'); if(c){ MAPA.prev=[...c.querySelectorAll('.callout:not(.saliendo)')]; MAPA.prevT=performance.now(); c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
+function clearCallouts(){ const c=$('callouts'); if(c){ const ant=[...c.querySelectorAll('.callout:not(.saliendo)')]; if(ant.length){ MAPA.prev=ant; MAPA.prevT=performance.now(); } c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
 // items: [{d, kind:'opt'|'sel'|'alt'}]
 // Subcategoría para distinguir opciones de la misma zona: el uso (Sala, Baño…) o, si el uso coincide,
 // el grupo de productos que solo tiene esa opción, sin las palabras que comparte con las demás (Madera / Resina)

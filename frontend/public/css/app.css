@@ -374,7 +374,7 @@ footer{font-size:13px;color:var(--muted)}
 .callouts .aqui{z-index:1}
 .callout.k-alt:hover{opacity:1}
 .callouts .aqui{position:absolute;left:0;top:0;font:400 12px/16px var(--body);color:#0072ce;background:rgba(255,255,255,.92);padding:1px 4px;border-radius:3px;white-space:nowrap;pointer-events:none}
-#mapa #gondolas rect.dest-sel{fill:#B0D3F0;stroke:#B0D3F0}
+#mapa #gondolas rect.dest-sel{fill:#7DB6EB;stroke:#7DB6EB}
 #mapa #etiquetas .pl.dest-sel rect{fill:#003b6f}
 #mapa #gondolas rect.dest-alt{fill:#a9cdee;stroke:none}
 #mapa #etiquetas .pl.dest-alt rect{fill:#a9cdee;stroke:#fff}
