@@ -101,7 +101,7 @@ footer{font-size:13px;color:var(--muted)}
 #mapa #etiquetas .pl rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa #etiquetas .pl text{fill:#6b7682}
 #mapa #etiquetas .pl rect[fill="#C60202"],#mapa #etiquetas .pl rect[fill="#041E7E"]{fill:#f1f3f5;stroke:none}
-#mapa #etiquetas .pl.dest rect{fill:#0072ce;stroke:#ffffff;stroke-width:3}
+#mapa #etiquetas .pl.dest rect{fill:#003b6f;stroke:#ffffff;stroke-width:3}
 #mapa #etiquetas .pl.dest text{fill:#ffffff}
 #mapa #zonas-nombre{fill:#767676;fill-opacity:1;font-family:var(--body);font-weight:400;stroke:#fff;stroke-opacity:.9;stroke-width:8px}
 #mapa #ent-base rect,#mapa #ent-base circle{fill:#005ba6}
