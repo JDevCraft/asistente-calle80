@@ -411,4 +411,3 @@ footer{font-size:13px;color:var(--muted)}
 #inicioModal .err:empty{display:none}
 #inicioModal .primary,#inicioModal .ghost{width:100%;min-height:48px;margin-top:10px;border-radius:12px;font-size:16px}
 #inicioModal .ghost{border:2px solid var(--accent)}
-#inicioModal .link{align-self:center;min-height:40px;padding:6px 16px;background:none;border:0;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}

@@ -268,7 +268,7 @@ function showMotivos(id){
   e.hidden=false;
 }
 // Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?».
-// Devuelve el pasillo escrito, '' (entrada) o null («Ahora no»). Las dos últimas dejan la ruta saliendo de la entrada.
+// Devuelve el pasillo escrito, '' (entrada) o null (toque fuera o Esc). Las dos últimas dejan la ruta saliendo de la entrada.
 function preguntarInicio(){
   return new Promise(res=>{
     const d=$('inicioModal'), inp=$('inicioPasillo'), err=$('inicioErr'), ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
@@ -279,7 +279,7 @@ function preguntarInicio(){
       d.style.top=Math.max(8,vv.offsetTop+(vv.height-d.offsetHeight)/2)+'px';
     };
     if(vv){ vv.addEventListener('resize',fit); vv.addEventListener('scroll',fit); }
-    const fin=v=>{ d.onclose=null; if(vv){ vv.removeEventListener('resize',fit); vv.removeEventListener('scroll',fit); } d.style.cssText=''; if(d.open) d.close(); res(v); };
+    const fin=v=>{ d.onclose=d.onclick=null; if(vv){ vv.removeEventListener('resize',fit); vv.removeEventListener('scroll',fit); } d.style.cssText=''; if(d.open) d.close(); res(v); };
     inp.oninput=()=>{ err.textContent=''; };
     const ok=()=>{
       const r=normalizarPasillo(inp.value,ids);
@@ -292,7 +292,7 @@ function preguntarInicio(){
     inp.onkeydown=ev=>{ if(ev.key==='Enter') ok(); };
     $('inicioOk').onclick=ok;
     $('inicioEntrada').onclick=()=>fin('');
-    $('inicioNo').onclick=()=>fin(null);
+    d.onclick=e=>{ const r=d.getBoundingClientRect(); if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) fin(null); }; // toque fuera
     d.onclose=()=>fin(null); // Esc
     d.showModal(); fit();
   });
