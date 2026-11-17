@@ -416,3 +416,5 @@ footer{font-size:13px;color:var(--muted)}
 .callout.k-opt:active{transform:scale(.97)}
 .callout .chev{width:14px;height:14px;margin-left:-2px}
 .callout.k-alt .chev{width:12px;height:12px}
+/* mientras se elige categoría no se muestran los números de pasillo */
+#mapa.elige #etiquetas .pl.dest{display:none}

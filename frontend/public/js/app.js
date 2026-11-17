@@ -121,7 +121,7 @@ function hint(txt,tipo){
   h.querySelector('.i-info').style.display=tipo==='ok'?'none':'';
   h.querySelector('.i-ia').style.display=tipo==='ok'?'':'none';
 }
-function clearCallouts(){ const c=$('callouts'); if(c){ c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones'); }
+function clearCallouts(){ const c=$('callouts'); if(c){ c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
 // items: [{d, kind:'opt'|'sel'|'alt'}]
 // Subcategoría para distinguir opciones de la misma zona: el uso (Sala, Baño…) o, si el uso coincide,
 // el grupo de productos que solo tiene esa opción, sin las palabras que comparte con las demás (Madera / Resina)
@@ -148,6 +148,7 @@ function etiquetaInfo(d){
 function drawCallouts(items,here){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=items; MAPA.here=here;
   if(items.length) $('mapa').classList.add('con-opciones');
+  $('mapa').classList.toggle('elige',items.some(x=>x.kind==='opt')); // sin número de pasillo hasta elegir categoría
   const uso=d=>String(d.etiqueta).split(/[:,]/)[0].trim();
   items.forEach((x,i)=>{
     const b=el('button','callout k-'+x.kind+(rutaAisle(x.d)==='patio'?' patio':'')); b.type='button';
