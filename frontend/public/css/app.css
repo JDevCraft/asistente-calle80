@@ -399,3 +399,15 @@ footer{font-size:13px;color:var(--muted)}
 .callout.patio svg{color:#b38f00}
 .maphint.patio{color:#5a4700;background:#FFF3B0;border:1px solid #F3C702;border-radius:6px;padding:6px 10px;font-weight:700}
 /* /UX-07 */
+
+/* modal de punto de partida */
+#inicioModal{border:0;border-radius:12px;padding:20px;width:min(92vw,360px);box-shadow:0 8px 32px rgba(0,0,0,.25);color:var(--ink);background:#fff}
+#inicioModal::backdrop{background:rgba(0,0,0,.35)}
+#inicioModal h2{margin:0 0 12px;font-size:18px;line-height:1.3}
+#inicioModal .op{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;cursor:pointer}
+#inicioModal .op input{width:18px;height:18px;accent-color:var(--accent)}
+#inicioPasillo{width:100%;box-sizing:border-box;min-height:44px;margin:0 0 4px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:16px}
+#inicioModal .err{margin:4px 0 0;color:var(--danger,#C60202);font-size:.9em}
+#inicioModal .err:empty{display:none}
+#inicioModal .acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+#inicioModal .acts button{min-height:44px}

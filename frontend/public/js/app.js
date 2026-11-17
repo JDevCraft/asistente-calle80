@@ -27,7 +27,7 @@ function pretty(s){
 
 // ================= ASISTENTE DE NECESIDADES =================
 const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(name)}));
-const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',proxOrigen:''};
+const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',nOk:0};
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -232,14 +232,14 @@ function sesionId(){
   return SES;
 }
 // micro-encuesta: una sola vez por búsqueda, solo si la búsqueda se registró (hay id). Pasos: ¿te ayudó? →
-// (si fue «No») motivo → «¿Necesitas algo más?». svTok invalida los temporizadores de una encuesta que ya se ocultó.
+// (si fue «No») motivo. svTok invalida los temporizadores de una encuesta que ya se ocultó.
 let svTok=0;
 const MOTIVOS=[['no_era','No era lo que buscaba'],['no_encontre','No encontré el producto'],['ruta_confusa','La ruta no es clara'],['otro','Otro…']];
 function hideSurvey(){ svTok++; const e=$('survey'); e.hidden=true; e.textContent=''; }
 function svBtn(txt,fn){ const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.addEventListener('click',fn); return b; }
 function postEncuesta(cuerpo){ fetch('/api/encuesta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cuerpo)}).catch(()=>{}); }
 function showSurvey(){
-  if(!A.lastSearchId){ showContinuar(); return; } // sin registro no hay encuesta, pero sí la invitación a seguir
+  if(!A.lastSearchId) return; // sin registro no hay encuesta
   const e=$('survey'); e.textContent=''; svTok++;
   e.append(el('span','sv-q','¿Esto te ayudó?'),svBtn('Sí',()=>sendSurvey(true)),svBtn('No',()=>sendSurvey(false))); e.hidden=false;
 }
@@ -248,14 +248,14 @@ function sendSurvey(util){
   A.lastSearchId=null; // una sola respuesta por búsqueda
   postEncuesta({id,util:util===true});
   if(window.gtag) gtag('event','survey_response',{util:util===true,sesion_id:sesionId()});
-  if(util===true) showContinuar(); else showMotivos(id);
+  if(util===true) hideSurvey(); else showMotivos(id);
 }
 // Tras un «No»: motivo de un toque; «Otro» abre un campo opcional de 140 caracteres. Sin respuesta en 8 s pasa al siguiente paso.
 function showMotivos(id){
   const e=$('survey'), tk=++svTok; e.textContent='';
-  const enviar=(motivo,comentario)=>{ postEncuesta(comentario?{id,motivo,comentario}:{id,motivo}); showContinuar(); };
+  const enviar=(motivo,comentario)=>{ postEncuesta(comentario?{id,motivo,comentario}:{id,motivo}); hideSurvey(); };
   e.append(el('span','sv-q','¿Qué pasó?'));
-  const t=setTimeout(()=>{ if(tk===svTok) showContinuar(); },8000);
+  const t=setTimeout(()=>{ if(tk===svTok) hideSurvey(); },8000);
   MOTIVOS.forEach(([cod,txt])=>e.append(svBtn(txt,()=>{
     clearTimeout(t);
     if(cod!=='otro'){ enviar(cod); return; }
@@ -267,51 +267,28 @@ function showMotivos(id){
   })));
   e.hidden=false;
 }
-// Cierre: invita a seguir. No se asume que el cliente llegó al pasillo del destino (no hay check-in real): si quiere
-// seguir, se le pregunta en qué pasillo está y la próxima ruta se calcula desde ahí. La respuesta vale solo para la
-// próxima búsqueda (ask() la activa) y nunca se aplica por defecto.
-function showContinuar(){
-  const e=$('survey'), tk=++svTok; e.textContent='';
-  const seguir=origen=>{ A.proxOrigen=origen; hideSurvey(); try{ $('need').focus({preventScroll:true}); }catch(_){} };
-  e.append(el('span','sv-q','¿Necesitas algo más?'));
-  e.append(svBtn('Buscar otra cosa',()=>{ svTok++; preguntarPasillo(seguir); }));
-  e.hidden=false;
-  setTimeout(()=>{ if(tk===svTok) hideSurvey(); },8000);
-}
-// Segundo paso: ¿en qué pasillo estás? Texto o voz. La voz solo transcribe en el campo; el cliente revisa y envía.
-function preguntarPasillo(seguir){
-  const e=$('survey'); e.textContent='';
-  const ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
-  e.append(el('span','sv-q','¿En qué pasillo estás?'));
-  const inp=document.createElement('input'); inp.type='text'; inp.maxLength=30; inp.className='sv-in'; inp.placeholder='Ej. 13B'; inp.setAttribute('aria-label','Número del pasillo donde estás'); inp.setAttribute('data-clarity-mask','True');
-  const err=el('span','sv-err'); err.setAttribute('role','alert');
-  const ok=()=>{
-    const r=normalizarPasillo(inp.value,ids);
-    if(r.id){ seguir(r.id); return; }
-    err.textContent=r.error==='ambiguo'?'¿Cuál de estos? '+r.opciones.join(', ')+'. Escribe el número con la letra.'
-      :r.error==='vacio'?'Escribe el número del pasillo, como aparece en el letrero.'
-      :'No encuentro ese pasillo. Escríbelo como aparece en el letrero, por ejemplo 13B.';
-    inp.focus();
-  };
-  inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') ok(); });
-  e.append(inp);
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(SR){
-    let rec=null;
-    const mic=svBtn('🎤 Dictar',()=>{
-      if(rec){ rec.stop(); return; }
-      rec=new SR(); rec.lang='es-CO'; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
-      mic.textContent='Escuchando…'; err.textContent='';
-      rec.onresult=ev=>{ inp.value=[...ev.results].map(r=>r[0].transcript).join(' ').trim(); };
-      rec.onerror=()=>{ err.textContent='No pude escucharte. Escribe el número del pasillo.'; };
-      rec.onend=()=>{ rec=null; mic.textContent='🎤 Dictar'; inp.focus(); };
-      try{ rec.start(); }catch(_){ rec=null; mic.textContent='🎤 Dictar'; }
-    });
-    mic.setAttribute('aria-label','Dictar el número del pasillo');
-    e.append(mic);
-  }
-  e.append(svBtn('Usar este pasillo',ok),svBtn('Estoy en la entrada',()=>seguir('')),err);
-  e.hidden=false; inp.focus({preventScroll:true});
+// Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?». Devuelve el pasillo elegido,
+// '' (entrada) o null («Ahora no»). Las dos últimas dejan la ruta saliendo de la entrada.
+function preguntarInicio(){
+  return new Promise(res=>{
+    const d=$('inicioModal'), inp=$('inicioPasillo'), err=$('inicioErr'), ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
+    const radio=v=>d.querySelector('input[name=inicio][value='+v+']');
+    inp.value=''; err.textContent=''; radio('entrada').checked=true;
+    const fin=v=>{ d.onclose=null; if(d.open) d.close(); res(v); };
+    inp.oninput=()=>{ radio('pasillo').checked=true; err.textContent=''; };
+    $('inicioOk').onclick=()=>{
+      if(radio('entrada').checked){ fin(''); return; }
+      const r=normalizarPasillo(inp.value,ids);
+      if(r.id){ fin(r.id); return; }
+      err.textContent=r.error==='ambiguo'?'¿Cuál de estos? '+r.opciones.join(', ')+'. Escribe el número con la letra.'
+        :r.error==='vacio'?'Escribe el número del pasillo, como aparece en el letrero.'
+        :'No encuentro ese pasillo. Escríbelo como aparece en el letrero, por ejemplo 13B.';
+      inp.focus();
+    };
+    $('inicioNo').onclick=()=>fin(null);
+    d.onclose=()=>fin(null); // Esc
+    d.showModal();
+  });
 }
 function renderPlan(){
   hideRoute();
@@ -564,7 +541,7 @@ async function ask(){
   A.busy=true; $('askBtn').disabled=true; $('stopBtn').hidden=false;
   if(window.gtag) gtag('event','search_submit',{canal:window.__canalBusqueda||'texto',sesion_id:sesionId()});
   hideSurvey(); A.lastSearchId=null; // un aviso viejo nunca puede responder a otra búsqueda
-  A.origen=A.proxOrigen; A.proxOrigen=''; // «desde donde estoy» vale solo para esta búsqueda
+  A.origen=''; // el punto de partida elegido vale solo para esta búsqueda
   hideRoute(); hint(''); // búsqueda nueva: fuera la ruta y las etiquetas de la anterior
   const t0=Date.now(); let ti=0; setStatus(THINK[0],false,true);
   timer=setInterval(()=>{ ti=Math.min(ti+1,THINK.length-1); const tx=document.querySelector('#aiStatus .think-txt'); if(tx) tx.textContent=THINK[ti]; },2600);
@@ -579,8 +556,11 @@ async function ask(){
       await new Promise((ok,no)=>{ const t=setTimeout(ok,1500); ctl.signal.addEventListener('abort',()=>{ clearTimeout(t); no({code:'cancelled'}); },{once:true}); });
       j=await sampleFn.json({signal:ctl.signal});
     }
-    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null; renderPlan();
+    A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null;
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
+    if(ok&&A.nOk>0){ setStatus(''); A.origen=await preguntarInicio()||''; } // segunda búsqueda en adelante: dónde empieza el recorrido
+    if(ok) A.nOk++;
+    renderPlan();
     const dt=Date.now()-t0;
     if(window.gtag) gtag('event','search_result',{resultado:A.ruta&&A.ruta.respaldo?'respaldo':(A.ruta&&A.ruta.fuente==='indice'?'indice':'modelo'),canal:window.__canalBusqueda||'texto',ms:dt,sesion_id:sesionId()});
     // UX-07: el resultado se explica en la línea bajo el mapa; si respondió el índice porque la IA no pudo, se avisa
