@@ -446,3 +446,8 @@ footer{font-size:13px;color:var(--muted)}
 @media (max-width:760px){ #start .hero-bg .chips{margin-inline:16px} }
 /* ETIQUETAS SOBRE EL MAPA EN PAUSA: las categorías por elegir se tocan en los chips bajo el mapa (evita etiquetas dobles). Quitar esta regla para reactivarlas */
 .callout.k-opt{display:none}
+/* pregunta directa: «Tapetes / ¿Cuál de estas secciones buscas?» con los chips como respuestas */
+.maphint.pregunta{color:#333;white-space:pre-line}
+.maphint.pregunta svg{display:none}
+.maphint.pregunta span::first-line{font-weight:900;font-size:20px;line-height:26px;color:#1a1a1a}
+.chips-nota{flex:1 1 100%;margin:2px 0 0;font:400 13px/18px var(--body);color:#767676}
