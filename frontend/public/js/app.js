@@ -761,6 +761,6 @@ sampleFn={ async json(opts){
   return j;
 } };
 initTracking();
-setStatus('Tú lo describes, nosotros lo encontramos.');
+// MENSAJE INICIAL OCULTO: setStatus('Tú lo describes, nosotros lo encontramos.');
 const bb=$('barBack'); if(bb) bb.onclick=()=>{ if(history.length>1) history.back(); else window.scrollTo({top:0,behavior:'smooth'}); };
 
