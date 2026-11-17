@@ -122,7 +122,6 @@ function hint(txt,tipo){
   const h=$('mapHint'); if(!h) return;
   h.className='maphint'+(tipo?' '+tipo:'')+(txt?'':' vacio'); // «vacio» (no [hidden]) para poder animar su apertura en móvil
   h.querySelector('span').textContent=txt||'';
-  h.classList.toggle('pregunta',/\n/.test(txt||''));
   h.querySelector('.i-info').style.display=tipo==='ok'?'none':'';
   h.querySelector('.i-ia').style.display=tipo==='ok'?'':'none';
 }
@@ -157,14 +156,13 @@ function etiquetaInfo(d){
   return {nombre,rep,txt};
 }
 function drawCallouts(items,here){
-  const chips=$('chips'), chipsNuevos=[], vistos=new Set();
   const c=$('callouts');
   // de varias categorías a una: las demás etiquetas se desvanecen y la elegida no vuelve a aparecer con fade
   // renderPlan vacía las etiquetas justo antes de dibujar: se usan las que clearCallouts apartó hace un instante
   const prev=(MAPA.prev&&performance.now()-MAPA.prevT<300?MAPA.prev:[...c.querySelectorAll('.callout:not(.saliendo)')]), eligiendo=items.length===1&&items[0].kind==='sel'&&prev.some(b=>b.classList.contains('k-opt'));
   const txtSel=eligiendo?etiquetaInfo(items[0].d).txt:null;
   c.innerHTML=''; MAPA.prev=null; MAPA.items=items; MAPA.here=here;
-  if(eligiendo) prev.forEach(b=>{ if(b.querySelector('.ct').textContent===txtSel) return; b.classList.add('saliendo'); b.disabled=true; setTimeout(()=>b.remove(),700); c.appendChild(b); });
+  if(eligiendo) prev.forEach(b=>{ if(b.querySelector('.ct').textContent===txtSel) return; b.classList.add('saliendo'); b.disabled=true; b.addEventListener('animationend',()=>b.remove(),{once:true}); c.appendChild(b); });
   if(items.length) $('mapa').classList.add('con-opciones');
   $('mapa').classList.toggle('elige',items.some(x=>x.kind==='opt')); // sin número de pasillo hasta elegir categoría
   const uso=d=>String(d.etiqueta).split(/[:,]/)[0].trim();
@@ -180,15 +178,9 @@ function drawCallouts(items,here){
     if(x.kind==='sel') b.setAttribute('aria-pressed','true');
     else b.onclick=()=>{ A.sel=x.d.id; renderPlan(); };
     if(eligiendo) b.classList.add('sigue');
-    // chip tocable con el mismo texto, ícono y acción que la etiqueta del mapa
-    if(x.kind==='opt'&&!vistos.has(txt)){ vistos.add(txt); const ch=b.cloneNode(true); ch.className='chip'; ch.onclick=b.onclick; chipsNuevos.push(ch); }
     c.appendChild(b);
   });
   if(here){ const h=el('span','aqui','Tú estás aquí'); c.appendChild(h); }
-  // chips: con 1 o más categorías por elegir (reemplazan a las etiquetas sobre el mapa); al elegir una se pliegan y luego se vacían
-  clearTimeout(MAPA.chT);
-  if(chipsNuevos.length>=1){ chips.replaceChildren(...chipsNuevos,el('p','chips-nota','Te mostramos el pasillo y cómo llegar')); chips.classList.remove('vacio'); }
-  else { chips.classList.add('vacio'); MAPA.chT=setTimeout(()=>chips.replaceChildren(),600); }
   layoutCallouts();
 }
 function layoutCallouts(){
@@ -251,10 +243,6 @@ function consulta(){
 }
 function pideCategoria(){
   const q=consulta();
-  // varias categorías por elegir: se dice qué buscó y cuántas categorías se ofrecen (los chips bajo el mapa las listan)
-  const n=new Set(MAPA.items.filter(x=>x.kind==='opt').map(x=>etiquetaInfo(x.d).txt)).size;
-  // pregunta directa: primera línea el producto (en negrita por CSS), segunda la pregunta; los chips son las respuestas
-  if(n>1&&q&&q.length<=40) return q.charAt(0).toUpperCase()+q.slice(1)+'\n¿Cuál de estas secciones buscas?';
   return q&&q.length<=40?'Selecciona la categoría de '+q+' que buscas':'Selecciona la categoría que buscas';
 }
 // Id de sesión: UUID aleatorio en sessionStorage (dura lo que la pestaña; sin IP ni identidad). Solo agrupa búsquedas.

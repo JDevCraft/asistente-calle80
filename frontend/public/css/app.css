@@ -346,8 +346,6 @@ footer{font-size:13px;color:var(--muted)}
   #start .ia-note,#start .hero-bg .maphint{interpolate-size:allow-keywords;height:auto;overflow:hidden;transition:height .5s ease,min-height .5s ease,margin .5s ease,opacity .5s ease}
   #start .ia-note:has(.status:empty){display:flex;visibility:visible;opacity:0;height:0;min-height:0;margin-bottom:-8px}
   #start .hero-bg .maphint.vacio{display:flex;opacity:0;height:0;margin-top:0;overflow:hidden}
-  #start .hero-bg .chips{interpolate-size:allow-keywords;height:auto;overflow:hidden;transition:height .5s ease,margin .5s ease,opacity .5s ease}
-  #start .hero-bg .chips.vacio{display:flex;opacity:0;height:0;margin-top:0}
   #start .hero-bg .maphint{margin-top:20px;font-size:14px;line-height:18px}
   #start #result:empty{display:none}
   #start #cont{background:#fff}
@@ -433,21 +431,3 @@ footer{font-size:13px;color:var(--muted)}
 .callout.saliendo{animation:calloutOut .6s ease both;pointer-events:none}
 .callout.k-sel.sigue{animation:none}
 #mapa #etiquetas .pl{transition:opacity .9s ease}
-/* categorías ofrecidas, listadas bajo el mapa */
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
-.chips.vacio{display:none}
-.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:5px 12px;border:0;border-radius:18px;background:#0072ce;color:#fff;font:700 14px/18px var(--body);cursor:pointer;box-shadow:0 2px 6px rgba(0,60,120,.25)}
-.chip:hover{background:#0063b3}
-.chip:active{transform:scale(.97)}
-.chip:focus-visible{outline:3px solid rgba(0,114,206,.35);outline-offset:2px}
-.chip svg{width:16px;height:16px;flex:none}
-.chip .ct{white-space:nowrap}
-.chip .chev{width:14px;height:14px;margin-left:-2px}
-@media (max-width:760px){ #start .hero-bg .chips{margin-inline:16px} }
-/* ETIQUETAS SOBRE EL MAPA EN PAUSA: las categorías por elegir se tocan en los chips bajo el mapa (evita etiquetas dobles). Quitar esta regla para reactivarlas */
-.callout.k-opt{display:none}
-/* pregunta directa: «Tapetes / ¿Cuál de estas secciones buscas?» con los chips como respuestas */
-.maphint.pregunta{color:#333;white-space:pre-line}
-.maphint.pregunta svg{display:none}
-.maphint.pregunta span::first-line{font-weight:900;font-size:20px;line-height:26px;color:#1a1a1a}
-.chips-nota{flex:1 1 100%;margin:2px 0 0;font:400 13px/18px var(--body);color:#767676}
