@@ -156,6 +156,7 @@ function drawCallouts(items,here){
     const u=USOS.find(([re])=>re.test(uso(x.d))), z=ICONOS.find(([re])=>re.test(nombre));
     b.appendChild(svgIcono(rep&&u?u[1]:z?z[1]:u?u[1]:'map-pin'));
     b.appendChild(el('span','ct',txt));
+    if(x.kind!=='sel'){ const g=document.createElementNS('http://www.w3.org/2000/svg','svg'); g.setAttribute('class','chev'); g.setAttribute('aria-hidden','true'); g.setAttribute('viewBox','0 0 24 24'); g.setAttribute('fill','none'); g.setAttribute('stroke','currentColor'); g.setAttribute('stroke-width','2.4'); g.setAttribute('stroke-linecap','round'); g.setAttribute('stroke-linejoin','round'); g.innerHTML='<path d="m9 6 6 6-6 6"/>'; b.appendChild(g); } // flecha: indica que se puede tocar
     b.setAttribute('aria-label',(x.kind==='sel'?'Seleccionado: ':'Ver cómo llegar a ')+txt);
     if(x.kind==='sel') b.setAttribute('aria-pressed','true');
     else b.onclick=()=>{ A.sel=x.d.id; renderPlan(); };

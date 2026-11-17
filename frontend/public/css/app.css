@@ -410,3 +410,9 @@ footer{font-size:13px;color:var(--muted)}
 #inicioModal .err:empty{display:none}
 #inicioModal .primary,#inicioModal .ghost{width:100%;min-height:48px;margin-top:10px;border-radius:12px;font-size:16px}
 #inicioModal .ghost{border:2px solid var(--accent)}
+/* UX etiquetas tocables: botón azul con flecha para que se entienda que se pueden tocar */
+.callout.k-opt:not(.patio){background:#0072ce;border-color:#0072ce;color:#fff;font-weight:700;min-height:32px;box-shadow:0 2px 6px rgba(0,60,120,.35)}
+.callout.k-opt:not(.patio):hover{background:#0063b3}
+.callout.k-opt:active{transform:scale(.97)}
+.callout .chev{width:14px;height:14px;margin-left:-2px}
+.callout.k-alt .chev{width:12px;height:12px}
