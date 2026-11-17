@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=3">
+<link rel="stylesheet" href="css/app.css?v=4">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -64,10 +64,8 @@
     </section>
     <dialog id="inicioModal" aria-labelledby="inicioT">
       <h2 id="inicioT">¿Desde dónde quieres iniciar tu recorrido?</h2>
-      <p class="sub">Dime en qué pasillo estás ahora y te llevo desde ahí hasta «<strong id="inicioProd"></strong>».</p>
-      <input id="inicioPasillo" type="text" maxlength="30" placeholder="Ej. 13B" aria-label="Pasillo donde estás" data-clarity-mask="True" autocomplete="off">
+      <input id="inicioPasillo" type="text" maxlength="30" placeholder="Pasillo donde estás, ej. 13B" aria-label="Pasillo donde estás" data-clarity-mask="True" autocomplete="off">
       <p id="inicioErr" class="err" role="alert"></p>
-      <p class="hint">¿No sabes en qué pasillo estás? Mira el letrero en la parte de arriba, al inicio o al final del pasillo.</p>
       <button class="primary" id="inicioOk" type="button">Generar mi ruta</button>
       <button class="ghost" id="inicioEntrada" type="button">Salir desde la entrada</button>
       <button class="link" id="inicioNo" type="button">Ahora no</button>

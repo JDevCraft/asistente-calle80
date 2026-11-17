@@ -400,17 +400,15 @@ footer{font-size:13px;color:var(--muted)}
 .maphint.patio{color:#5a4700;background:#FFF3B0;border:1px solid #F3C702;border-radius:6px;padding:6px 10px;font-weight:700}
 /* /UX-07 */
 
-/* modal de punto de partida */
-#inicioModal{border:0;border-radius:16px;padding:22px 20px 14px;width:min(92vw,380px);box-shadow:0 12px 40px rgba(0,0,0,.28);color:var(--ink);background:#fff}
+/* modal de punto de partida (compacto: debe caber sobre el teclado móvil) */
+#inicioModal{border:0;border-radius:16px;padding:18px 16px 8px;width:min(92vw,380px);box-shadow:0 12px 40px rgba(0,0,0,.28);color:var(--ink);background:#fff}
 #inicioModal[open]{display:flex;flex-direction:column;overflow-y:auto}
 #inicioModal::backdrop{background:rgba(0,30,70,.45)}
-#inicioModal h2{margin:0 0 10px;font-size:22px;line-height:1.2;color:#003b6f}
-#inicioModal .sub{margin:0 0 14px;font-size:15px;line-height:1.4}
-#inicioPasillo{width:100%;box-sizing:border-box;min-height:52px;padding:10px 14px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:18px;color:var(--ink)}
+#inicioModal h2{margin:0 0 12px;font-size:20px;line-height:1.2;color:#003b6f}
+#inicioPasillo{width:100%;box-sizing:border-box;min-height:48px;padding:8px 14px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:16px;color:var(--ink)}
 #inicioPasillo:focus{outline:3px solid #f5c400;outline-offset:0;border-color:var(--line)}
 #inicioModal .err{margin:6px 0 0;color:var(--danger,#C60202);font-size:.9em}
 #inicioModal .err:empty{display:none}
-#inicioModal .hint{margin:8px 0 14px;font-size:13px;line-height:1.4;color:var(--muted)}
-#inicioModal .primary,#inicioModal .ghost{width:100%;min-height:52px;border-radius:12px;font-size:16px}
-#inicioModal .ghost{margin-top:10px;border:2px solid var(--accent)}
-#inicioModal .link{align-self:center;margin-top:6px;min-height:44px;padding:8px 16px;background:none;border:0;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
+#inicioModal .primary,#inicioModal .ghost{width:100%;min-height:48px;margin-top:10px;border-radius:12px;font-size:16px}
+#inicioModal .ghost{border:2px solid var(--accent)}
+#inicioModal .link{align-self:center;min-height:40px;padding:6px 16px;background:none;border:0;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}

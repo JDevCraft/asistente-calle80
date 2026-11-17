@@ -267,12 +267,12 @@ function showMotivos(id){
   })));
   e.hidden=false;
 }
-// Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?» para el producto «prod».
+// Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?».
 // Devuelve el pasillo escrito, '' (entrada) o null («Ahora no»). Las dos últimas dejan la ruta saliendo de la entrada.
-function preguntarInicio(prod){
+function preguntarInicio(){
   return new Promise(res=>{
     const d=$('inicioModal'), inp=$('inicioPasillo'), err=$('inicioErr'), ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
-    inp.value=''; err.textContent=''; $('inicioProd').textContent=prod;
+    inp.value=''; err.textContent='';
     // El teclado móvil achica el viewport visual pero no el de diseño: se centra el modal en el área visible.
     const vv=window.visualViewport, fit=()=>{
       if(!vv) return; d.style.maxHeight=(vv.height-16)+'px'; d.style.bottom='auto'; d.style.marginBlock='0';
@@ -565,7 +565,7 @@ async function ask(){
     }
     A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null;
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
-    if(ok&&A.nOk>0){ setStatus(''); A.origen=await preguntarInicio((A.ruta&&A.ruta.consulta)||text)||''; } // segunda búsqueda en adelante: dónde empieza el recorrido
+    if(ok&&A.nOk>0){ setStatus(''); A.origen=await preguntarInicio()||''; } // segunda búsqueda en adelante: dónde empieza el recorrido
     if(ok) A.nOk++;
     renderPlan();
     const dt=Date.now()-t0;
