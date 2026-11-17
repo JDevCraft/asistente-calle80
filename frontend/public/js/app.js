@@ -116,7 +116,7 @@ function lugarTxt(d){ return d.lugar?d.lugar.toLowerCase()+' '+d.rango:(d.pasill
 const MAPA={items:[],here:false};
 function hint(txt,tipo){
   const h=$('mapHint'); if(!h) return;
-  h.hidden=!txt; h.className='maphint'+(tipo?' '+tipo:'');
+  h.className='maphint'+(tipo?' '+tipo:'')+(txt?'':' vacio'); // «vacio» (no [hidden]) para poder animar su apertura en móvil
   h.querySelector('span').textContent=txt||'';
   h.querySelector('.i-info').style.display=tipo==='ok'?'none':'';
   h.querySelector('.i-ia').style.display=tipo==='ok'?'':'none';
