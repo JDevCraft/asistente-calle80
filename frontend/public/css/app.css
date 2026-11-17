@@ -97,7 +97,7 @@ footer{font-size:13px;color:var(--muted)}
 #mapa #zonas path{fill:#f6f7f9;stroke:#f6f7f9}
 #mapa #gondolas rect{fill:#e7ebf0;stroke:none}
 #mapa #gondolas rect[stroke="#C60202"]{fill:#cfe4f7;stroke:#0072ce;stroke-width:3}
-#mapa #gondolas rect.dest{fill:#B0D3F0;stroke:#005ba6;stroke-width:3}
+#mapa #gondolas rect.dest{fill:#B0D3F0;stroke:#B0D3F0;stroke-width:3}
 #mapa #etiquetas .pl rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa #etiquetas .pl text{fill:#6b7682}
 #mapa #etiquetas .pl rect[fill="#C60202"],#mapa #etiquetas .pl rect[fill="#041E7E"]{fill:#f1f3f5;stroke:none}
@@ -374,7 +374,7 @@ footer{font-size:13px;color:var(--muted)}
 .callouts .aqui{z-index:1}
 .callout.k-alt:hover{opacity:1}
 .callouts .aqui{position:absolute;left:0;top:0;font:400 12px/16px var(--body);color:#0072ce;background:rgba(255,255,255,.92);padding:1px 4px;border-radius:3px;white-space:nowrap;pointer-events:none}
-#mapa #gondolas rect.dest-sel{fill:#B0D3F0;stroke:#003b6f}
+#mapa #gondolas rect.dest-sel{fill:#B0D3F0;stroke:#B0D3F0}
 #mapa #etiquetas .pl.dest-sel rect{fill:#003b6f}
 #mapa #gondolas rect.dest-alt{fill:#a9cdee;stroke:none}
 #mapa #etiquetas .pl.dest-alt rect{fill:#a9cdee;stroke:#fff}
