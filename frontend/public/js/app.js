@@ -174,9 +174,9 @@ function drawCallouts(items,here){
     c.appendChild(b);
   });
   if(here){ const h=el('span','aqui','Tú estás aquí'); c.appendChild(h); }
-  // chips: solo con 2 o más categorías distintas por elegir; al elegir una se pliegan y luego se vacían
+  // chips: con 1 o más categorías por elegir (reemplazan a las etiquetas sobre el mapa); al elegir una se pliegan y luego se vacían
   clearTimeout(MAPA.chT);
-  if(chipsNuevos.length>1){ chips.replaceChildren(...chipsNuevos); chips.classList.remove('vacio'); }
+  if(chipsNuevos.length>=1){ chips.replaceChildren(...chipsNuevos); chips.classList.remove('vacio'); }
   else { chips.classList.add('vacio'); MAPA.chT=setTimeout(()=>chips.replaceChildren(),600); }
   layoutCallouts();
 }
@@ -238,7 +238,7 @@ function pideCategoria(){
   const q=String(ru.consulta||(pr&&pr.titulo)||A.text||'').trim().replace(/[.?!¿¡]+/g,'').toLowerCase();
   // varias categorías por elegir: se dice qué buscó y cuántas categorías se ofrecen (los chips bajo el mapa las listan)
   const n=new Set(MAPA.items.filter(x=>x.kind==='opt').map(x=>etiquetaInfo(x.d).txt)).size;
-  if(n>1&&q&&q.length<=40) return 'Buscaste «'+q+'»: tenemos '+n+' categorías para ti. Toca una para ver cómo llegar.';
+  if(n>1&&q&&q.length<=40) return 'Encontramos «'+q+'» en '+n+' categorías. Elige la que necesitas para ver en qué pasillo están.';
   return q&&q.length<=40?'Selecciona la categoría de '+q+' que buscas':'Selecciona la categoría que buscas';
 }
 // Id de sesión: UUID aleatorio en sessionStorage (dura lo que la pestaña; sin IP ni identidad). Solo agrupa búsquedas.

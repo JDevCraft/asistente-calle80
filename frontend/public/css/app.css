@@ -444,3 +444,5 @@ footer{font-size:13px;color:var(--muted)}
 .chip .ct{white-space:nowrap}
 .chip .chev{width:14px;height:14px;margin-left:-2px}
 @media (max-width:760px){ #start .hero-bg .chips{margin-inline:16px} }
+/* ETIQUETAS SOBRE EL MAPA EN PAUSA: las categorías por elegir se tocan en los chips bajo el mapa (evita etiquetas dobles). Quitar esta regla para reactivarlas */
+.callout.k-opt{display:none}
