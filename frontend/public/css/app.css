@@ -379,7 +379,7 @@ footer{font-size:13px;color:var(--muted)}
 #mapa #gondolas rect.dest-alt{fill:#a9cdee;stroke:none}
 #mapa #etiquetas .pl.dest-alt rect{fill:#a9cdee;stroke:#fff}
 #mapa #etiquetas .pl.dest-alt text{fill:#fff}
-#mapa.con-opciones #zonas-nombre{display:none}
+#mapa.con-opciones #zonas-nombre{opacity:0;pointer-events:none}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* El número de pasillo solo se ve en los pasillos de un resultado; en la primera carga el plano va sin números (solo nombres de zona) */
@@ -418,3 +418,9 @@ footer{font-size:13px;color:var(--muted)}
 .callout.k-alt .chev{width:12px;height:12px}
 /* mientras se elige categoría no se muestran los números de pasillo */
 #mapa.elige #etiquetas .pl.dest{display:none}
+/* transición suave: los nombres de zona se desvanecen, los pasillos cambian de color y las etiquetas aparecen después */
+#mapa #zonas-nombre{transition:opacity .45s ease}
+#mapa #gondolas rect{transition:fill .45s ease,stroke .45s ease}
+@keyframes calloutIn{from{opacity:0}to{opacity:1}}
+.callout.k-opt,.callout.k-sel{animation:calloutIn .45s ease .25s both}
+@media (prefers-reduced-motion:reduce){#mapa #zonas-nombre,#mapa #gondolas rect{transition:none}.callout.k-opt,.callout.k-sel{animation:none}}
