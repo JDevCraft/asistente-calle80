@@ -96,7 +96,7 @@ footer{font-size:13px;color:var(--muted)}
 #mapa #mapa > rect{fill:#ffffff;stroke:#e3e7ec;stroke-width:3}
 #mapa #zonas path{fill:#f6f7f9;stroke:#f6f7f9}
 #mapa #gondolas rect{fill:#e7ebf0;stroke:none}
-#mapa #gondolas rect[stroke="#C60202"]{fill:#cfe4f7;stroke:#0072ce;stroke-width:3}
+#mapa #gondolas rect[stroke="#C60202"]{fill:#e7ebf0;stroke:none}
 #mapa #gondolas rect.dest{fill:#B0D3F0;stroke:#B0D3F0;stroke-width:3}
 #mapa #etiquetas .pl rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa #etiquetas .pl text{fill:#6b7682}
