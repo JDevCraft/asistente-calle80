@@ -267,17 +267,15 @@ function showMotivos(id){
   })));
   e.hidden=false;
 }
-// Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?». Devuelve el pasillo elegido,
-// '' (entrada) o null («Ahora no»). Las dos últimas dejan la ruta saliendo de la entrada.
-function preguntarInicio(){
+// Desde la segunda búsqueda exitosa: modal «¿Desde dónde quieres iniciar tu recorrido?» para el producto «prod».
+// Devuelve el pasillo escrito, '' (entrada) o null («Ahora no»). Las dos últimas dejan la ruta saliendo de la entrada.
+function preguntarInicio(prod){
   return new Promise(res=>{
     const d=$('inicioModal'), inp=$('inicioPasillo'), err=$('inicioErr'), ids=[...$('desde').options].map(o=>o.value).filter(Boolean);
-    const radio=v=>d.querySelector('input[name=inicio][value='+v+']');
-    inp.value=''; err.textContent=''; radio('entrada').checked=true;
+    inp.value=''; err.textContent=''; $('inicioProd').textContent=prod;
     const fin=v=>{ d.onclose=null; if(d.open) d.close(); res(v); };
-    inp.oninput=()=>{ radio('pasillo').checked=true; err.textContent=''; };
-    $('inicioOk').onclick=()=>{
-      if(radio('entrada').checked){ fin(''); return; }
+    inp.oninput=()=>{ err.textContent=''; };
+    const ok=()=>{
       const r=normalizarPasillo(inp.value,ids);
       if(r.id){ fin(r.id); return; }
       err.textContent=r.error==='ambiguo'?'¿Cuál de estos? '+r.opciones.join(', ')+'. Escribe el número con la letra.'
@@ -285,6 +283,9 @@ function preguntarInicio(){
         :'No encuentro ese pasillo. Escríbelo como aparece en el letrero, por ejemplo 13B.';
       inp.focus();
     };
+    inp.onkeydown=ev=>{ if(ev.key==='Enter') ok(); };
+    $('inicioOk').onclick=ok;
+    $('inicioEntrada').onclick=()=>fin('');
     $('inicioNo').onclick=()=>fin(null);
     d.onclose=()=>fin(null); // Esc
     d.showModal();
@@ -558,7 +559,7 @@ async function ask(){
     }
     A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null;
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
-    if(ok&&A.nOk>0){ setStatus(''); A.origen=await preguntarInicio()||''; } // segunda búsqueda en adelante: dónde empieza el recorrido
+    if(ok&&A.nOk>0){ setStatus(''); A.origen=await preguntarInicio((A.ruta&&A.ruta.consulta)||text)||''; } // segunda búsqueda en adelante: dónde empieza el recorrido
     if(ok) A.nOk++;
     renderPlan();
     const dt=Date.now()-t0;

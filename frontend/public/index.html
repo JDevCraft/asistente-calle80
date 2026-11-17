@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=2">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -64,11 +64,13 @@
     </section>
     <dialog id="inicioModal" aria-labelledby="inicioT">
       <h2 id="inicioT">¿Desde dónde quieres iniciar tu recorrido?</h2>
-      <label class="op"><input type="radio" name="inicio" value="pasillo"><span>Estoy en un pasillo</span></label>
-      <input id="inicioPasillo" type="text" maxlength="30" placeholder="Ej. 13B" aria-label="Número del pasillo donde estás" data-clarity-mask="True" autocomplete="off">
-      <label class="op"><input type="radio" name="inicio" value="entrada" checked><span>Desde la entrada de la tienda</span></label>
+      <p class="sub">Dime en qué pasillo estás ahora y te llevo desde ahí hasta «<strong id="inicioProd"></strong>».</p>
+      <input id="inicioPasillo" type="text" maxlength="30" placeholder="Ej. 13B" aria-label="Pasillo donde estás" data-clarity-mask="True" autocomplete="off">
       <p id="inicioErr" class="err" role="alert"></p>
-      <div class="acts"><button class="primary" id="inicioOk" type="button">Generar mi ruta</button><button class="ghost" id="inicioNo" type="button">Ahora no</button></div>
+      <p class="hint">¿No sabes en qué pasillo estás? Mira el letrero en la parte de arriba, al inicio o al final del pasillo.</p>
+      <button class="primary" id="inicioOk" type="button">Generar mi ruta</button>
+      <button class="ghost" id="inicioEntrada" type="button">Salir desde la entrada</button>
+      <button class="link" id="inicioNo" type="button">Ahora no</button>
     </dialog>
     <p class="maphint" id="mapHint" role="status" aria-live="polite" hidden><svg class="i-info" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><svg class="i-ia" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4.2l1.3 3.6 3.6 1.3-3.6 1.3L8 14l-1.3-3.6L3.1 9.1l3.6-1.3z" fill="#0072ce"/><path d="M15.2 1.7l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="#0072ce"/><path d="M15 13l.5 1.4 1.4.5-1.4.5L15 16.8l-.5-1.4-1.4-.5 1.4-.5z" fill="#a6a6a6"/></svg><span></span></p>
     </div>
