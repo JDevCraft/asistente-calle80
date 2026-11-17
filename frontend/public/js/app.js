@@ -337,6 +337,8 @@ function renderPlan(){
   const p=A.plan, ru=A.ruta;
   // con resultado el mapa pasa arriba y ocupa el espacio (ver .start.has-res en app.css)
   $('start').classList.toggle('has-res',!!(p||ru));
+  // vista conversación (móvil): burbuja con lo que escribió el cliente
+  { const y=$('tuConsulta'), t=String(A.text||'').trim(); if(y){ y.textContent=t; y.classList.toggle('vacio',!(p||ru)||!t); } }
   if(!p&&!ru){ hint(''); return; }
   const ds=(ru&&ru.destinos)||[];
   if(!ds.length){ hint('No encontramos dónde está en la tienda. Prueba a describirlo con otras palabras o pregunta a un asesor.','info'); return; }
