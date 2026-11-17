@@ -343,7 +343,7 @@ footer{font-size:13px;color:var(--muted)}
   #start .ask{flex:none}
   #start .ask .askbox{margin-top:12px;min-height:84px;padding-bottom:6px}
   #start .ia-note:has(.status:empty){display:none}
-  #start .hero-bg .maphint{margin-top:4px;font-size:14px;line-height:18px}
+  #start .hero-bg .maphint{margin-top:12px;font-size:14px;line-height:18px}
   #start #result:empty{display:none}
   #start #cont{background:#fff}
 }
