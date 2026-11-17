@@ -2,7 +2,7 @@
   "_leeme": "Segmentos de los laterales (muros) y bloques sueltos. Un SKU con ubicación de lateral (p. ej. 02L23 = lateral 02L, módulo 23) va al segmento cuya lista 'familias' contiene su familia; si ninguna coincide, al segmento cuyo rango 'modulos' contiene el número de módulo; si tampoco, al segmento de rango más cercano. Editar aquí y volver a correr scripts/build_destinos.py.",
   "laterales": {
     "01L": [
-      {"id": "01l", "nombre": "Jardín y puertas", "familias": [], "modulos": [1, 99]}
+      {"id": "01l", "nombre": "Jardín", "familias": [], "modulos": [1, 99]}
     ],
     "02L": [
       {"id": "02l-1", "nombre": "Aire libre", "familias": ["AIRE LIBRE", "JARDIN", "MASCOTAS"], "modulos": [1, 19]},
