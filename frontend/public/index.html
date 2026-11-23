@@ -2,82 +2,88 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Asistente de necesidades Calle 80</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Búsqueda en tienda · Homecenter Calle 80</title>
 <meta name="description" content="Encuentra en la tienda Calle 80 lo que necesitas para tu proyecto, con la ubicación en el mapa.">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=21">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="css/app.css?v=32">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
 
+<!-- Header HC (Figma 58:10399) -->
 <header class="hc-top">
-<div class="hc-main">
-<span class="hc-menu"><svg viewBox="0 0 16 16" fill="none" stroke="#333" stroke-width="1.5" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/></svg></span>
-<span class="hc-logo"><svg width="40" height="30" viewBox="22 4 478 350" aria-hidden="true"><path d="M30 160 152 42H237V8H294V42H370L492 160V348H30Z" fill="#000"/><path d="M152 80 234 162H68Z" fill="#ffd500"/><path d="M184 72H362L452 162H272Z" fill="#0070cd"/><rect x="62" y="192" width="183" height="125" fill="#e00020"/><rect x="277" y="192" width="183" height="125" fill="#fff"/></svg><span class="word"><b>HOMECENTER</b><i>SODIMAC corona</i></span></span>
-<span class="hc-catbtn"><svg viewBox="0 0 16 16" fill="none" stroke="#333" stroke-width="1.5" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/></svg><span>Categorías</span></span>
-</span>
-<span class="hc-loc"><svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.6" aria-hidden="true"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span>Ingresa tu ubicación</span></span>
-<span class="hc-cart"><b class="hc-badge">0</b><svg viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h3l2.5 11h11L21 7H6.5"/><circle cx="9" cy="19.5" r="1.2"/><circle cx="17" cy="19.5" r="1.2"/></svg></span>
-<span class="hc-cmrp"><span>CMR<br>Puntos</span><b>Programa CMR Puntos</b></span>
-<span class="hc-acc"><svg viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7.5" r="4"/><path d="M4.5 21v-4a4 4 0 0 1 4-4h7a4 4 0 0 1 4 4v4z"/></svg><span>Mi Cuenta</span></span>
-</div>
+  <div class="hc-in">
+    <div class="hc-l">
+      <span class="ic ic-menu" aria-hidden="true"></span>
+      <img class="hc-logo" src="img/homecenter-house.svg" width="32" height="24" alt="Homecenter">
+    </div>
+    <div class="hc-r">
+      <span class="ic ic-cart" aria-hidden="true"></span>
+      <span class="ic ic-user" aria-hidden="true"></span>
+    </div>
+  </div>
 </header>
-<nav class="appbar" aria-label="Búsqueda inteligente"><div class="in"><button type="button" id="barBack" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><h2>Búsqueda inteligente</h2></div></nav>
-<div class="wrap">
+<!-- Top App Bar (Figma 58:10412) -->
+<nav class="appbar" aria-label="Búsqueda en tienda">
+  <div class="in">
+    <button type="button" id="barBack" aria-label="Volver"><span class="ic ic-back" aria-hidden="true"></span></button>
+    <h2>Búsqueda en tienda</h2>
+    <button type="button" id="barInfo" aria-label="Cómo funciona" aria-expanded="false" aria-controls="sheet"><span class="ic ic-info" aria-hidden="true"></span></button>
+  </div>
+</nav>
 
-  <main id="v-asistente" style="display:flex;flex-direction:column;gap:28px">
-    <div class="start" id="start">
-    <section class="ask" aria-label="Tu necesidad">
-      <h1>¿Qué estás buscando?</h1>
-      <p class="ia-note"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4.2l1.3 3.6 3.6 1.3-3.6 1.3L8 14l-1.3-3.6L3.1 9.1l3.6-1.3z" fill="#0072ce"/><path d="M15.2 1.7l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="#0072ce"/><path d="M15 13l.5 1.4 1.4.5-1.4.5L15 16.8l-.5-1.4-1.4-.5 1.4-.5z" fill="#a6a6a6"/></svg><span class="status" id="aiStatus" role="status"></span></p>
-      <div class="askbox"><label class="fl" for="need">¿Qué estás buscando?</label><svg class="spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.300 1.700L12 18l-2.200-6.300L3.500 10l6.300-1.700z"/><path d="M19 15l.9 2.600 2.600.9-2.600.9L19 22l-.9-2.600-2.600-.9 2.600-.9z"/></svg>
-        <textarea id="need" rows="2" data-clarity-unmask="True" aria-label="Describe tu necesidad" placeholder="Escribe el producto que deseas encontrar en tienda"></textarea>
-        <div class="row"><button class="qa x lst" id="micCancel" type="button" aria-label="Cancelar dictado" title="Cancelar dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button><span class="hold-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>Desliza para cancelar</span><span class="wave lst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><div class="grp"><button class="qa sq lst" id="micStop" type="button" aria-label="Detener dictado" title="Detener dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg></button><button class="mic" id="micBtn" type="button" aria-label="Dictar con la voz" title="Dictar con la voz" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-        <div class="actions">
-          <button class="ghost" id="stopBtn" type="button" hidden>Detener</button>
-          <button class="primary" id="askBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.500" cy="10.500" r="6.500"/><path d="m15.500 15.500 5 5"/></svg>Buscar</button>
-        </div>
-        </div></div>
+<main class="app" id="start">
+  <!-- Mapa (Figma «Mapas / Tienda Calle 80»): el plano lo dibuja js/ruta.js -->
+  <section class="ruta idle" id="rutaModal" aria-labelledby="rutaTitulo">
+    <div class="ruta-top" hidden><div class="t"><h2 id="rutaTitulo">Cómo llegar</h2><p id="rutaProducto"></p></div><button class="cerrar" id="rutaCerrar" type="button">Cerrar mapa</button></div>
+    <div class="ruta-body">
+      <div id="cont" class="cargando" aria-busy="true">
+        <svg id="mapa" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de la tienda con la ruta al pasillo"></svg>
+        <div class="callouts" id="callouts" role="group" aria-label="Ubicación en el mapa"></div>
+        <div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="scrim" id="scrim" aria-hidden="true"></div>
       </div>
-      <div id="survey" role="status" hidden></div>
-      <p class="heard" id="heard" hidden></p>
-    </section>
-    <div id="result"></div>
-    <!-- TODO(Task 10): copy NOT legally reviewed (Ley 1581 de 2012, habeas data). Must not ship to real beta traffic unchanged without business/legal sign-off. -->
-    <div class="hero-bg">
-
-    <section class="ruta idle" id="rutaModal" aria-labelledby="rutaTitulo">
-      <div class="ruta-top">
-        <div class="t"><h2 id="rutaTitulo">Cómo llegar</h2><p id="rutaProducto"></p></div>
-        <button class="cerrar" id="rutaCerrar" type="button">Cerrar mapa</button>
-      </div>
-      <div class="ruta-body">
-        <div id="cont">
-          <svg id="mapa" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de la tienda con la ruta al pasillo"></svg>
-          <div class="callouts" id="callouts" role="group" aria-label="Opciones en el mapa"></div>
-        </div>
-      </div>
-      <div hidden><p id="rutaCaption"></p><button id="rutaPlay" type="button"></button><p id="rutaProg"></p><button id="rutaPrev" type="button"></button><button id="rutaNext" type="button"></button><button id="verTodo" type="button"></button><ol id="rutaPasos"></ol><select id="destino"><option value="">—</option></select><select id="desde"><option value="">Entrada</option></select><div id="info"></div></div>
-    </section>
-    <dialog id="inicioModal" aria-labelledby="inicioT">
-      <h2 id="inicioT">¿Desde dónde quieres iniciar tu recorrido?</h2>
-      <input id="inicioPasillo" type="text" maxlength="30" placeholder="Pasillo donde estás, ej. 13B" aria-label="Pasillo donde estás" data-clarity-unmask="True" autocomplete="off">
-      <p id="inicioErr" class="err" role="alert"></p>
-      <button class="primary" id="inicioOk" type="button">Generar mi ruta</button>
-      <button class="ghost" id="inicioEntrada" type="button">Salir desde la entrada</button>
-    </dialog>
-    <p class="maphint vacio" id="mapHint" role="status" aria-live="polite"><svg class="i-info" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><svg class="i-ia" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4.2l1.3 3.6 3.6 1.3-3.6 1.3L8 14l-1.3-3.6L3.1 9.1l3.6-1.3z" fill="#0072ce"/><path d="M15.2 1.7l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="#0072ce"/><path d="M15 13l.5 1.4 1.4.5-1.4.5L15 16.8l-.5-1.4-1.4-.5 1.4-.5z" fill="#a6a6a6"/></svg><span></span></p>
     </div>
+    <div hidden><p id="rutaCaption"></p><button id="rutaPlay" type="button"></button><p id="rutaProg"></p><button id="rutaPrev" type="button"></button><button id="rutaNext" type="button"></button><button id="verTodo" type="button"></button><ol id="rutaPasos"></ol><select id="destino"><option value="">—</option></select><select id="desde"><option value="">Entrada</option></select><div id="info"></div></div>
+  </section>
+
+  <!-- Bottom sheet (Figma «Product - Bootom sheet»): un solo componente cambia de estado con data-mode -->
+  <section class="sheet" id="sheet" data-mode="inicio" aria-label="Asistente de búsqueda">
+    <div class="sh-top">
+      <button type="button" class="sh-grip" id="sheetGrip" aria-label="Contraer panel" aria-expanded="true"><i></i></button>
+      <div class="sh-row">
+        <div class="sh-head" id="sheetHead">
+          <p class="sh-busy" id="aiStatus" role="status" aria-live="polite"></p>
+          <h1 class="sh-t" id="sheetTitle">¿Qué estás buscando?</h1>
+          <p class="sh-t2" id="sheetTitle2" hidden></p>
+          <p class="sh-s" id="sheetSub">Tienda Calle 80</p>
+        </div>
+        <!-- Figma 58:13495 «06 — Configuración de material»: botón Salir (75:7018) -->
+        <button type="button" class="salir" id="sheetSalir" hidden>Salir</button>
+      </div>
     </div>
-
-
-  </main>
-
-</div>
-
+    <div class="sh-opts" id="sheetOpts" role="group" aria-labelledby="sheetTitle"></div>
+    <div id="survey" role="status" hidden></div>
+    <p class="heard" id="heard" hidden></p>
+    <!-- search section (Figma I58:10464) -->
+    <div class="askbox">
+      <div class="field">
+        <label class="sr" for="need">Lo que buscas</label>
+        <textarea id="need" rows="1" data-clarity-unmask="True" placeholder="Escribe el producto que buscas" autocomplete="off" enterkeyhint="search"></textarea>
+        <span class="hold-hint" aria-hidden="true"><span class="ic ic-back"></span>Desliza para cancelar</span>
+        <span class="wave lst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+      <button class="qa x lst" id="micCancel" type="button" aria-label="Cancelar dictado" title="Cancelar dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+      <button class="qa sq lst" id="micStop" type="button" aria-label="Detener dictado" title="Detener dictado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg></button>
+      <button class="qa mic" id="micBtn" type="button" aria-label="Dictar con la voz" title="Dictar con la voz" hidden><span class="ic ic-mic" aria-hidden="true"></span></button>
+      <button class="qa send" id="askBtn" type="button" aria-label="Buscar" title="Buscar"><span class="ic ic-send" aria-hidden="true"></span></button>
+      <button class="qa stop" id="stopBtn" type="button" aria-label="Detener búsqueda" title="Detener búsqueda" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg></button>
+    </div>
+  </section>
+</main>
 
 <script type="module" src="js/ruta.js"></script>
 <script type="module" src="js/app.js"></script>

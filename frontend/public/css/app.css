@@ -1,97 +1,194 @@
-:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* HC-HEADER: nav visual de Homecenter (demo, sin links). Mobile-first. */
-:root{--hc-blue:#0072ce;--hc-red:#dd0021;--hc-text:#3d3c3c;--hc-bg:#f3f3f3;--hc-line:#e0e0e0}
-.hc-top{background:#fff;color:var(--hc-text);font-family:var(--body);border-bottom:1px solid var(--hc-line)}
-.hc-main{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:"menu logo cart user";align-items:center;gap:10px 12px;padding:9px 16px 5px}
-.hc-menu{grid-area:menu}
-.hc-menu svg{width:24px;height:24px;display:block}
-.hc-logo{grid-area:logo;display:flex;align-items:center;gap:6px}
-.hc-logo .word{display:flex;flex-direction:column;line-height:1}
-.hc-logo .word b{font-weight:900;font-size:17px;letter-spacing:-.3px;color:var(--hc-blue)}
-.hc-logo .word i{font-style:normal;font-weight:900;font-size:8px;color:var(--hc-red);margin-top:2px}
-.hc-logo .word{display:none}
-.hc-logo svg{width:40px;height:30px}
-.hc-cart{grid-area:cart;position:relative}
-.hc-cart svg{width:22px;height:22px}
-.hc-badge{display:inline-flex;align-items:center;position:absolute;top:-8px;right:-8px;background:var(--hc-red);color:#fff;font-size:11px;border-radius:50%;width:17px;height:17px;justify-content:center}
-.hc-acc{grid-area:user}
-.hc-acc svg{width:24px;height:24px}
-.hc-acc > span,.hc-catbtn,.hc-loc,.hc-cmrp{display:none}
-@media (min-width:901px){
-  .hc-main{grid-template-columns:auto auto auto auto auto auto;grid-template-areas:"logo catbtn loc cart cmrp acc";padding:0 24px;min-height:52px;gap:18px;justify-content:center}
-  .hc-catbtn{grid-area:catbtn;display:inline-flex;align-items:center;gap:8px;border:1px solid #6b6b6b;border-radius:4px;padding:8px 12px;font:700 14px var(--body);background:#fff;color:var(--hc-text)}
-  .hc-catbtn svg{width:16px;height:16px}
-  .hc-menu{display:none}
-  .hc-logo{grid-area:logo}
-  .hc-logo .word{display:flex}
-  .hc-logo svg{width:32px;height:24px}
-    .hc-loc{grid-area:loc;display:inline-flex;font-size:12px;gap:6px;color:var(--hc-blue);text-decoration:underline}
-  .hc-loc svg{width:20px;height:20px;color:#555}
-  .hc-cart{grid-area:cart}
-  .hc-cmrp{grid-area:cmrp;display:inline-flex;gap:6px;font-size:10px;line-height:1.15}
-  .hc-cmrp b{font-weight:400;font-size:12px;display:block}
-  .hc-acc{grid-area:acc;display:inline-flex;gap:6px;font-size:12px}
-  .hc-acc > span{display:inline}
-  .hc-acc svg{width:20px;height:20px}
-}
-/* /HC-HEADER */
-/* Layout: barra azul arriba y una columna blanca tipo tienda en línea; pregunta, lo que entendimos y tarjetas de producto con pasillo y stock. Paleta clara única: blanco, grises neutros y azul de tienda */
+/* Asistente Calle 80 · UI mapa + bottom sheet (Figma «🚧 Asistentes - Lepton - Discovery», grupo «Frames finales»).
+   Mobile-first sobre 390 de ancho; en pantallas anchas la app es una columna centrada de máx. 480 px. */
 :root{
   color-scheme:light;
-  --bg:#ffffff; --surface:#ffffff; --soft:#f5f5f5; --ink:#333333; --muted:#717171; --line:#e0e0e0;
-  --accent:#0072ce; --accent-hover:#0063b3; --accent-ink:#ffffff; --accent-soft:#e8f2fb;
-  --ok:#1e7e34; --warn:#dd0021;
   --body:"Lato",Arial,"Helvetica Neue",sans-serif;
+  /* tokens del diseño */
+  --primary:#0072ce; --primary-hover:#0063b3; --primary-soft:#e8f2fb;
+  --text:#333333; --text-light:#5c5c5c; --text-lighter:#767676;
+  --surface:#ffffff; --neutral-lightest:#ebebeb; --neutral-light:#f5f5f5; --grip:#c0c0c0;
+  --danger:#dd0021;
+  --lvl1-b:0 2px 4px rgba(0,0,0,.14),0 1px 1px rgba(0,0,0,.10);
+  --lvl1-t:0 -2px 4px rgba(0,0,0,.10);
+  --qa-shadow:0 1px 2px rgba(0,0,0,.14),0 .5px .5px rgba(0,0,0,.10);
+  --app-w:480px;
+  --kb:0px; /* alto del teclado en iOS (lo calcula app.js con visualViewport) */
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+html,body{height:100%}
+body{margin:0;background:#fff;color:var(--text);font:400 14px/20px var(--body);-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
 button{font:inherit;color:inherit;cursor:pointer}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+img{max-width:100%}
 
+/* Íconos del diseño: los SVG de /img se usan como máscara para poder cambiarles el color */
+.ic{display:inline-block;flex:none;width:24px;height:24px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.ic-menu{--m:url(../img/menu.svg)} .ic-cart{--m:url(../img/cart.svg)} .ic-user{--m:url(../img/user.svg)}
+.ic-back{--m:url(../img/chevron-left.svg)} .ic-info{--m:url(../img/information.svg)}
+.ic-mic{--m:url(../img/microphone.svg)} .ic-send{--m:url(../img/send.svg)} .ic-arrow{--m:url(../img/arrow-right.svg)}
+.ic-ia{--m:url(../img/ia.svg)} .ic-dir{--m:url(../img/directions.svg)} .ic-pin{--m:url(../img/location.svg)}
 
-.wrap{max-width:960px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+/* ---------- Header HC (Figma 58:10399) ---------- */
+.hc-top{flex:none;position:relative;z-index:3;background:#fff;filter:drop-shadow(0 4px 2px rgba(0,0,0,.1))}
+.hc-in{max-width:var(--app-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 12px}
+.hc-l{display:flex;align-items:center;gap:16px}
+.hc-l .ic-menu{width:20px;height:20px;color:var(--text)}
+.hc-logo{display:block;width:32px;height:24px}
+.hc-r{display:flex;align-items:flex-start;gap:4px;color:var(--text)}
+.hc-r .ic{width:32px;height:32px}
 
-.ask{display:flex;flex-direction:column;gap:12px}
-.ask h1{font-weight:900;font-size:clamp(26px,4.4vw,36px);line-height:1.1;margin:0;text-wrap:balance}
-.askbox{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.askbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-#need{flex:1 1 260px;min-width:0;border:0;background:transparent;color:var(--ink);font:400 18px/1.4 var(--body);padding:8px;outline:none;resize:none;min-height:56px}
-.actions{display:flex;gap:8px;margin-left:auto}
-.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:12px 22px;font-weight:700;font-size:16px}
-.primary:hover{background:var(--accent-hover)}
-.primary:disabled{opacity:.55;cursor:default}
-.ghost{background:var(--surface);border:1px solid var(--accent);color:var(--accent);border-radius:4px;padding:11px 16px;font-weight:700}
-.status{font-size:14px;color:var(--muted);min-height:1.5em;margin:0}
-.status.err{color:var(--warn)}
-.status.busy::before{content:"";display:inline-block;width:.85em;height:.85em;border:2px solid var(--accent);border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:-2px;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ---------- Top App Bar (Figma 58:10412) ---------- */
+.appbar{flex:none;position:relative;z-index:2;background:var(--surface);box-shadow:var(--lvl1-b)}
+.appbar .in{max-width:var(--app-w);margin:0 auto;height:48px;display:flex;align-items:center;padding:0 16px}
+.appbar button{flex:none;width:24px;height:24px;padding:0;border:0;background:none;color:var(--text);display:grid;place-items:center;border-radius:50%}
+.appbar h2{flex:1;min-width:0;margin:0;font:400 20px/24px var(--body);color:var(--text);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar #barInfo[aria-expanded="true"]{color:var(--primary)}
 
-#result{display:flex;flex-direction:column;gap:24px}
-.need{font-weight:900;font-size:clamp(22px,3.4vw,28px);line-height:1.15;margin:0;text-wrap:balance}
-.src{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--accent-soft);color:var(--accent)}
-.src.demo{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+/* ---------- App: mapa arriba, sheet abajo ---------- */
+.app{flex:1 1 auto;min-height:0;width:100%;max-width:var(--app-w);margin:0 auto;display:flex;flex-direction:column;position:relative}
+/* El panel mide lo que su contenido; el mapa ocupa el resto y el plano se encaja completo (sin recortes) */
+.ruta{flex:1 1 auto;min-height:160px;display:flex;flex-direction:column;padding:16px 16px 12px}
+.ruta-body{flex:1 1 auto;min-height:0;position:relative;display:flex}
+#cont{position:relative;flex:1 1 auto;min-height:0;background:#fff;overflow:hidden;border-radius:8px}
+#mapa{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none;transition:opacity .4s ease}
+#mapa text{font-family:var(--body)}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0;transition:box-shadow .15s}
-.card:hover{box-shadow:0 2px 10px rgba(0,0,0,.10)}
-.card .d{font-weight:700;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
-.card .s{font-size:13px;color:var(--muted)}
-.card .f{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
-.card .aisles{display:flex;flex-wrap:wrap;gap:4px}
-.aisle{font-size:12px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:2px 8px;white-space:nowrap}
-.ref{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.where .aisle{font-size:13px}
-footer{font-size:13px;color:var(--muted)}
-@media (max-width:520px){ #need{font-size:17px} .actions{width:100%} .primary{flex:1} }
-@media (prefers-reduced-motion:reduce){ .status.busy::before{animation:none} .card{transition:none} }
-/* Inicio con ilustración */
-.start{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
-.hero-bg{min-width:0}
-.start.has-res{grid-template-columns:minmax(0,1fr)}
-.start.has-res .hero-bg{display:block}
-.ruta.idle .ruta-top{display:none}
-.hero-bg .ruta-body{height:clamp(260px,calc(100vh - 370px),700px)}
-@media (max-width:760px){ .start{grid-template-columns:minmax(0,1fr);gap:8px} }
-/* Mapa limpio: plano neutro, color de marca solo en la guía */
+/* Esqueleto del mapa mientras carga (comentario Figma en el frame 1: «hazme un esqueleto acá») */
+.skel{position:absolute;inset:0;display:none;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:10px;padding:4px}
+.skel i{border-radius:6px;background:linear-gradient(100deg,#eef0f3 30%,#f8f9fa 50%,#eef0f3 70%) 0 0/300% 100%;animation:skel 1.4s linear infinite}
+.skel i:nth-child(1){grid-column:span 4} .skel i:nth-child(5){grid-row:span 2} .skel i:nth-child(6){grid-column:span 2;grid-row:span 2} .skel i:nth-child(10){grid-column:span 3}
+#cont.cargando .skel{display:grid}
+#cont.cargando #mapa,#cont.cargando .callouts{opacity:0}
+@keyframes skel{from{background-position:100% 0}to{background-position:0 0}}
+
+/* Velo sobre el mapa mientras se escribe (frame 2) */
+.scrim{position:absolute;inset:-16px;background:rgba(51,51,51,.55);opacity:0;pointer-events:none;transition:opacity .3s ease}
+body.escribiendo .scrim{opacity:1;pointer-events:auto}
+
+/* ---------- Bottom sheet (Figma «Product - Bootom sheet») ---------- */
+.sheet{flex:none;display:flex;flex-direction:column;position:relative;z-index:4;background:var(--surface);border-radius:16px 16px 0 0;box-shadow:0 -2px 4px rgba(0,0,0,.10),0 4px 7px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0px);
+  transform:translateY(calc(-1 * var(--kb)));transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.sh-top{padding:16px 20px 8px 16px;display:flex;flex-direction:column;gap:16px}
+.sh-grip{align-self:center;display:grid;place-items:center;width:48px;height:20px;margin:-10px 0 -6px;padding:0;border:0;background:none;touch-action:none}
+.sh-grip i{display:block;width:30px;height:4px;border-radius:5px;background:var(--grip)}
+.sh-head{display:flex;flex-direction:column;gap:2px;min-width:0;interpolate-size:allow-keywords;overflow:hidden;transition:height .3s ease,opacity .25s ease}
+.sh-t{margin:0;font:500 20px/24px var(--body);color:var(--text);overflow-wrap:anywhere;text-wrap:pretty}
+.sh-t b{font-weight:700}
+.sh-row{display:flex;align-items:center;gap:16px;min-width:0}
+.sh-row .sh-head{flex:1 1 auto}
+.sh-t2{margin:0;font:400 16px/22px var(--body);color:var(--text);overflow-wrap:anywhere}
+.salir{flex:none;min-height:36px;padding:8px 16px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body)}
+.salir:hover{background:var(--primary-hover)}
+/* Resultado con ruta (Figma 58:13495): título 20 regular + línea 16, botón Salir y sin buscador */
+.sheet.con-salir .sh-t{font-weight:400}
+.sheet.con-salir .sh-top{padding-bottom:16px}
+.sheet.con-salir .askbox{display:none}
+/* Resultado con varias categorías: al subir el panel (asa) se despliegan las pills debajo del título (Figma «Product Items» 8 8 16 16) */
+.sheet.plegado .sh-opts{display:none}
+.sheet.plegable:not(.plegado) .sh-top{padding-bottom:8px}
+.sheet.plegable .sh-opts{padding-bottom:16px}
+.opt.pill.actual{border-color:var(--primary);font-weight:700}
+.sh-s{margin:0;font:500 14px/20px var(--body);color:var(--text-light);overflow-wrap:anywhere}
+.sh-s:empty{display:none}
+.sh-s.err{color:var(--danger)}
+/* Línea de estado de la IA: «Buscando…» con estrellas animadas, mensajes y errores */
+.sh-busy{display:flex;align-items:center;gap:4px;margin:0;font:400 16px/18px var(--body);color:var(--primary);min-height:0;overflow-wrap:anywhere}
+.sh-busy:empty{display:none}
+.sh-busy.err{color:var(--danger);font-size:14px;line-height:20px}
+.sh-busy.note{font-size:14px;line-height:20px}
+.sh-busy .ic-ia{width:20px;height:20px;color:var(--primary)}
+.sh-busy.busy .ic-ia{animation:twinkle 1.3s ease-in-out infinite}
+.sh-busy .think-txt{display:inline-block}
+.sh-busy .think-txt.swap{animation:phrase .45s ease both}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0);opacity:1}35%{transform:scale(.72) rotate(-12deg);opacity:.55}60%{transform:scale(1.12) rotate(8deg);opacity:1}}
+@keyframes phrase{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.retry{margin-left:6px;padding:2px 10px;min-height:28px;border:1px solid currentColor;border-radius:4px;background:#fff;color:inherit;font:inherit;font-weight:700}
+
+/* Modos: qué muestra el encabezado */
+.sheet[data-mode="buscando"] .sh-t,.sheet[data-mode="buscando"] .sh-s{display:none}
+.sheet[data-mode="buscando"] .sh-top{gap:16px}
+
+/* Botones de opción (Figma Button 56:6291): aparecen de izquierda a derecha, al ritmo de los pasillos del mapa */
+.sh-opts{display:flex;gap:10px;padding:8px 8px 8px 16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.sh-opts::-webkit-scrollbar{display:none}
+.sh-opts:empty{display:none}
+.opt{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body);white-space:nowrap;transition:background .15s}
+.opt:hover{background:var(--primary-hover)}
+.opt:active{transform:scale(.98)}
+.opt .ic-arrow{color:#fff}
+/* Categorías como pills (Figma «Badge»): 28 px, fondo #E6F1FA, borde #B0D3F0, ícono de la categoría a la izquierda */
+.opt.pill{min-height:28px;padding:4px 8px;gap:8px;border:1px solid #B0D3F0;border-radius:100px;background:#E6F1FA;color:var(--primary);font:400 14px/20px var(--body)}
+.opt.pill:hover{background:#d6e8f7}
+.opt.pill svg{flex:none;width:20px;height:20px;color:#005192}
+.opt.pill .ic-pin{width:20px;height:20px;color:#005192}
+.sh-opts:has(.pill){gap:10px;padding:8px 8px 8px 16px}
+/* Botones de «¿En qué pasillo estás?»: ícono de indicaciones con el rombo de indicaciones, en blanco con la flecha calada */
+.opt .ic-dir{color:#fff;width:22px;height:22px}
+.opt .ic-pin{color:#fff;width:20px;height:20px}
+.opt.entra{animation:optIn .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
+@keyframes optIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+/* Sección de búsqueda (Figma search section, 80 px) */
+.askbox{display:flex;align-items:center;gap:16px;padding:16px;background:#fff;margin-top:auto}
+.field{position:relative;flex:1 1 auto;min-width:0;min-height:50px;display:flex;align-items:center;gap:8px;padding:8px;border-radius:4px;background:var(--neutral-lightest);transition:box-shadow .15s}
+.field:focus-within{box-shadow:inset 0 0 0 1px var(--primary)}
+#need{flex:1 1 auto;min-width:0;width:100%;max-height:80px;border:0;background:transparent;outline:none;resize:none;padding:0;color:var(--text);font:400 16px/20px var(--body);field-sizing:content}
+@media (min-width:600px){#need{font-size:14px}}
+#need::placeholder{color:var(--text-lighter);font-size:14px}
+.qa{flex:none;width:36px;height:36px;padding:0;border-radius:50%;border:.5px solid rgba(255,255,255,.12);box-shadow:var(--qa-shadow);display:grid;place-items:center;background:#fff;color:var(--primary)}
+.qa svg{width:24px;height:24px}
+.qa .ic{width:24px;height:24px}
+.qa.send{background:linear-gradient(94deg,#a8bddb 46%,#0072ce 48.5%,#a8bddb 139%);color:#fff}
+.qa.send:disabled{opacity:.55;cursor:default}
+.qa.stop{background:var(--primary);color:#fff}
+.qa.x{background:var(--primary);color:#ebebeb}
+.qa.sq:hover,.qa.mic:hover{background:#f3f8fd}
+
+/* Dictado: mientras escucha, la onda va dentro del campo y el micrófono cambia por cancelar/detener */
+.askbox .lst{display:none}
+.wave{flex:none;width:96px;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.wave i{display:block;flex:none;width:2px;height:26px;border-radius:1px;background:#868585;transform:scaleY(.12);transition:transform 90ms linear}
+.askbox.listening .wave.voz i{background:var(--primary)}
+.askbox.listening .lst{display:grid}
+.askbox.listening .wave.lst{display:flex}
+.askbox.listening .mic{display:none}
+.askbox.listening .field{box-shadow:inset 0 0 0 1px var(--primary)}
+.askbox.listening #need::placeholder{color:transparent}
+.askbox .mic{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
+.askbox.listening.pressing .mic{display:grid}
+.askbox .hold-hint{display:none;align-items:center;gap:2px;font:400 12px/18px var(--body);color:var(--text-lighter);white-space:nowrap}
+.askbox .hold-hint .ic{width:16px;height:16px}
+.askbox.listening.hold .hold-hint{display:flex}
+.askbox.listening.hold #need{display:none}
+.askbox.listening.hold #micCancel,.askbox.listening.hold #micStop{display:none}
+.askbox.listening.hold.out .hold-hint{color:var(--primary)}
+.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{background:var(--primary);border-color:var(--primary);color:#fff;transform:scale(1.25);animation:micpulse 1.2s ease-out infinite}
+@keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(0,114,206,.40)}100%{box-shadow:0 0 0 12px rgba(0,114,206,0)}}
+
+/* Escribiendo: el panel sube con el teclado y el encabezado se recoge (frame 2, comentario «animación hacia arriba») */
+body.escribiendo .sh-head{height:0;opacity:0}
+body.escribiendo .sh-opts{display:none}
+body.escribiendo .sheet[data-mode="origen"] .sh-head{height:auto;opacity:1}
+body.escribiendo .sheet[data-mode="origen"] .sh-s{display:none}
+body.escribiendo .sheet[data-mode="origen"] .sh-top{gap:8px}
+body.escribiendo .sheet[data-mode="origen"] .sh-opts{display:flex}
+body.escribiendo .sh-top{gap:0}
+/* Panel contraído con el asa: solo queda el campo */
+.sheet.min .sh-head{height:0;opacity:0}
+.sheet.min .sh-opts{display:none}
+.sheet.min .sh-top{gap:0}
+
+/* Micro-encuesta (desactivada mientras se rediseña; se conserva el contrato) */
+#survey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 16px;padding:6px 10px;border:1px solid #e0e0e0;border-radius:8px}
+#survey .sv-q{font-weight:700;margin-right:auto}
+#survey button{min-height:40px;min-width:64px;padding:8px 14px;border-radius:4px;font-weight:700;border:1px solid var(--primary);background:#fff;color:var(--primary)}
+#survey .sv-in{flex:1 1 180px;min-height:40px;padding:8px 10px;border:1px solid #e0e0e0;border-radius:4px;font:inherit}
+.heard{margin:0 16px;font-size:14px;font-weight:700;color:#005ba6}
+
+/* ---------- Mapa: plano neutro, color de marca solo en la guía ---------- */
 #mapa #familias,#mapa #familias-velo,#mapa #zonas-borde,#mapa #modulos{display:none}
 #mapa #mapa > rect{fill:#ffffff;stroke:#e3e7ec;stroke-width:3}
 #mapa #zonas path{fill:#f6f7f9;stroke:#f6f7f9}
@@ -101,333 +198,53 @@ footer{font-size:13px;color:var(--muted)}
 #mapa #etiquetas .pl rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa #etiquetas .pl text{fill:#6b7682}
 #mapa #etiquetas .pl rect[fill="#C60202"],#mapa #etiquetas .pl rect[fill="#041E7E"]{fill:#f1f3f5;stroke:none}
-#mapa #etiquetas .pl.dest rect{fill:#003b6f;stroke:#ffffff;stroke-width:3}
+#mapa #etiquetas .pl.dest rect{fill:#0072ce;stroke:#ffffff;stroke-width:3}
 #mapa #etiquetas .pl.dest text{fill:#ffffff}
 #mapa #zonas-nombre{fill:#767676;fill-opacity:1;font-family:var(--body);font-weight:400;stroke:#fff;stroke-opacity:.9;stroke-width:8px}
 #mapa #ent-base rect,#mapa #ent-base circle{fill:#005ba6}
 #mapa #ent-base line{stroke:#005ba6}
 #mapa #ent-base .pl{display:none}
-/* Mapa de tienda y recorrido guiado */
-.go{align-self:stretch;margin-top:4px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:9px 10px;font-weight:700;font-size:14px}
-.go:hover{background:var(--accent-hover)}
-.dcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
-.dcard.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
-.dcard .dh{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.dcard .dk{display:flex;flex-direction:column;line-height:1.1}
-.dcard .dl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.dcard .dr{font-size:26px;font-weight:900;color:var(--accent);font-variant-numeric:tabular-nums}
-.dcard .dn{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.dcard .de{margin:0;font-weight:700;font-size:15px}
-.dcard .dq{margin:0;font-size:13px;color:var(--muted)}
-.dcard .go{align-self:flex-start;margin:6px 0 0;padding:9px 18px}
-.dcard .aviso{margin:4px 0 0;font-size:13px;background:#fff7e0;border:1px solid #f0d78c;border-radius:4px;padding:8px 10px}
-.dcard .ex{margin-top:6px;border-top:1px solid var(--line);padding-top:8px}
-.dcard .ex summary{cursor:pointer;font-weight:700;color:var(--accent);font-size:14px;padding:4px 0}
-.q{margin:0;font-weight:900;font-size:18px}
-.opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--surface);border:1px solid #bdbdbd;border-radius:8px;padding:9px 12px;font:inherit;color:inherit;cursor:pointer;min-width:0;max-width:100%}
-.opt b{font-size:14px}
-.opt span{font-size:12px;color:var(--muted)}
-.opt .oq{color:#333}
-.opt:hover{border-color:var(--accent)}
-.opt.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
-.opts.sm .opt{padding:6px 12px;border-radius:999px;font-size:13px}
-.al{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
-.mlist li .aisle{align-self:flex-start;margin-top:2px}
-#result:empty{display:none}
-#survey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0;padding:6px 10px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink)}
-#survey[hidden]{display:none}
-/* la encuesta flota sobre el mapa: no empuja el mapa hacia abajo */
-#survey .sv-q{font-weight:700;margin-right:auto}
-#survey button{min-height:40px;min-width:64px;padding:8px 14px;border-radius:6px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--accent);background:#fff;color:var(--accent)}
-#survey button:hover{background:var(--accent-soft)}
-#survey .sv-in{flex:1 1 180px;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;color:var(--ink)}
-#survey .sv-err{flex:1 1 100%;color:var(--danger,#C60202);font-size:.9em}
-#survey .sv-err:empty{display:none}
-.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
-.ruta{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
-.ruta-top{display:flex;align-items:flex-start;gap:8px}
-.ruta-top .primary{padding:8px 14px;font-size:14px;flex:none}
-.ruta-top .t{flex:1;min-width:0}
-.ruta-top h2{margin:0;font-weight:900;font-size:22px;line-height:1.2;text-wrap:balance}
-.ruta-top p{margin:2px 0 0;font-size:14px;color:var(--muted);overflow-wrap:anywhere}
-.cerrar{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:4px;padding:8px 14px;font-weight:700;flex:none}
-.ruta-body{display:grid;grid-template-columns:minmax(0,1fr);height:min(680px,80vh);border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
-#cont{position:relative;min-height:0;background:var(--soft)}
-#mapa{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none}
-#mapa text{font-family:var(--body)}
 #mapa .pulso{transform-box:fill-box;transform-origin:center;opacity:0}
 #mapa .destino-pulsa .pulso{animation:pulso .9s ease-out 3}
 @keyframes pulso{from{transform:scale(1);opacity:.95}to{transform:scale(3.4);opacity:0}}
-.caption{margin:0;background:var(--accent);color:var(--accent-ink);padding:12px 16px;font-weight:700;font-size:15px;line-height:1.35;min-height:3.1em}
-.caption:empty{visibility:hidden}
-.ctrl .primary{padding:10px 16px;font-size:15px}
-.ctrl .ghost{padding:9px 14px}
-.pasos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:p}
-.pasos li{counter-increment:p;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:14px;line-height:1.4;transition:background .2s,border-color .2s}
-.pasos li::before{content:counter(p);width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;font-size:13px}
-.pasos li.done::before{background:var(--ok);color:#fff}
-.pasos li.on{border-color:var(--accent);background:var(--accent-soft)}
-.pasos li.on::before{background:var(--accent);color:var(--accent-ink)}
-@media (max-width:760px){ .ruta-body{height:min(600px,68vh)} .ruta-top h2{font-size:20px} .caption{font-size:14px;padding:10px 12px} }
-@media (prefers-reduced-motion:reduce){ #mapa .destino-pulsa .pulso{animation:none} .pasos li{transition:none} }
-@media (max-width:520px){
-  .card{padding:10px 12px;gap:3px}
-  .card .d{font-size:14px;line-height:1.25}
-  .card .s{font-size:12px}
-  .card .f{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:4px;padding-top:6px}
-  .aisle{font-size:11px;padding:1px 6px}
-  .card .ref{font-size:11px}
-  .go{align-self:auto;margin:0 0 0 auto;padding:6px 12px;font-size:13px}
-}
-/* ASK-UI */
-.ask{gap:14px}
-.ask .kicker{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-weight:700;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:#0072ce;background:#e8f2fb;border-radius:999px;padding:4px 12px}
-.askbox{position:relative;align-items:center;gap:10px;border:2px solid transparent;border-radius:16px;padding:12px 12px 12px 16px;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(120deg,#0072ce,#4aa3ec 50%,#dd0021) border-box;box-shadow:0 8px 24px rgba(0,114,206,.16),0 2px 6px rgba(0,0,0,.06);transition:box-shadow .2s,transform .2s}
-.askbox:focus-within{border-color:transparent;box-shadow:0 12px 32px rgba(0,114,206,.28),0 0 0 4px rgba(0,114,206,.12);transform:translateY(-1px)}
-.askbox .spark{flex:none;width:28px;height:28px;color:#0072ce;align-self:flex-start;margin-top:8px}
-#need{font-size:19px;min-height:64px;padding:8px 4px}
-#need::placeholder{color:#8a8a8a}
-.askbox .primary{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:14px 24px;font-size:16px;background:linear-gradient(135deg,#0072ce,#005ba6);box-shadow:0 4px 12px rgba(0,114,206,.35);transition:transform .15s,box-shadow .15s}
-.askbox .primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,114,206,.45)}
-.askbox .primary svg{width:18px;height:18px}
-@media (max-width:520px){.askbox{border-radius:14px;padding:10px}.askbox .spark{display:none}.askbox .actions{width:100%}.askbox .primary{width:100%;justify-content:center}}
-/* MIC-UI */
-.mic{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid #cfe3f6;background:#f3f8fd;color:#0072ce;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s,transform .15s}
-.mic:hover{background:#e0eefb;transform:translateY(-1px)}
-.mic svg{width:22px;height:22px}
-.mic.rec{background:#dd0021;border-color:#dd0021;color:#fff;animation:micpulse 1.2s ease-out infinite}
-@keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(221,0,33,.45)}100%{box-shadow:0 0 0 14px rgba(221,0,33,0)}}
-@media (max-width:520px){.askbox #need{order:0;flex:1 1 100%;width:100%}.mic{order:1;margin-left:auto}.askbox .actions{order:2}}
-@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
-/* /MIC-UI */
-/* /ASK-UI */
-/* THINK-UI */
-.status.busy::before{display:none}
-.status.busy{display:flex;align-items:center;gap:10px;color:#005ba6;font-weight:700}
-.dots{display:inline-flex;gap:4px;align-items:center}
-.dots i{width:8px;height:8px;border-radius:50%;background:#0072ce;animation:think 1.2s ease-in-out infinite}
-.dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
-@keyframes think{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
-.think-txt{background:linear-gradient(90deg,#6b7f95 0%,#6b7f95 35%,#0072ce 50%,#6b7f95 65%,#6b7f95 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shimmer 2.2s linear infinite}
-@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
-.askbox.thinking{animation:glow 1.8s ease-in-out infinite}
-@keyframes glow{0%,100%{box-shadow:0 8px 24px rgba(0,114,206,.16),0 0 0 0 rgba(0,114,206,.25)}50%{box-shadow:0 10px 30px rgba(0,114,206,.3),0 0 0 6px rgba(0,114,206,.1)}}
-@media (prefers-reduced-motion:reduce){.dots i,.think-txt,.askbox.thinking{animation:none}.think-txt{color:#005ba6;-webkit-text-fill-color:#005ba6;background:none}}
-/* /THINK-UI */
-/* MOBILE-HOME */
-@media (max-width:760px){
-  header.top .in{gap:6px 10px;padding-top:8px;padding-bottom:8px}
-  .wrap{padding-block:16px 40px;gap:16px}
-  #v-asistente{gap:16px!important}
-  .ask{gap:10px}
-  .ask h1{font-size:clamp(24px,7vw,30px);line-height:1.12}
-  .start{gap:4px}
-  .hero-bg{margin-top:4px}
-  .hero-bg .ruta-body{height:auto;min-height:0;aspect-ratio:1340/1748;max-height:none}
-}
-@media (max-width:520px){
-  .askbox{gap:8px;padding:10px}
-  .askbox #need{font-size:17px;min-height:72px;padding:4px 2px}
-  .askbox .actions{order:1;width:auto;flex:1 1 0;margin-left:0;min-width:0}
-  .askbox .actions .primary{flex:1;padding:13px 14px}
-  .askbox .actions .ghost{flex:none}
-  .askbox .mic{order:2;margin-left:0}
-  .status{font-size:13px;min-height:1.2em}
-}
-/* /MOBILE-HOME */
-/* UX-06 — Configuración de material (diseño UX) */
-.appbar{display:flex;align-items:center;gap:16px;height:36px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.14),0 1px 1px rgba(0,0,0,.1);position:relative;z-index:1}
-.appbar .in{flex:1;display:flex;align-items:center;max-width:960px;margin:0 auto;min-width:0}
-.appbar button{flex:none;width:20px;height:20px;padding:0;border:0;background:none;color:#333;display:grid;place-items:center}
-.appbar button svg{width:20px;height:20px}
-.appbar h2{flex:1;min-width:0;margin:0;font:400 16px/20px var(--body);color:#333;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ask h1{display:none}
-.ia-note{display:flex;align-items:center;gap:4px;margin:0;font:400 12px/18px var(--body);color:#0072ce}
-.ia-note svg{flex:none;width:20px;height:20px}
-.askbox{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:9px;padding:16px 16px 8px;min-height:100px;background:#fff;border:1px solid #767676;border-radius:4px;box-shadow:none;transform:none;transition:border-color .15s}
-.askbox:focus-within{border-color:#0072ce;box-shadow:0 0 0 1px #0072ce;transform:none}
-.askbox .spark{display:none}
-.askbox .fl{position:absolute;left:12px;top:-10px;padding:0 4px;background:#fff;font:400 14px/20px var(--body);color:#333;pointer-events:none}
-.askbox:focus-within .fl{color:#0072ce}
-.askbox #need{order:0;flex:1 1 auto;width:100%;min-height:26px;padding:0;font:400 14px/20px var(--body);color:#333}
-.askbox #need::placeholder{color:#a1a1a1}
-.askbox .row{order:1;display:flex;justify-content:flex-end;align-items:center;gap:10px}
-.askbox .mic{order:0;margin:0;width:36px;height:36px;background:#fff;border:.5px solid rgba(255,255,255,.12);box-shadow:0 1px 2px rgba(0,0,0,.14),0 .5px .5px rgba(0,0,0,.1);color:#0072ce}
-.askbox .mic:hover{background:#f3f8fd;transform:none}
-.askbox .mic svg{width:24px;height:24px}
-.askbox .mic.rec{background:#dd0021;color:#fff}
-.askbox .actions{order:1;width:auto;flex:none;margin:0;gap:10px}
-.askbox .actions .primary,.askbox .primary{width:auto;flex:none;height:40px;padding:10px 16px;gap:2px;border-radius:4px;background:#0072ce;box-shadow:none;font:400 14px/20px var(--body);color:#fff;transform:none}
-.askbox .primary:hover:not(:disabled){background:#0063b3;transform:none;box-shadow:none}
-.askbox .primary svg{display:none}
-.askbox .actions .ghost{height:40px;padding:9px 14px;font:400 14px/20px var(--body)}
-@keyframes glow{0%,100%{box-shadow:0 0 0 1px #0072ce}50%{box-shadow:0 0 0 4px rgba(0,114,206,.18)}}
-@media (max-width:900px){
-  header.top{border-bottom:0;box-shadow:0 4px 4px rgba(0,0,0,.1);position:relative;z-index:2}
-  header.top .in{display:flex;justify-content:space-between;height:48px;padding-top:8px;padding-bottom:8px;gap:16px}
-  .hc-logo{margin-right:auto}
-  .hc-logo svg{width:26px;height:20px}
-  .hc-cart svg,.m-user svg{width:24px;height:24px}
-  .hc-cart{margin-right:-12px}
-  .hc-cart,.hc-acc{transform:translateY(4px)}
-}
-@media (max-width:760px){
-  .wrap{padding-block:24px 24px;gap:24px}
-  #v-asistente{gap:24px!important}
-  .start{display:flex;flex-direction:column;align-items:stretch;gap:8px}
-  .start .hero-bg{order:1;margin-top:0}
-  .start .ask{order:2;gap:8px}
-  .start #result{order:3;margin-top:16px}
-  .hero-bg .ruta-body{border-radius:0;border:0}
-  .ask .askbox{margin-top:24px}
-  .ask .ia-note{order:-1}
-}
-@media (max-width:520px){
-  .askbox{gap:10px;padding:16px 16px 8px}
-  .askbox #need{font-size:14px;min-height:26px;padding:0}
-  .askbox .actions{order:1;width:auto;flex:none;margin-left:0}
-  .askbox .actions .primary{flex:none;padding:10px 16px}
-  .askbox .mic{order:0;margin-left:0}
-}
-/* /UX-06 */
-/* UX-06 escuchando */
-.askbox .lst{display:none}
-.askbox .grp{display:flex;align-items:center;gap:10px}
-.qa{flex:none;width:36px;height:36px;padding:0;border-radius:50%;border:.5px solid rgba(255,255,255,.12);box-shadow:0 1px 2px rgba(0,0,0,.14),0 .5px .5px rgba(0,0,0,.1);display:grid;place-items:center;background:#fff;color:#0072ce}
-.qa svg{width:24px;height:24px}
-.qa.x{background:#0072ce;color:#ebebeb}
-.qa.x:hover{background:#0063b3}
-.qa.sq:hover{background:#f3f8fd}
-.wave{flex:1 1 auto;min-width:0;max-width:128px;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 5px}
-.wave i{display:block;flex:none;width:2px;height:26px;border-radius:1px;background:#868585;transform:scaleY(.12);transform-origin:center;transition:transform 90ms linear}
-.askbox.listening .wave.voz i{background:#0072ce}
-.askbox.listening .row{justify-content:space-between}
-.askbox.listening .lst{display:grid}
-.askbox.listening .wave.lst{display:flex}
-.askbox.listening .mic{display:none}
-.askbox.listening #need{caret-color:#0072ce}
-.askbox.listening #need::placeholder{color:transparent}
-.askbox.listening{border-color:#0072ce}
-@media (prefers-reduced-motion:reduce){.wave i{transition:none}}
-/* /UX-06 escuchando */
-/* UX-06 mantener presionado */
-.askbox .mic{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.askbox.listening.pressing .mic{display:grid}
-.askbox .hold-hint{display:none;flex:none;align-items:center;gap:2px;font:400 12px/18px var(--body);color:#767676;white-space:nowrap;transition:opacity .1s}
-.askbox .hold-hint svg{width:16px;height:16px}
-.askbox.listening.hold .hold-hint{display:flex}
-.askbox.listening.hold #micCancel,.askbox.listening.hold #micStop{display:none}
-.askbox.listening.hold .mic{background:#0072ce;color:#fff;border-color:#0072ce;transform:scale(1.25);box-shadow:0 0 0 6px rgba(0,114,206,.15);animation:none}
-.askbox.listening.hold.out .hold-hint{color:#0072ce}
-/* /UX-06 mantener presionado */
-/* UX-06 estado IA en la línea superior */
-.ia-note{min-height:20px}
-.ia-note .status,.ia-note .status.busy{display:block;margin:0;min-height:0;font:400 12px/18px var(--body);color:#0072ce;min-width:0;overflow-wrap:anywhere}
-.ia-note .status.err{color:#dd0021}
-.ia-note .status .dots{display:none}
-.ia-note .think-txt{font-weight:700}
-.ia-note:has(.status:empty){visibility:hidden}
-/* /UX-06 estado IA */
-/* UX-06 vista única sin scroll (móvil), también con resultado: el mapa ocupa el espacio libre y el input queda siempre visible */
-@media (max-width:760px){
-  body:has(#start){display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0}
-  body:has(#start) header.top,body:has(#start) .appbar{flex:none}
-  body:has(#start) .wrap{flex:1 1 auto;min-height:0;width:100%;padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));gap:0}
-  body:has(#start) #v-asistente{flex:1 1 auto;min-height:0;gap:0!important}
-  #start{flex:1 1 auto;min-height:0;gap:0}
-  #start .hero-bg{flex:1 1 0;min-height:140px;display:flex;flex-direction:column;margin-inline:-16px}
-  #start .hero-bg .maphint{margin-inline:16px}
-  #start #rutaModal{flex:1 1 auto;min-height:0;gap:0}
-  #start .hero-bg .ruta-body{flex:1 1 auto;height:auto;min-height:0;aspect-ratio:auto}
-  #start .ask{flex:none}
-  #start .ask .askbox{margin-top:12px;min-height:84px;padding-bottom:6px}
-  /* sin saltos: el aviso de estado y el texto bajo el mapa se abren y cierran con transición en vez de aparecer/desaparecer de golpe */
-  #start .ia-note,#start .hero-bg .maphint{interpolate-size:allow-keywords;height:auto;overflow:hidden;transition:height .5s ease,min-height .5s ease,margin .5s ease,opacity .5s ease}
-  #start .ia-note:has(.status:empty){display:flex;visibility:visible;opacity:0;height:0;min-height:0;margin-bottom:-8px}
-  #start .hero-bg .maphint.vacio{display:flex;opacity:0;height:0;margin-top:0;overflow:hidden}
-  #start .hero-bg .maphint{margin-top:20px;font-size:14px;line-height:18px}
-  #start #result:empty{display:none}
-  #start #cont{background:#fff}
-}
-/* /UX-06 primera vista */
-/* UX-06 micrófono siempre azul al presionar/grabar (sin estado rojo intermedio) */
-.askbox .mic{transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
-.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{background:#0072ce;border-color:#0072ce;color:#fff;transform:scale(1.25);animation:micpulseazul 1.2s ease-out infinite}
-@keyframes micpulseazul{0%{box-shadow:0 0 0 0 rgba(0,114,206,.40)}100%{box-shadow:0 0 0 12px rgba(0,114,206,0)}}
-@media (prefers-reduced-motion:reduce){.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{animation:none;box-shadow:0 0 0 6px rgba(0,114,206,.15)}}
-/* /UX-06 micrófono azul */
-.heard{margin:0;font-size:14px;font-weight:700;color:#005ba6;background:#e8f2fb;border-radius:8px;padding:8px 12px;overflow-wrap:anywhere}
-/* UX-07 respuesta sobre el mapa */
-#cont .callouts{position:absolute;inset:0;pointer-events:none;z-index:2}
-.callout{position:absolute;left:0;top:0;pointer-events:auto;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;min-height:28px;box-sizing:border-box;background:#fff;border:1px solid #0072ce;border-radius:4px;color:#0072ce;font:400 12px/16px var(--body);box-shadow:0 1px 3px rgba(0,0,0,.14);cursor:pointer;white-space:nowrap;transition:opacity .15s,transform .15s,box-shadow .15s}
-.callout svg{width:16px;height:16px;flex:none}
-/* Texto de la etiqueta: hasta dos líneas para que se lea completo (subcategorías largas) */
-.callout .ct{white-space:normal;text-align:left;max-width:120px;line-height:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-.callout.k-alt .ct{max-width:110px;line-height:14px}
-.callout small{font-size:12px;color:#5b6b7a}
-.callout:hover:not(.k-sel){transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.16)}
-.callout:focus-visible{outline:3px solid rgba(0,114,206,.35);outline-offset:2px}
-.callout.k-sel{cursor:default}
-.callout.k-alt{opacity:.8;border-color:#8fbce6;min-height:24px;padding:2px 6px;gap:4px;font-size:11px;line-height:14px}
-.callout.k-alt svg{width:14px;height:14px}
-/* Teléfonos pequeños: etiqueta aún más compacta para no tapar el plano */
-@media (max-width:380px){ .callout{font-size:11px;line-height:14px;min-height:24px;padding:2px 6px;gap:3px} .callout svg{width:14px;height:14px} .callout .ct{max-width:96px;line-height:13px} }
-.callout.k-alt small{font-size:11px}
-.callouts .aqui{z-index:1}
-.callout.k-alt:hover{opacity:1}
-.callouts .aqui{position:absolute;left:0;top:0;font:400 12px/16px var(--body);color:#0072ce;background:rgba(255,255,255,.92);padding:1px 4px;border-radius:3px;white-space:nowrap;pointer-events:none}
-#mapa #gondolas rect.dest-sel{fill:#7DB6EB;stroke:#7DB6EB}
-#mapa #etiquetas .pl.dest-sel rect{fill:#003b6f}
+#mapa #gondolas rect.dest-sel{fill:#0072ce;stroke:#0072ce}
+#mapa #etiquetas .pl.dest-sel rect{fill:#005192}
 #mapa #gondolas rect.dest-alt{fill:#a9cdee;stroke:none}
 #mapa #etiquetas .pl.dest-alt rect{fill:#a9cdee;stroke:#fff}
 #mapa #etiquetas .pl.dest-alt text{fill:#fff}
-#mapa.con-opciones #zonas-nombre{opacity:0;pointer-events:none}
+/* Nombres del mapa: las zonas/categorías no se muestran; solo quedan Puntos de pago y Rampas eléctricas (.pl.ref),
+   igual al inicio que al elegir categoría. En el resultado con ruta tampoco (Figma 58:13495) */
+#mapa #zonas-nombre{opacity:0;pointer-events:none}
+#mapa #etiquetas .pl:not([id^="l-"]):not(.ref){display:none}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
-/* El número de pasillo solo se ve en los pasillos de un resultado; en la primera carga el plano va sin números (solo nombres de zona) */
+/* El número de pasillo solo se ve en los pasillos de un resultado */
 #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-alt){display:none}
-.status .retry{margin-left:6px;padding:2px 10px;border:1px solid currentColor;border-radius:4px;background:#fff;color:inherit;font:inherit;font-weight:700;cursor:pointer;min-height:28px}
-.maphint{display:flex;align-items:flex-start;gap:4px;margin:8px 0 0;font:400 16px/22px var(--body);color:#2e2e2e;overflow-wrap:anywhere}
-.maphint[hidden],.maphint.vacio{display:none}
-.maphint svg{width:20px;height:20px;flex:none;margin-top:1px}
-.maphint.ok{color:#0072ce}
-@media (max-width:760px){ #start .hero-bg .maphint{flex:none;max-height:7.5em;overflow:auto} }
-@media (prefers-reduced-motion:reduce){ .callout{transition:none} }
-.callouts.guiando .k-alt{opacity:0;pointer-events:none}
-/* Patio Constructor (ubicaciones P): la salida se dibuja como un lateral más (gris); solo se alumbra en amarillo cuando el resultado lleva al patio */
-#mapa #gondolas rect#g-patio.dest,#mapa #gondolas rect#g-patio.dest-alt{fill:#F3C702;stroke:#b38f00;stroke-width:3}
-.callout.patio{background:#FFF6CC;border-color:#E0B300;color:#5a4700}
-.callout.patio svg{color:#b38f00}
-.maphint.patio{color:#5a4700;background:#FFF3B0;border:1px solid #F3C702;border-radius:6px;padding:6px 10px;font-weight:700}
-/* /UX-07 */
-
-/* modal de punto de partida (compacto: debe caber sobre el teclado móvil) */
-#inicioModal{border:0;border-radius:16px;padding:18px 16px 8px;width:min(92vw,380px);box-shadow:0 12px 40px rgba(0,0,0,.28);color:var(--ink);background:#fff}
-#inicioModal[open]{display:flex;flex-direction:column;overflow-y:auto}
-#inicioModal::backdrop{background:rgba(0,30,70,.45)}
-#inicioModal h2{margin:0 0 12px;font-size:20px;line-height:1.2;color:#003b6f}
-#inicioPasillo{width:100%;box-sizing:border-box;min-height:48px;padding:8px 14px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:16px;color:var(--ink)}
-#inicioPasillo:focus{outline:3px solid #f5c400;outline-offset:0;border-color:var(--line)}
-#inicioModal .err{margin:6px 0 0;color:var(--danger,#C60202);font-size:.9em}
-#inicioModal .err:empty{display:none}
-#inicioModal .primary,#inicioModal .ghost{width:100%;min-height:48px;margin-top:10px;border-radius:12px;font-size:16px}
-#inicioModal .ghost{border:2px solid var(--accent)}
-/* UX etiquetas tocables: botón azul con flecha para que se entienda que se pueden tocar */
-.callout.k-opt:not(.patio){background:#0072ce;border-color:#0072ce;color:#fff;font-weight:700;min-height:32px;box-shadow:0 2px 6px rgba(0,60,120,.35)}
-.callout.k-opt:not(.patio):hover{background:#0063b3}
-.callout.k-opt:active{transform:scale(.97)}
-.callout .chev{width:14px;height:14px;margin-left:-2px}
-.callout.k-alt .chev{width:12px;height:12px}
 /* mientras se elige categoría no se muestran los números de pasillo */
-#mapa.elige #etiquetas .pl.dest{opacity:0;pointer-events:none}
-/* transición suave: los nombres de zona se desvanecen, los pasillos cambian de color y las etiquetas aparecen después (solo fundidos, sin movimiento) */
+#mapa.elige #etiquetas .pl.dest{display:none}
+/* «ir mostrando los pasillos a medida»: cada opción se ilumina con su retardo (style.transitionDelay en app.js) */
 #mapa #zonas-nombre{transition:opacity .9s ease}
-#mapa #gondolas rect{transition:fill .9s ease,stroke .9s ease}
-@keyframes calloutIn{from{opacity:0}to{opacity:1}}
-.callout.k-opt,.callout.k-sel{animation:calloutIn .7s ease .6s both}
-/* de varias categorías a una: las otras etiquetas se desvanecen, la elegida se queda y el número del pasillo aparece */
-@keyframes calloutOut{from{opacity:1}to{opacity:0}}
-.callout.saliendo{animation:calloutOut .6s ease both;pointer-events:none}
-.callout.k-sel.sigue{animation:none}
-#mapa #etiquetas .pl{transition:opacity .9s ease}
+#mapa #gondolas rect{transition:fill .6s ease,stroke .6s ease}
+#mapa #etiquetas .pl{transition:opacity .6s ease}
+/* Patio Constructor */
+#mapa #gondolas rect#g-patio.dest,#mapa #gondolas rect#g-patio.dest-alt{fill:#F3C702;stroke:#b38f00;stroke-width:3}
+
+/* Etiquetas sobre el mapa: solo «Tú estás aquí» / «Tú» (las categorías ahora van en el sheet) */
+#cont .callouts{position:absolute;inset:0;pointer-events:none;z-index:2;transition:opacity .4s ease}
+.callouts.guiando .k-alt{opacity:0}
+.callouts .aqui{position:absolute;left:0;top:0;z-index:1;pointer-events:none;white-space:nowrap;padding:0 2px;color:var(--primary);font:400 12px/18px var(--body);text-shadow:0 0 12px rgba(29,29,29,.2),0 0 2px #fff,0 0 2px #fff}
+.callouts .aqui.tu{font:700 14px/20px var(--body)}
+/* Nombres de las categorías señaladas mientras se elige (no son clicables: la elección está en el panel) */
+.callouts .callout.cat{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;padding:0 2px;color:var(--primary);font:700 12px/16px var(--body);
+  text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff;animation:catIn .45s ease both;animation-delay:var(--d,0ms)}
+@keyframes catIn{from{opacity:0}to{opacity:1}}
+/* Pantalla de resultado (Figma 58:16142): plano limpio, sin nombres de zona; el halo del punto solo durante el recorrido animado */
+#mapa.con-ruta #etiquetas .pl.dest:not(.dest-sel),#mapa.con-ruta #zonas-nombre,#mapa.con-ruta #etiquetas .pl.ref,#mapa.con-ruta #ent-base{opacity:0}
+#mapa .halo{display:none}
+#cont:has(.callouts.guiando) #mapa .halo{display:inline}
+
+@media (prefers-reduced-motion:reduce){
+  .sheet,.sh-head,.scrim,#mapa,#mapa #gondolas rect,#mapa #etiquetas .pl,#mapa #zonas-nombre{transition:none}
+  .skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{animation:none}
+  .wave i{transition:none}
+}
