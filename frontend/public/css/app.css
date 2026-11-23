@@ -129,6 +129,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.pill{min-height:28px;padding:4px 8px;gap:8px;border:1px solid #B0D3F0;border-radius:100px;background:#E6F1FA;color:var(--primary);font:400 14px/20px var(--body)}
 .opt.pill:hover{background:#d6e8f7}
 .opt.pill svg{flex:none;width:20px;height:20px;color:#005192}
+.opt.pill .num{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-right:-4px;border-radius:50%;background:var(--primary);color:#fff;font:700 12px/1 var(--body)}
 .opt.pill .ic-pin{width:20px;height:20px;color:#005192}
 .sh-opts:has(.pill){gap:10px;padding:8px 8px 8px 16px}
 /* Botones de «¿En qué pasillo estás?»: ícono de indicaciones con el rombo de indicaciones, en blanco con la flecha calada */
