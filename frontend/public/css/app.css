@@ -196,6 +196,12 @@ body.escribiendo .sheet[data-mode="origen"] .sh-s{display:none}
 body.escribiendo .sheet[data-mode="origen"] .sh-top{gap:8px}
 body.escribiendo .sheet[data-mode="origen"] .sh-opts{display:flex}
 body.escribiendo .sh-top{gap:0}
+/* Teclado abierto en vertical: sin gris sobre el mapa (el toque fuera sigue cerrando el teclado), sin la barra de título y sin hueco donde iba el título */
+@media (orientation:portrait){
+  body.escribiendo .scrim{background:transparent}
+  body.escribiendo .appbar{display:none}
+  body.escribiendo .sheet:not([data-mode="origen"]) .sh-top{padding-top:8px}
+}
 /* Panel contraído con el asa: solo queda el campo */
 .sheet.min .sh-head{height:0;opacity:0}
 .sheet.min .sh-opts{display:none}
