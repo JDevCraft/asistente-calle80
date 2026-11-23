@@ -335,7 +335,7 @@ function elegir(enMapa,fuera){
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
   // Nombre de cada categoría junto a sus pasillos: solo texto, sin aspecto de botón (la elección se hace en el panel)
   const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const e=el('span','callout cat',(i+1)+' · '+etiquetaInfo(d).txt); // el número une la etiqueta con su chip del panel e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  xs.forEach((d,i)=>{ const e=el('span','callout cat',(i+1)+' · '+etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
