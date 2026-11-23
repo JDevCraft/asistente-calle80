@@ -339,8 +339,8 @@ function elegir(enMapa,fuera){
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   const zonas=A.ruta&&A.ruta.zonas; // «mueble»: un solo mensaje con todas las zonas; la ruta se traza al elegir una
-  sheet('categoria',{t:zonas?'Tenemos muebles en '+xs.length+' zonas de la tienda':q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
-    s:zonas?xs.map(d=>etiquetaInfo(d).txt+': pasillos '+d.rango).join(' · '):'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
+  sheet('categoria',{t:zonas?'¿En qué categoría buscas Muebles?':q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
+    s:zonas?'':'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
     opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
 }
 // «¿En qué pasillo estás?» (Figma 58:14973): reemplaza el modal; la ruta desde la entrada queda dibujada detrás
