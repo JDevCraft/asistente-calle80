@@ -136,6 +136,13 @@ function subDe(d,pares){
   if(k&&!/^(y|e|o|de|del|para|con|en|sin|a)$/i.test(ws[k])) t=ws.slice(k).join(' ').replace(/^./,c=>c.toUpperCase());
   return t.length>60?t.slice(0,59).trim()+'…':t;
 }
+// Etiquetas fijas por tipo de producto y destino (id del motor): un solo nivel (producto), sin prefijos internos, listas de usos ni laterales.
+// Solo para búsquedas sin filtros («silla», no «silla de oficina»). Por ahora: silla, tapete, maceta.
+const ETQ={
+  SILLA:{'24A-27A':'Sillas de oficina','02L-·-Muebles':'Sillas de comedor','08A-11A+11L':'Sillas de exterior madera','12A-14A':'Sillas de exterior ratán','02L-·-Aire-libre':'Sillas plegables de exterior'},
+  TAPETE:{'19A-22A':'Tapetes para sala y habitación','31A':'Tapetes de baño','11C-12C+01E':'Tapetes de carro','07A-08A+Zona-D':'Tapetes para mascotas'},
+  MATERA:{'01A-03A-04A-05A':'Macetas plásticas','02A-05A+01A':'Macetas plásticas','02L-·-Aire-libre':'Macetas de cerámica','01L-·-Jardín':'Jardín vertical'}
+};
 // Texto de la etiqueta de un destino: la familia, o la subcategoría cuando la familia se repite; nunca pasillos ni ubicaciones
 function etiquetaInfo(d){
   const todos=(((A.ruta&&A.ruta.destinos)||[]).filter(y=>rutaAisle(y)));
@@ -145,6 +152,7 @@ function etiquetaInfo(d){
   const q=consulta();
   if(q&&txt.toLowerCase()===q){ const u=String(d.etiqueta||'').split(/[:,]/)[0].trim(), c=(d.conjuntos||[]).find(c=>!/^OTROS?$/i.test(String(c).trim()));
     txt=u&&u.toLowerCase()!==q?u:(c?corto(c):txt); }
+  const fijo=!(A.ruta&&A.ruta.filtros||[]).length&&(ETQ[((A.ruta&&A.ruta.tipos)||[])[0]]||{})[d.id]; if(fijo) txt=fijo;
   return {nombre,rep,txt};
 }
 function layoutCallouts(){
