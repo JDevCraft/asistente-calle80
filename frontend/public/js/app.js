@@ -293,7 +293,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   $('sheetTitle').replaceChildren(...(Array.isArray(t)?rico(t):[document.createTextNode(t)]));
   const T2=$('sheetTitle2'); T2.textContent=t2; T2.hidden=!t2;
   sh.classList.toggle('plegable',!!plegable); sh.classList.toggle('plegado',!!plegable); // resultado: las categorías se despliegan al subir el panel
-  sh.classList.toggle('con-salir',!!salir); $('sheetSalir').hidden=!salir; // resultado con ruta: sin buscador, con «Salir»
+  sh.classList.toggle('con-salir',!!salir); $('sheetAct').hidden=!salir; // resultado con ruta: sin buscador, con «Salir»
   const S=$('sheetSub'); S.textContent=s; S.classList.toggle('err',!!sErr);
   const o=$('sheetOpts'); o.replaceChildren(); o.scrollLeft=0;
   opts.forEach(x=>{
@@ -895,6 +895,7 @@ sampleFn={ async json(opts){
   return j;
 } };
 initTracking();
+$('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
 $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen=false; A.origen=''; A.origenElegido=false; hideRoute(); $('need').value=''; inicio(); };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
