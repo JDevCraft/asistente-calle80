@@ -135,11 +135,11 @@ async function llamarGemini(sys, user, t0, malas) {
   return { fallo: !r || [429, 503].includes(r.status) ? 'ia_ocupada' : 'error' };
 }
 
-// Búsqueda genérica «mueble»: una sola respuesta con las tres zonas (la principal primero, con ruta), sin pregunta.
+// Búsqueda genérica «mueble»: mismo flujo que cualquier búsqueda con varias categorías (se elige una y se traza la ruta); solo cambian las etiquetas, con las tres zonas del catálogo
 // Rangos del catálogo (Segmentación de Productos Calle 80). Si crece la lista de palabras genéricas, pasar a datos.
 const zona = (rango, pasillos, skus, familia, conjuntos) => ({ id: rango.replace('–', '-'), rango, lugar: null, pasillos, principal: pasillos[0], enMapa: true, skus, pct: 0, espacios: [], conjuntos, familia, etiqueta: familia });
 const MUEBLE_GENERICO = {
-  decision: 'directo', total: 808, alternativa: true, zonas: true, fuente: 'indice', consulta: 'Mueble', tipos: ['MUEBLE'], filtros: [], conjs: null, pregunta: null,
+  decision: 'directo', total: 808, alternativa: true, fuente: 'indice', consulta: 'Muebles', tipos: ['MUEBLE'], filtros: [], conjs: null, pregunta: null,
   destinos: [
     zona('24A–28A', ['24A', '25A', '27A', '28A', '26A'], 507, 'Sala, habitación y estudio', ['Sofás y mesas de TV', 'Cómodas y mesas de noche', 'Escritorios y bibliotecas']),
     zona('40A–44A', ['41A', '43A', '40A', '44A'], 145, 'Baño', ['Muebles de lavamanos', 'Sobre el inodoro', 'Lavaderos']),

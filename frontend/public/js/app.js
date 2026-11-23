@@ -338,9 +338,8 @@ function elegir(enMapa,fuera){
   xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
-  const zonas=A.ruta&&A.ruta.zonas; // «mueble»: un solo mensaje con todas las zonas; la ruta se traza al elegir una
-  sheet('categoria',{t:zonas?'¿En qué categoría buscas Muebles?':q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
-    s:zonas?'':'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
+  sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
+    s:'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
     opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
 }
 // «¿En qué pasillo estás?» (Figma 58:14973): reemplaza el modal; la ruta desde la entrada queda dibujada detrás
@@ -397,7 +396,7 @@ function renderPlan(){
       const pedir=!!A.pideOrigen; // desde la segunda búsqueda: primero se pregunta desde dónde sale
       if(!pedir) A.proxUltimo=rutaAisle(d); // se guarda al cerrar la búsqueda, no mientras se pregunta el origen
       openDest(d,null,pedir);
-      if(unaCategoria||ru.zonas) paint(otros.flatMap(mapIds),'dest');
+      if(unaCategoria) paint(otros.flatMap(mapIds),'dest');
       drawHere();
       if(pedir) origenSheet();
       else {
