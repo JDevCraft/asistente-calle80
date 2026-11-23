@@ -205,7 +205,12 @@ function layoutCallouts(){
     b.style.left=x0+'px'; b.style.top=y0+'px';
   });
 }
-if(window.ResizeObserver) new ResizeObserver(()=>layoutCallouts()).observe($('cont'));
+// Durante el recorrido guiado R.mr (tamaño del mapa) está congelado: si el panel se pliega o despliega, se mide de nuevo y la cámara se reencuadra con la nueva proporción
+if(window.ResizeObserver) new ResizeObserver(()=>{
+  if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
+  else if(!R.guiando&&!R.ruta&&MAPA.enc&&MAPA.items.length){ encuadre(MAPA.enc); return; } // vista de opciones: acerca o aleja la cámara según el alto disponible
+  layoutCallouts();
+}).observe($('cont'));
 if(document.fonts) document.fonts.addEventListener('loadingdone',()=>layoutCallouts()); // Lato carga tarde: el ancho medido de la etiqueta cambia y se salía del borde
 // "Selecciona la categoría de sillas que buscas": nombre del producto buscado
 // (índice: el tipo de producto; IA: el título del grupo principal; si no, el texto escrito)
@@ -413,6 +418,7 @@ function renderPlan(){
 // Teléfonos pequeños (mapa de menos de 340 px de alto): la vista de opciones se acerca a los pasillos encontrados
 // para que se vean y las etiquetas tengan espacio; con más alto, o al trazar la ruta, se ve el plano completo
 function encuadre(ds){
+  MAPA.enc=ds; // el observador de #cont lo repite cuando el panel cambia de alto
   const sv=$('mapa'), r=sv.getBoundingClientRect();
   sv.setAttribute('viewBox',STORE.join(' '));
   if(!ds.length||!r.height||r.height>=340){ if(MAPA.items.length) layoutCallouts(); return; }
