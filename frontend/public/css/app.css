@@ -173,6 +173,17 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .askbox.listening .wave.lst{display:flex}
 .askbox.listening .mic{display:none}
 .askbox.listening #need::placeholder{color:transparent}
+/* Dictado: texto en una capa propia; el textarea sigue guardando el valor pero no se ve. Parcial atenuado, nuevo con fade, vacío con «Escuchando…» pulsando */
+.dic{display:none;flex:1 1 auto;min-width:0;min-height:20px;max-height:80px;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text);font:400 16px/20px var(--body)}
+@media (min-width:600px){.dic{font-size:14px}}
+.askbox.listening .dic{display:block}
+.askbox.listening #need{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.dic span{transition:opacity .35s ease}
+.dic span.i{opacity:.45}
+.dic span.n{animation:dicIn .3s ease-out}
+.dic:empty::before{content:"Escuchando…";color:var(--text-lighter);animation:dicPulse 1.4s ease-in-out infinite}
+@keyframes dicIn{from{opacity:0;transform:translateY(3px)}}
+@keyframes dicPulse{50%{opacity:.35}}
 .askbox .mic{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .2s ease,box-shadow .2s ease}
 /* Dictado — mantener presionado (Figma 89:10254): X, «desliza para cancelar», onda y el botón con el cuadro de detener */
 .askbox .hold-hint{display:none;align-items:center;font:400 14px/20px var(--body);color:var(--text-lighter);white-space:nowrap}
@@ -317,4 +328,5 @@ body.escribiendo .sh-top{gap:0}
   .sheet,.sh-head,.scrim,#mapa,#mapa #gondolas rect,#mapa #etiquetas .pl,#mapa #zonas-nombre{transition:none}
   .skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,._x{animation:none}
   .wave i{transition:none}
+  .dic span,.dic span.n,.dic:empty::before{transition:none;animation:none}
 }

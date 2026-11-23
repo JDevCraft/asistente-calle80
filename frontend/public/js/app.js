@@ -689,7 +689,16 @@ $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.pr
   // fin: 'auto' (toque: busca al callar) | 'hold' (presionado: busca al soltar) | 'stop' (deja el texto) | 'buscar' | 'cancel'
   let rec=null, base='', heard=false, fin='auto';
   const sep=t=>t&&!/\s$/.test(t)?' ':'';
-  const on=v=>{ ab.classList.toggle('listening',v); btn.classList.toggle('rec',v); btn.setAttribute('aria-pressed',String(v)); };
+  // Texto dictado: palabras confirmadas en sólido, las parciales atenuadas; cada palabra nueva entra con fade y al confirmarse se solidifica (se reutilizan los span para que la transición corra)
+  const dic=$('dic');
+  function paint(pre,fin,parcial){
+    if(!dic) return;
+    const w=[]; for(const [t,c] of [[pre,'f'],[fin,'f'],[parcial,'i']]) (t.match(/\S+/g)||[]).forEach(x=>w.push([x+' ',c]));
+    w.forEach(([x,c],k)=>{ let s=dic.children[k]; if(!s){ s=document.createElement('span'); s.className='n'; dic.appendChild(s); } if(s.textContent!==x) s.textContent=x; s.classList.toggle('i',c==='i'); });
+    while(dic.children.length>w.length) dic.lastChild.remove();
+    dic.scrollTop=dic.scrollHeight;
+  }
+  const on=v=>{ ab.classList.toggle('listening',v); btn.classList.toggle('rec',v); btn.setAttribute('aria-pressed',String(v)); paint(v?box.value:'','',''); };
   const listening=()=>ab.classList.contains('listening');
 
   // Onda de voz: historial de volumen real del micrófono que se desplaza a la izquierda.
@@ -740,9 +749,9 @@ $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.pr
     rec.onsoundstart=()=>{ M.snd=true; log('soundstart'); }; rec.onspeechstart=()=>{ M.snd=true; M.voz=performance.now(); log('speechstart'); }; rec.onsoundend=()=>{ M.snd=false; };
     const pre=box.value;
     rec.onresult=e=>{
-      let t='';
-      for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript;
-      t=t.trim(); if(t){ heard=true; box.value=pre+sep(pre)+t; }
+      let t='', conf='', parcial='';
+      for(let i=0;i<e.results.length;i++){ const x=e.results[i][0].transcript; t+=x; if(e.results[i].isFinal) conf+=x; else parcial+=x; }
+      t=t.trim(); if(t){ heard=true; box.value=pre+sep(pre)+t; paint(pre,conf,parcial); }
       M.voz=performance.now(); log('result: '+t);
     };
     rec.onerror=e=>{ log('error: '+e.error);
