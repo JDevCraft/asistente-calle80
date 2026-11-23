@@ -338,8 +338,9 @@ function elegir(enMapa,fuera){
   xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
-  sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
-    s:'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
+  const zonas=A.ruta&&A.ruta.zonas; // «mueble»: un solo mensaje con todas las zonas; la ruta se traza al elegir una
+  sheet('categoria',{t:zonas?'Tenemos muebles en '+xs.length+' zonas de la tienda':q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
+    s:zonas?xs.map(d=>etiquetaInfo(d).txt+': pasillos '+d.rango).join(' · '):'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
     opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
 }
 // «¿En qué pasillo estás?» (Figma 58:14973): reemplaza el modal; la ruta desde la entrada queda dibujada detrás
@@ -386,7 +387,7 @@ function renderPlan(){
   const enMapa=ds.filter(d=>rutaAisle(d)), fuera=ds.filter(d=>!rutaAisle(d));
   // Una sola categoría en el mapa (o la misma etiqueta en varios lugares, como Taladros): no hay nada que elegir
   const unaCategoria=enMapa.length>0&&new Set(enMapa.map(d=>etiquetaInfo(d).txt)).size===1;
-  if(!ds.some(d=>d.id===A.sel)&&(unaCategoria||(ru.zonas&&enMapa.length))) A.sel=enMapa[0].id; // «mueble»: la zona principal va con ruta, sin preguntar
+  if(!ds.some(d=>d.id===A.sel)&&unaCategoria) A.sel=enMapa[0].id;
   const sel=ds.find(d=>d.id===A.sel);
   if((ru.decision==='directo'&&!sel&&rutaAisle(ds[0]))||!(ru.decision==='directo'||sel)) elegir(enMapa,fuera);
   else {
@@ -402,7 +403,7 @@ function renderPlan(){
       else {
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
         const que=q&&q.length<=40?q+(varias?' de '+txt.toLowerCase():''):'';
-        const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):ru.zonas?'También hay en '+otros.map(x=>etiquetaInfo(x).txt+' (pasillos '+x.rango+')').join(' y '):'');
+        const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
         sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta, // categorías fijas a la vista; la elegida va en modo seleccionado
