@@ -285,8 +285,8 @@ body.escribiendo .sh-top{gap:0}
 #need:placeholder-shown{white-space:nowrap;overflow:hidden}
 #need::placeholder{text-overflow:ellipsis;white-space:nowrap}
 /* Fila de pills deslizable: se desvanece en el borde derecho para que se note que hay más */
-/* Pills sin scroll lateral: bajan a una segunda línea */
-.sh-opts{flex-wrap:wrap;row-gap:8px;overflow:visible;padding-right:16px}
+/* Pills en una sola línea con scroll lateral */
+.sh-opts{flex-wrap:nowrap;overflow-x:auto;padding-right:16px}
 /* Pills de 28 px (diseño) con área táctil de 44 px */
 .opt.pill{position:relative}
 .opt.pill::after{content:"";position:absolute;inset:-8px -2px}
