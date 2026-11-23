@@ -80,7 +80,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .sh-row{display:flex;align-items:center;gap:16px;min-width:0}
 .sh-row .sh-head{flex:1 1 auto}
 .sh-t2{margin:0;font:400 16px/22px var(--body);color:var(--text);overflow-wrap:anywhere}
-.salir{flex:none;min-height:36px;padding:8px 16px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body)}
+.salir{flex:none;white-space:nowrap;min-height:36px;padding:8px 16px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body)}
 .salir:hover{background:var(--primary-hover)}
 /* Resultado con ruta (Figma 58:13495): título 20 regular + línea 16, botón Salir y sin buscador */
 .sheet.con-salir .sh-t{font-weight:400}
@@ -90,7 +90,13 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .sheet.plegado .sh-opts{display:none}
 .sheet.plegable:not(.plegado) .sh-top{padding-bottom:8px}
 .sheet.plegable .sh-opts{padding-bottom:16px}
-.opt.pill.actual{border-color:var(--primary);font-weight:700}
+/* Pill seleccionada (Figma Badge seleccionado): fondo #0072CE, texto e ícono #E6F1FA, sin borde */
+.opt.pill.actual{background:var(--primary);border-color:var(--primary);color:#E6F1FA;font-weight:400;cursor:default}
+.opt.pill.actual svg{color:#E6F1FA}
+.opt.pill.actual:hover{background:var(--primary)}
+/* Resultado con varias categorías: pills fijas debajo del título */
+.sheet.con-salir .sh-top{padding-bottom:8px}
+.sheet.con-salir .sh-opts{padding-bottom:16px}
 .sh-s{margin:0;font:500 14px/20px var(--body);color:var(--text-light);overflow-wrap:anywhere}
 .sh-s:empty{display:none}
 .sh-s.err{color:var(--danger)}
@@ -131,42 +137,56 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.entra{animation:optIn .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
 @keyframes optIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
 
-/* Sección de búsqueda (Figma search section, 80 px) */
-.askbox{display:flex;align-items:center;gap:16px;padding:16px;background:#fff;margin-top:auto}
-.field{position:relative;flex:1 1 auto;min-width:0;min-height:50px;display:flex;align-items:center;gap:8px;padding:8px;border-radius:4px;background:var(--neutral-lightest);transition:box-shadow .15s}
+/* Sección de búsqueda (Figma 89:8559 y siguientes)
+   · reposo / 1 línea: píldora #EBEBEB (radio 40) con micrófono y enviar adentro; al escribir se oculta el micrófono
+   · más de una línea o dictando: caja (radio 4), texto arriba y barra de acciones abajo */
+.askbox{padding:16px;background:#fff;margin-top:auto}
+.field{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 8px 8px 16px;border-radius:40px;background:var(--neutral-lightest);transition:border-radius .2s ease,box-shadow .15s}
 .field:focus-within{box-shadow:inset 0 0 0 1px var(--primary)}
 #need{flex:1 1 auto;min-width:0;width:100%;max-height:80px;border:0;background:transparent;outline:none;resize:none;padding:0;color:var(--text);font:400 16px/20px var(--body);field-sizing:content}
 @media (min-width:600px){#need{font-size:14px}}
 #need::placeholder{color:var(--text-lighter);font-size:14px}
+.fbar{display:flex;align-items:center;gap:8px;flex:none}
+.fsp{display:none}
+.askbox.con-texto .mic{display:none}
+/* caja: varias líneas o dictando */
+.askbox.multi .field,.askbox.listening .field{flex-direction:column;align-items:stretch;gap:8px;padding:8px 16px;border-radius:4px;min-height:100px}
+.askbox.multi .fbar,.askbox.listening .fbar{align-self:stretch;justify-content:flex-end}
+.askbox.listening .fsp{display:block;flex:1}
 .qa{flex:none;width:36px;height:36px;padding:0;border-radius:50%;border:.5px solid rgba(255,255,255,.12);box-shadow:var(--qa-shadow);display:grid;place-items:center;background:#fff;color:var(--primary)}
 .qa svg{width:24px;height:24px}
 .qa .ic{width:24px;height:24px}
-.qa.send{background:linear-gradient(94deg,#a8bddb 46%,#0072ce 48.5%,#a8bddb 139%);color:#fff}
+.qa.send{background:linear-gradient(94deg,#a8bddb -46%,#0072ce 48.5%,#a8bddb 139%);color:#fff}
 .qa.send:disabled{opacity:.55;cursor:default}
 .qa.stop{background:var(--primary);color:#fff}
 .qa.x{background:var(--primary);color:#ebebeb}
 .qa.sq:hover,.qa.mic:hover{background:#f3f8fd}
+.ic-close{--m:url(../img/close.svg)} .ic-stopsq{--m:url(../img/stop-square.svg)}
+.mic .ic-stopsq{display:none}
 
-/* Dictado: mientras escucha, la onda va dentro del campo y el micrófono cambia por cancelar/detener */
+/* Dictado — toque (Figma 89:8960): X azul a la izquierda, onda, pausa y enviar a la derecha */
 .askbox .lst{display:none}
-.wave{flex:none;width:96px;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 4px}
-.wave i{display:block;flex:none;width:2px;height:26px;border-radius:1px;background:#868585;transform:scaleY(.12);transition:transform 90ms linear}
+.wave{flex:none;width:128px;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.wave i{display:block;flex:none;width:1px;height:26px;border-radius:1px;background:#868585;transform:scaleY(.12);transition:transform 90ms linear}
 .askbox.listening .wave.voz i{background:var(--primary)}
 .askbox.listening .lst{display:grid}
 .askbox.listening .wave.lst{display:flex}
 .askbox.listening .mic{display:none}
-.askbox.listening .field{box-shadow:inset 0 0 0 1px var(--primary)}
 .askbox.listening #need::placeholder{color:transparent}
-.askbox .mic{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .2s ease,background .2s ease,box-shadow .2s ease}
-.askbox.listening.pressing .mic{display:grid}
-.askbox .hold-hint{display:none;align-items:center;gap:2px;font:400 12px/18px var(--body);color:var(--text-lighter);white-space:nowrap}
-.askbox .hold-hint .ic{width:16px;height:16px}
+.askbox .mic{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .2s ease,box-shadow .2s ease}
+/* Dictado — mantener presionado (Figma 89:10254): X, «desliza para cancelar», onda y el botón con el cuadro de detener */
+.askbox .hold-hint{display:none;align-items:center;font:400 14px/20px var(--body);color:var(--text-lighter);white-space:nowrap}
+.askbox.listening.pressing .mic,.askbox.listening.hold .mic{display:grid}
+.askbox.listening.pressing #micStop,.askbox.listening.hold #micStop{display:none}
 .askbox.listening.hold .hold-hint{display:flex}
-.askbox.listening.hold #need{display:none}
-.askbox.listening.hold #micCancel,.askbox.listening.hold #micStop{display:none}
+.askbox.listening.hold .wave{width:40px}
+.askbox.listening.hold .fbar{gap:6px}
+.askbox.listening.hold .hold-hint{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.askbox.listening.hold .mic .ic-mic,.askbox.listening.pressing .mic .ic-mic{display:none}
+.askbox.listening.hold .mic .ic-stopsq,.askbox.listening.pressing .mic .ic-stopsq{display:block}
 .askbox.listening.hold.out .hold-hint{color:var(--primary)}
-.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{background:var(--primary);border-color:var(--primary);color:#fff;transform:scale(1.25);animation:micpulse 1.2s ease-out infinite}
-@keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(0,114,206,.40)}100%{box-shadow:0 0 0 12px rgba(0,114,206,0)}}
+.askbox.listening.hold .mic,.askbox.pressing .mic{animation:micpulse 1.2s ease-out infinite}
+@keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(0,114,206,.35)}100%{box-shadow:0 0 0 10px rgba(0,114,206,0)}}
 
 /* Escribiendo: el panel sube con el teclado y el encabezado se recoge (frame 2, comentario «animación hacia arriba») */
 body.escribiendo .sh-head{height:0;opacity:0}
@@ -243,8 +263,51 @@ body.escribiendo .sh-top{gap:0}
 #mapa .halo{display:none}
 #cont:has(.callouts.guiando) #mapa .halo{display:inline}
 
+/* ---------- Responsive móvil ---------- */
+/* El placeholder no se parte en dos líneas en pantallas angostas (iPhone SE, 320 px) */
+#need:placeholder-shown{white-space:nowrap;overflow:hidden}
+#need::placeholder{text-overflow:ellipsis;white-space:nowrap}
+/* Fila de pills deslizable: se desvanece en el borde derecho para que se note que hay más */
+/* Pills sin scroll lateral: bajan a una segunda línea */
+.sh-opts{flex-wrap:wrap;row-gap:8px;overflow:visible;padding-right:16px}
+/* Pills de 28 px (diseño) con área táctil de 44 px */
+.opt.pill{position:relative}
+.opt.pill::after{content:"";position:absolute;inset:-8px -2px}
+.salir,.appbar button{position:relative}
+.appbar button::after{content:"";position:absolute;inset:-10px}
+/* Muesca del teléfono en horizontal */
+.app{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.hc-in{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.appbar .in{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* Panel nunca más alto que la pantalla: si no cabe, su contenido se desplaza */
+.sheet{max-height:calc(100dvh - 96px - 120px);overflow-y:auto;overscroll-behavior:contain}
+/* Pantallas muy angostas (≤ 340 px) */
+@media (max-width:340px){
+  .hc-in{padding-top:6px;padding-bottom:6px} .hc-r .ic{width:28px;height:28px}
+  .appbar h2{font-size:18px}
+  .sh-top{padding:14px 14px 8px 12px}
+  .sh-t{font-size:18px;line-height:22px}
+  .askbox{padding:12px}
+  .field{padding-left:12px;gap:8px}
+  .fbar{gap:6px}
+  .askbox.listening .wave{width:72px}
+  .askbox.listening.hold .hold-hint{font-size:12px}
+  .ruta{padding:12px 12px 8px}
+}
+/* Teléfono en horizontal (alto ≤ 500 px): mapa a la izquierda y panel a la derecha */
+@media (orientation:landscape) and (max-height:500px){
+  .hc-top{display:none}
+  .appbar .in{height:40px} .appbar h2{font-size:18px}
+  .app{max-width:none;flex-direction:row}
+  .ruta{flex:1 1 auto;min-height:0;padding:8px 8px 8px 16px}
+  .sheet{flex:0 0 min(380px,50vw);max-height:none;height:auto;border-radius:16px 0 0 0;box-shadow:-2px 0 4px rgba(0,0,0,.10),0 4px 7px rgba(0,0,0,.25);transform:none}
+  .sh-grip{display:none}
+  .sh-top{padding-top:12px}
+  .sheet.min .sh-head,body.escribiendo .sh-head{height:auto;opacity:1}
+  .sheet.plegado .sh-opts{display:flex} /* sin asa en horizontal: las categorías del resultado quedan a la vista */
+}
 @media (prefers-reduced-motion:reduce){
   .sheet,.sh-head,.scrim,#mapa,#mapa #gondolas rect,#mapa #etiquetas .pl,#mapa #zonas-nombre{transition:none}
-  .skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,.askbox .mic.rec,.askbox.pressing .mic,.askbox.listening.hold .mic{animation:none}
+  .skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,._x{animation:none}
   .wave i{transition:none}
 }

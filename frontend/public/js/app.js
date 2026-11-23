@@ -298,7 +298,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   $('need').placeholder=PH[mode]||'¿Cómo podemos ayudarte?';
   if(mode!=='buscando') setStatus('');
 }
-function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Tienda Calle 80'}); }
+function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Estás en la tienda de Calle 80'}); }
 // pinta los pasillos de una opción con retardo («ir mostrando los pasillos a medida»)
 function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e.closest('#gondolas')) e.style.transitionDelay=ms+'ms'; e.classList.add(cls); })); }
 // borde izquierdo en pantalla de los pasillos de un destino: ordena las opciones de izquierda a derecha
@@ -397,8 +397,9 @@ function renderPlan(){
         const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
-        sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta,plegable:cats.length>1,
-          opts:cats.map((x,i)=>({txt:etiquetaInfo(x).txt,pill:true,d:x,actual:x===d,delay:i*STEP,fn:()=>{ if(x===d){ $('sheet').classList.add('plegado'); return; } A.sel=x.id; renderPlan(); }}))});
+        sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta, // categorías fijas a la vista; la elegida va en modo seleccionado
+          
+          opts:cats.map((x,i)=>({txt:etiquetaInfo(x).txt,pill:true,d:x,actual:x===d,delay:i*STEP,fn:()=>{ if(x===d) return; A.sel=x.id; renderPlan(); }}))});
       }
     } else {
       paint(otros.flatMap(mapIds),'dest');
@@ -854,6 +855,20 @@ sampleFn={ async json(opts){
 } };
 initTracking();
 $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen=false; A.origen=''; A.origenElegido=false; hideRoute(); $('need').value=''; inicio(); };
+/* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
+(function(){
+  const box=$('need'), ab=document.querySelector('.askbox'); let ult=null, lenMulti=0;
+  const una=()=>box.scrollHeight<=26; // una línea (20 px de alto de línea)
+  function sync(){
+    const v=box.value; if(v===ult) return; ult=v;
+    ab.classList.toggle('con-texto',v.trim().length>0);
+    if(!ab.classList.contains('multi')){ if(v&&!una()){ ab.classList.add('multi'); lenMulti=v.length; } }
+    else if(!v||v.length<lenMulti-6){ ab.classList.remove('multi'); if(v&&!una()){ ab.classList.add('multi'); lenMulti=v.length; } }
+  }
+  box.addEventListener('input',sync);
+  setInterval(sync,250); // el dictado y las búsquedas cambian el texto sin evento input
+  window.addEventListener('resize',()=>{ ult=null; sync(); });
+})();
 /* ---------- Panel: teclado, velo, asa e información ---------- */
 (function(){
   const need=$('need'), body=document.body, sh=$('sheet'), vv=window.visualViewport;
