@@ -196,8 +196,8 @@ body.escribiendo .sheet[data-mode="origen"] .sh-s{display:none}
 body.escribiendo .sheet[data-mode="origen"] .sh-top{gap:8px}
 body.escribiendo .sheet[data-mode="origen"] .sh-opts{display:flex}
 body.escribiendo .sh-top{gap:0}
-/* Teclado abierto en vertical: sin gris sobre el mapa (el toque fuera sigue cerrando el teclado), sin la barra de título y sin hueco donde iba el título */
-@media (orientation:portrait){
+/* Con el teclado abierto: sin gris sobre el mapa (el toque fuera sigue cerrando el teclado), sin la barra de título y sin hueco donde iba el título */
+@media (max-width:599px){
   body.escribiendo .scrim{background:transparent}
   body.escribiendo .appbar{display:none}
   body.escribiendo .sheet:not([data-mode="origen"]) .sh-top{padding-top:8px}
@@ -301,7 +301,8 @@ body.escribiendo .sh-top{gap:0}
   .ruta{padding:12px 12px 8px}
 }
 /* Teléfono en horizontal (alto ≤ 500 px): mapa a la izquierda y panel a la derecha */
-@media (orientation:landscape) and (max-height:500px){
+/* min-width: con el teclado abierto un teléfono en vertical queda casi cuadrado (ancho > alto) y no debe tomarse como horizontal */
+@media (orientation:landscape) and (max-height:500px) and (min-width:600px){
   .hc-top{display:none}
   .appbar .in{height:40px} .appbar h2{font-size:18px}
   .app{max-width:none;flex-direction:row}
