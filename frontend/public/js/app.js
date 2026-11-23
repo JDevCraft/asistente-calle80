@@ -294,7 +294,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   opts.forEach(x=>{
     const b=el('button','opt'+(x.pill?' pill':'')+(x.delay!=null?' entra':'')); b.type='button';
     if(x.pill&&x.icon==='pin'){ const a=el('span','ic ic-pin'); a.setAttribute('aria-hidden','true'); b.append(a,el('span',null,x.txt)); } // pasillo: pill con ubicación
-    else if(x.pill){ if(x.n) b.append(el('span','num',x.n)); if(x.d) b.append(svgIcono(iconoDe(x.d))); b.append(el('span',null,x.txt)); } // Figma «Badge»: ícono de la categoría + texto
+    else if(x.pill){ if(x.d) b.append(svgIcono(iconoDe(x.d))); b.append(el('span',null,x.txt)); } // Figma «Badge»: ícono de la categoría + texto
     else if(x.icon==='pin'){ const a=el('span','ic ic-pin'); a.setAttribute('aria-hidden','true'); b.append(a,el('span',null,x.txt)); } // ubicación a la izquierda
     else { b.append(el('span',null,x.txt)); const a=el('span','ic '+(x.icon==='dir'?'ic-dir':'ic-arrow')); a.setAttribute('aria-hidden','true'); b.append(a); }
     if(x.delay) b.style.setProperty('--d',x.delay+'ms');
@@ -335,12 +335,12 @@ function elegir(enMapa,fuera){
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
   // Nombre de cada categoría junto a sus pasillos: solo texto, sin aspecto de botón (la elección se hace en el panel)
   const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const e=el('span','callout cat',(i+1)+' · '+etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
     s:'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
-    opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,n:i+1,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
+    opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
 }
 // «¿En qué pasillo estás?» (Figma 58:14973): reemplaza el modal; la ruta desde la entrada queda dibujada detrás
 // el último pasillo al que se le trazó ruta: lo más probable es que el cliente siga ahí
