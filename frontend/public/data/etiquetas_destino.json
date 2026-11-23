@@ -1,0 +1,205 @@
+{
+ "SILLA": {
+  "24A-27A": "Sillas de oficina",
+  "02L-·-Muebles": "Sillas de comedor",
+  "08A-11A+11L": "Sillas de exterior madera",
+  "12A-14A": "Sillas de exterior ratán",
+  "02L-·-Aire-libre": "Sillas plegables de exterior"
+ },
+ "TAPETE": {
+  "19A-22A": "Tapetes para sala y habitación",
+  "31A": "Tapetes de baño",
+  "11C-12C+01E": "Tapetes de carro",
+  "07A-08A+Zona-D": "Tapetes para mascotas"
+ },
+ "MATERA": {
+  "01A-03A-04A-05A": "Macetas plásticas",
+  "02A-05A+01A": "Macetas plásticas",
+  "02L-·-Aire-libre": "Macetas de cerámica",
+  "01L-·-Jardín": "Jardín vertical"
+ },
+ "MESA": {
+  "24A-27A": "Mesas de centro y auxiliares",
+  "10A-11A-12A-14A+22A-23A": "Mesas de exterior",
+  "02L-·-Aire-libre": "Mesas plásticas y multiuso",
+  "10B": "Tablas de planchar",
+  "02L-·-Muebles": "Mesas laterales y plegables"
+ },
+ "CAMA": {
+  "07A+Zona-D+08L": "Camas para mascotas",
+  "33A-34A": "Ropa de cama",
+  "02L-·-Aire-libre": "Más camas para mascotas"
+ },
+ "SOPORTE": {
+  "28A-30A": "Soportes para repisa y TV",
+  "34A-35A+28C": "Soportes y ganchos decorativos",
+  "17C-20C": "Escuadras y soportes",
+  "10C-12C": "Soportes para celular y auto",
+  "09A-10A": "Hamacas y accesorios"
+ },
+ "PROTECTOR": {
+  "32A-33A": "Cubrecolchones",
+  "09B-11B": "Protección para pintura y tapicería",
+  "11C-12C": "Protectores de carro",
+  "06C-08C-09C": "Protectores de voltaje",
+  "29A-30A": "Protección infantil y salvalozas"
+ },
+ "CINTA": {
+  "17C-20C+17L": "Cintas de empaque y doble faz",
+  "Zona-P": "Cintas para obra",
+  "10B-11B": "Cintas para pintura",
+  "13C": "Cintas aisladoras",
+  "44A-45A": "Cintas de teflón y reparación"
+ },
+ "REPISA": {
+  "28A-30A": "Repisas",
+  "40A-42A": "Repisas de baño",
+  "24A-27A": "Estantes y libreros de oficina"
+ },
+ "ORGANIZADOR": {
+  "28A-30A": "Organizadores para el hogar",
+  "08C-11C": "Organizadores de cables y auto"
+ },
+ "TUBO": {
+  "44A-45A": "Tubos PVC",
+  "Zona-P": "Tubos y perfiles de obra",
+  "18C-20C": "Barras de clóset",
+  "08C-09C": "Tubos eléctricos",
+  "35A": "Tubos cromados",
+  "03L-·-Decoración": "Más tubos cromados"
+ },
+ "MANGUERA": {
+  "05A-08A": "Mangueras de jardín",
+  "44A-45A": "Mangueras de agua y flexibles",
+  "16C": "Accesorios de hidrolavadora",
+  "14C": "Niveles",
+  "42A": "Flexibles de baño",
+  "09A-11A": "Limpiafondos de piscina"
+ },
+ "CARGADOR": {
+  "09C-12C": "Cargadores y power banks",
+  "03A+Zona-D": "Morrales para mascotas",
+  "14C-15C": "Cargadores para herramientas"
+ },
+ "LIMPIADOR": {
+  "09B-11B": "Limpiadores para el hogar",
+  "10C-12C": "Limpiadores para carro"
+ },
+ "CANASTA": {
+  "28A-30A": "Cajas y canastos",
+  "09B-10B": "Canastos para ropa",
+  "15A-17A": "Paneras y utensilios de cocina"
+ },
+ "BOLSA": {
+  "09B-10B+00B": "Bolsas de basura",
+  "28A-30A": "Bolsos y space bags",
+  "06A-09A": "Bolsas de camping y navidad",
+  "35A-36A": "Repuestos de electrodomésticos",
+  "Zona-D": "Bolsas para mascotas"
+ },
+ "SELLADOR": {
+  "11B-14B": "Fondos nitro",
+  "11B+Zona-P+44R+21B": "Selladores de poliuretano"
+ },
+ "PERNO": {
+  "18C": "Pernos hexagonales",
+  "20C-21C": "Pernos de ojo"
+ },
+ "BATERIA": {
+  "12B+Zona-E": "Baterías 46–55 Amp",
+  "12C-15C": "Baterías de repuesto",
+  "15A-16A": "Ollas antiadherentes"
+ },
+ "CABLE": {
+  "08C-11C": "Cables y conectores",
+  "08R-·-Máquina-de-cables": "Cables especiales",
+  "21C": "Cables de acero"
+ },
+ "COJIN": {
+  "31A-34A": "Cojines de interior",
+  "03L-·-Decoración": "Cojines de exterior",
+  "10A-11A-12A-14A": "Cojines para silla de exterior",
+  "01A-02A": "Cojines navideños"
+ },
+ "LINTERNA": {
+  "04L-·-Eléctricos+14L": "Linternas recargables",
+  "08C-11C": "Linternas a pilas"
+ },
+ "NEVERA": {
+  "02L-·-Aire-libre+01A": "Neveras portátiles rígidas",
+  "36A-38A": "Minibares",
+  "08A-11A": "Combos de neveras portátiles"
+ },
+ "LLAVE": {
+  "14C-16C": "Llaves",
+  "44A-45A": "Llaves de jardín"
+ },
+ "DUCHA": {
+  "40A-42A": "Duchas y cabezales",
+  "44A-45A": "Duchas eléctricas",
+  "05A-06A": "Regaderas plásticas"
+ },
+ "BUTACO": {
+  "02L-·-Muebles": "Butacos fijos",
+  "22A-24A-25A": "Butacos plegables"
+ },
+ "CAFETERA": {
+  "35A-37A+36R": "Cafeteras de goteo",
+  "15A-17A": "Cafeteras de mesa"
+ },
+ "OLLA": {
+  "15A-18A": "Ollas de acero",
+  "36A-37A": "Ollas multifunción"
+ },
+ "REJA": {
+  "06A": "Celosías de madera",
+  "01L-·-Jardín+01P": "Rejas"
+ },
+ "SIERRA": {
+  "13C-16C": "Sierras circulares inalámbricas",
+  "04L-·-Herramientas": "Sierras circulares",
+  "17C": "Sierra de banco"
+ },
+ "PILA": {
+  "08C-10C+01E": "Pilas especiales",
+  "04L-·-Eléctricos": "Pilas recargables"
+ },
+ "FAROL": {
+  "07B-08B": "Apliques de pared exterior",
+  "01A-03A-04A-05A": "Faroles animados"
+ },
+ "ARBOL": {
+  "10A-13A+25B": "Árboles de Navidad con luces",
+  "14A-16A-17A-18A": "Árboles de Navidad sin luces",
+  "04A-07A": "Árboles artificiales"
+ },
+ "ESFERA": {
+  "15A-18A+02D": "Bolas navideñas brillantes",
+  "19A-21A": "Packs de bolas navideñas",
+  "01A-04A": "Otras bolas navideñas"
+ },
+ "FLOR": {
+  "01L-·-Jardín": "Flores artificiales",
+  "03A-04A": "Ramos de flores"
+ },
+ "INSECTICIDA": {
+  "01L-·-Jardín+91L": "Insecticidas químicos",
+  "01A-02A": "Insecticidas en aerosol"
+ },
+ "PASTO": {
+  "01L-·-Jardín+01A": "Pasto sintético en rollo",
+  "04A-07A": "Pasto sintético por metro"
+ },
+ "CLOSET": {
+  "24A-27A": "Clósets de melamina",
+  "29A": "Clósets de tela"
+ },
+ "CALADORA": {
+  "04L-·-Herramientas": "Caladoras",
+  "13C-15C": "Caladoras inalámbricas"
+ },
+ "LIJADORA": {
+  "13C-14C": "Lijadoras orbitales",
+  "04L-·-Herramientas": "Lijadoras de banda"
+ }
+}
