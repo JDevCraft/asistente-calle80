@@ -135,6 +135,19 @@ async function llamarGemini(sys, user, t0, malas) {
   return { fallo: !r || [429, 503].includes(r.status) ? 'ia_ocupada' : 'error' };
 }
 
+// Búsqueda genérica «mueble»: una sola respuesta con las tres zonas (la principal primero, con ruta), sin pregunta.
+// Rangos del catálogo (Segmentación de Productos Calle 80). Si crece la lista de palabras genéricas, pasar a datos.
+const zona = (rango, pasillos, skus, familia, conjuntos) => ({ id: rango.replace('–', '-'), rango, lugar: null, pasillos, principal: pasillos[0], enMapa: true, skus, pct: 0, espacios: [], conjuntos, familia, etiqueta: familia });
+const MUEBLE_GENERICO = {
+  decision: 'directo', total: 808, alternativa: true, zonas: true, fuente: 'indice', consulta: 'Mueble', tipos: ['MUEBLE'], filtros: [], conjs: null, pregunta: null,
+  destinos: [
+    zona('24A–28A', ['24A', '25A', '27A', '28A', '26A'], 507, 'Sala, habitación y estudio', ['Sofás y mesas de TV', 'Cómodas y mesas de noche', 'Escritorios y bibliotecas']),
+    zona('40A–44A', ['41A', '43A', '40A', '44A'], 145, 'Baño', ['Muebles de lavamanos', 'Sobre el inodoro', 'Lavaderos']),
+    zona('39A–41A', ['40A', '39A', '41A'], 156, 'Cocina', ['Gabinetes base', 'Alacenas'])
+  ]
+};
+const esMuebleGenerico = t => /^(el |un |los |unos )?muebles?$/.test(String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, '').trim());
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
@@ -159,6 +172,7 @@ module.exports = async (req, res) => {
   // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
   const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, sesionId, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
   const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
+  if (!answers.length && esMuebleGenerico(text)) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: MUEBLE_GENERICO, ms: Date.now() - t0, id: rid }); }
   if (!answers.length) {
     const r = rapido(text);
     if (r) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: r, ms: Date.now() - t0, id: rid }); }

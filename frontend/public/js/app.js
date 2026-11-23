@@ -386,7 +386,7 @@ function renderPlan(){
   const enMapa=ds.filter(d=>rutaAisle(d)), fuera=ds.filter(d=>!rutaAisle(d));
   // Una sola categoría en el mapa (o la misma etiqueta en varios lugares, como Taladros): no hay nada que elegir
   const unaCategoria=enMapa.length>0&&new Set(enMapa.map(d=>etiquetaInfo(d).txt)).size===1;
-  if(!ds.some(d=>d.id===A.sel)&&unaCategoria) A.sel=enMapa[0].id;
+  if(!ds.some(d=>d.id===A.sel)&&(unaCategoria||(ru.zonas&&enMapa.length))) A.sel=enMapa[0].id; // «mueble»: la zona principal va con ruta, sin preguntar
   const sel=ds.find(d=>d.id===A.sel);
   if((ru.decision==='directo'&&!sel&&rutaAisle(ds[0]))||!(ru.decision==='directo'||sel)) elegir(enMapa,fuera);
   else {
@@ -396,13 +396,13 @@ function renderPlan(){
       const pedir=!!A.pideOrigen; // desde la segunda búsqueda: primero se pregunta desde dónde sale
       if(!pedir) A.proxUltimo=rutaAisle(d); // se guarda al cerrar la búsqueda, no mientras se pregunta el origen
       openDest(d,null,pedir);
-      if(unaCategoria) paint(otros.flatMap(mapIds),'dest');
+      if(unaCategoria||ru.zonas) paint(otros.flatMap(mapIds),'dest');
       drawHere();
       if(pedir) origenSheet();
       else {
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
         const que=q&&q.length<=40?q+(varias?' de '+txt.toLowerCase():''):'';
-        const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
+        const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):ru.zonas?'También hay en '+otros.map(x=>etiquetaInfo(x).txt+' (pasillos '+x.rango+')').join(' y '):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
         sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta, // categorías fijas a la vista; la elegida va en modo seleccionado
