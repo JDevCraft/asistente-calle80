@@ -209,6 +209,9 @@ function layoutCallouts(){
 if(window.ResizeObserver) new ResizeObserver(()=>{
   if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
   else if(!R.guiando&&!R.ruta&&MAPA.enc&&MAPA.items.length){ encuadre(MAPA.enc); return; } // vista de opciones: acerca o aleja la cámara según el alto disponible
+  else if(!R.guiando&&R.ruta&&R.fit&&trail()){ // ruta en reposo (p. ej. al ocultarse las categorías): el mapa llena el área, recortando a los lados o arriba/abajo sobre el centro de la ruta
+    const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ const a=r.height/r.width; let h=STORE[3], w=h/a; if(w>STORE[2]){ w=STORE[2]; h=w*a; }
+      const p0=toSvg(trail().getPointAtLength(0)), p1=toSvg(trail().getPointAtLength(R.L)); R.fit=[(p0[0]+p1[0])/2-w/2,(p0[1]+p1[1])/2-h/2,w,h]; setVB(R.fit); return; } }
   layoutCallouts();
 }).observe($('cont'));
 if(document.fonts) document.fonts.addEventListener('loadingdone',()=>layoutCallouts()); // Lato carga tarde: el ancho medido de la etiqueta cambia y se salía del borde
