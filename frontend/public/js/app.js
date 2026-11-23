@@ -342,11 +342,11 @@ function drawHere(){
 function iconoDe(d){ const {nombre,rep}=etiquetaInfo(d), uso=String(d.etiqueta).split(/[:,]/)[0].trim();
   const u=USOS.find(([re])=>re.test(uso)), z=ICONOS.find(([re])=>re.test(nombre)); return rep&&u?u[1]:z?z[1]:u?u[1]:'map-pin'; }
 function fueraTxt(xs){ return xs.length?'También hay en '+xs.map(lugarTxt).join(', ')+' (aún sin mapa; pregunta a un asesor).':''; }
-function dondeTxt(d){
-  if(rutaAisle(d)==='patio') return 'Dirígete a Patio Constructor';
-  if(d.lugar) return 'Dirígete a '+d.lugar.toLowerCase()+' '+d.rango;
-  if(d.pasillos.length>1) return 'Dirígete a los pasillos '+String(d.rango).toLowerCase();
-  return 'Dirígete al pasillo '+String(d.pasillos[0]||d.rango).toLowerCase();
+function dondeTxt(d){ // el lugar va en negrita (Figma: «Dirígete al pasillo **26a**»)
+  if(rutaAisle(d)==='patio') return ['Dirígete a ',['b','Patio Constructor']];
+  if(d.lugar) return ['Dirígete a ',['b',d.lugar.toLowerCase()+' '+d.rango]];
+  if(d.pasillos.length>1) return ['Dirígete a los pasillos ',['b',String(d.rango).toLowerCase()]];
+  return ['Dirígete al pasillo ',['b',String(d.pasillos[0]||d.rango).toLowerCase()]];
 }
 function elegir(enMapa,fuera){
   if(!enMapa.length){ sheet('resultado',{t:'Está en varios lugares de la tienda',s:fueraTxt(fuera)}); return; }
