@@ -130,6 +130,12 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.pill:hover{background:#d6e8f7}
 .opt.pill svg{flex:none;width:20px;height:20px;color:#005192}
 .opt.pill .ic-pin{width:20px;height:20px;color:#005192}
+.opt.pill.verde{background:#E6F3E6;border-color:#B5DAB5;color:#006200}
+.opt.pill.verde:hover{background:#d8ecd8}
+.opt.pill.verde .ic-pin{color:#006200}
+/* ¿En qué pasillo estás? (Figma 06): la zona de Puntos de pago se tiñe de verde y pierde su rótulo */
+body:has(#sheet[data-mode="origen"]) #mapa #gondolas rect.pago{fill:#E3F2E0;transition:fill .3s}
+body:has(#sheet[data-mode="origen"]) #mapa #etiquetas .pl.ref.pago{display:none}
 .sh-opts:has(.pill){gap:10px;padding:8px 8px 8px 16px}
 /* Botones de «¿En qué pasillo estás?»: ícono de indicaciones con el rombo de indicaciones, en blanco con la flecha calada */
 .opt .ic-dir{color:#fff;width:22px;height:22px}

@@ -302,6 +302,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
     else if(x.pill){ if(x.d) b.append(svgIcono(iconoDe(x.d))); b.append(el('span',null,x.txt)); } // Figma «Badge»: ícono de la categoría + texto
     else if(x.icon==='pin'){ const a=el('span','ic ic-pin'); a.setAttribute('aria-hidden','true'); b.append(a,el('span',null,x.txt)); } // ubicación a la izquierda
     else { b.append(el('span',null,x.txt)); const a=el('span','ic '+(x.icon==='dir'?'ic-dir':'ic-arrow')); a.setAttribute('aria-hidden','true'); b.append(a); }
+    if(x.verde) b.classList.add('verde');
     if(x.delay) b.style.setProperty('--d',x.delay+'ms');
     // con el teclado abierto el botón no le quita el foco al campo (si no, el panel se reacomoda y el toque se pierde)
     b.addEventListener('pointerdown',e=>{ if(document.activeElement===$('need')) e.preventDefault(); });
@@ -357,8 +358,8 @@ function ultimoPasillo(){
 function origenSheet(err){
   const ultimo=ultimoPasillo();
   sheet('origen',{t:'¿En qué pasillo estás?',s:err||'Arriba están los pasillos',sErr:!!err,opts:[
-    {txt:'Entrada',icon:'pin',pill:true,delay:0,fn:()=>fijarOrigen('')},
-    {txt:'Punto de pago',icon:'pin',pill:true,delay:STEP,fn:()=>fijarOrigen(pasilloCajas())},
+    {txt:'Punto de pago',icon:'pin',pill:true,verde:true,delay:0,fn:()=>fijarOrigen(pasilloCajas())}, // Figma 06: va primero y en verde, igual que su zona en el mapa
+    {txt:'Entrada',icon:'pin',pill:true,delay:STEP,fn:()=>fijarOrigen('')},
     ...(ultimo?[{txt:'Pasillo '+ultimo.txt,icon:'pin',pill:true,delay:2*STEP,fn:()=>fijarOrigen(ultimo.id)}]:[])]});
 }
 function fijarOrigen(id){ A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan(); }
@@ -454,6 +455,9 @@ const ZONA_UX={"1545.5,325.3":[1556.2,288.1,"H"],"1547.6,494.2":[1534.3,495,"V"]
     if(v[2]==='H') t.setAttribute('transform',`rotate(90 ${v[0]} ${v[1]})`); else t.removeAttribute('transform'); }); })();
 // Puntos de pago y Rampas eléctricas: mismo texto que los nombres de zona (sin la pastilla de fondo)
 $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(!g.id.startsWith('l-')&&/puntos de pago|rampas el/i.test(g.textContent)) g.classList.add('ref'); });
+// Puntos de pago: la góndola que contiene el punto de cajas y su rótulo se marcan para teñirlos de verde al preguntar el origen
+$('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago/i.test(g.textContent)) g.classList.add('pago'); });
+$('mapa').querySelectorAll('#gondolas rect').forEach(r=>{ const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height'); if(x<=211.1&&211.1<=x+w&&y<=911.7&&911.7<=y+h) r.classList.add('pago'); });
 const MAPIDS=new Set((typeof window.pasillosDelPlano==='function'?window.pasillosDelPlano():[]).map(x=>String(x).toLowerCase()));
 const REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R={ruta:null,pasos:[],dist:[],paso:0,len:0,anim:0,token:0,marker:null,trail:null,fit:null,L:0,guiando:false};
