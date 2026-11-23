@@ -293,6 +293,10 @@ body.escribiendo .sh-top{gap:0}
 /* Fila de pills deslizable: se desvanece en el borde derecho para que se note que hay más */
 /* Pills en una sola línea con scroll lateral */
 .sh-opts{flex-wrap:nowrap;overflow-x:auto;padding-right:16px}
+/* Desvanecido en el borde donde hay más pills (clases f-izq / f-der las pone app.js solo si desborda) */
+.sh-opts.f-izq,.sh-opts.f-der{--mi:#000;--md:#000;-webkit-mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md));mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md))}
+.sh-opts.f-izq{--mi:transparent}
+.sh-opts.f-der{--md:transparent}
 /* Pills de 28 px (diseño) con área táctil de 44 px */
 .opt.pill{position:relative}
 .opt.pill::after{content:"";position:absolute;inset:-8px -2px}

@@ -311,7 +311,21 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   });
   $('need').placeholder=PH[mode]||'¿Cómo podemos ayudarte?';
   if(mode!=='buscando') setStatus('');
+  requestAnimationFrame(()=>{ fadeOpts(); empujon(opts.length); });
 }
+// Fila de pills con scroll lateral: se desvanece en el borde donde hay más (solo si de verdad desborda) y, al aparecer,
+// se desliza un poco y vuelve para mostrar el gesto. Con pocas opciones que caben no pasa nada.
+var nudgeT;
+function fadeOpts(){ const o=$('sheetOpts'), m=o.scrollWidth-o.clientWidth; o.classList.toggle('f-der',m>2&&o.scrollLeft<m-2); o.classList.toggle('f-izq',o.scrollLeft>2); }
+function empujon(n){
+  clearTimeout(nudgeT); if(REDUCE_UI) return; const o=$('sheetOpts');
+  nudgeT=setTimeout(()=>{ if(!o.offsetParent||o.scrollLeft>0||o.scrollWidth-o.clientWidth<=2) return;
+    o.scrollTo({left:48,behavior:'smooth'}); nudgeT=setTimeout(()=>o.scrollTo({left:0,behavior:'smooth'}),550); },n*STEP+700);
+}
+$('sheetOpts').addEventListener('scroll',fadeOpts,{passive:true});
+$('sheetOpts').addEventListener('pointerdown',()=>clearTimeout(nudgeT)); // si el cliente ya la toca, no se mueve sola
+if(window.ResizeObserver) new ResizeObserver(fadeOpts).observe($('sheetOpts'));
+
 function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Estás en la tienda de Calle 80'}); }
 // pinta los pasillos de una opción con retardo («ir mostrando los pasillos a medida»)
 function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e.closest('#gondolas')) e.style.transitionDelay=ms+'ms'; e.classList.add(cls); })); }
