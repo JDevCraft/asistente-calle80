@@ -31,6 +31,8 @@ LATERALES = ROOT / 'data' / 'laterales.json'
 OUT = ROOT / 'backend' / 'api' / '_destinos.json'
 GAP_MAX = 32.0          # unidades del plano entre góndolas para considerarlas contiguas
 FAMILIAS_FUERA = {'MISCELANEOS'}  # bonos, donaciones, estibas: no son productos
+SKUS_FUERA = {'874782', '918916'}   # tapetes de Navidad retirados del índice (pedido del equipo)
+PASILLOS_INEXISTENTES = {'25b', '27b'}  # no existen en la tienda: se quitan de las ubicaciones de todos los SKUs
 
 
 def norm(s):
@@ -121,10 +123,13 @@ def main():
         fam, conj, esp, tipo, pas = r[i_fam], r[i_conj], r[i_esp], r[i_tipo], r[i_pas]
         if not fam or not conj or fam in FAMILIAS_FUERA:
             continue
+        if str(r[0]).strip() in SKUS_FUERA:
+            continue
         n_skus += 1
         key = f'{fam}>{conj}'
         conj_info.setdefault(key, esp or 'Otros')
         aisles = [aisle_key(p) for p in str(pas or '').split(',') if p.strip()]
+        aisles = [a for a in aisles if a not in PASILLOS_INEXISTENTES]
         # Laterales: el módulo de la ubicación (02L23 → módulo 23) y la familia dicen a qué segmento va
         if LAT and any(a in LAT for a in aisles):
             ubs = [u.strip().lower() for u in str(r[i_ub] or '').split(',') if u.strip()]

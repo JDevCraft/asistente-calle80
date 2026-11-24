@@ -262,4 +262,7 @@ function desdeSegmentos(segs) {
   return decidir(destinos(entradas));
 }
 
-module.exports = { rapido, desdeSegmentos, tokens, destinos };
+// Segmentos de Temporada (Navidad…): solo se ofrecen si el cliente los pide
+const esTemporada = seg => { const c = SEG2CONJ.get(seg); return !!c && c.startsWith('TEMPORADA>'); };
+
+module.exports = { rapido, desdeSegmentos, esTemporada, tokens, destinos };

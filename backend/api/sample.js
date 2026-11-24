@@ -3,7 +3,7 @@
 // varias claves separadas por coma. Las claves viven en
 // variables de entorno de Vercel (nunca en el navegador ni en el código).
 const { CATALOG, ESPS } = require('./_catalog');
-const { rapido, desdeSegmentos, tokens } = require('./_engine');
+const { rapido, desdeSegmentos, esTemporada, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
 const { limitado, cacheGet, cacheSet } = require('./_estado');
 const { registrarBusqueda, UUID_RE } = require('./_tracking');
@@ -191,7 +191,7 @@ module.exports = async (req, res) => {
   if (!NV_KEYS.length && !GM_KEYS.length) return respaldo(500, 'sampling_disabled');
   // sin quitar stopwords: "con" y "sin" cambian el sentido de la necesidad
   const clave = t => tokens(t).join(' ');
-  const key = clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
+  const key = 'v2|' + clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
   const hit = await cacheGet(key);
   // proveedor no se guarda en la caché: el registro de un acierto de caché lo deja en null
   if (hit) { await registrar({ resultado: 'modelo' }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
@@ -227,7 +227,11 @@ module.exports = async (req, res) => {
     const grupos = Array.isArray(plan.grupos) ? plan.grupos : [];
     const princ = grupos.find(g => /^principal/i.test(String(g.rol || '').trim())) || grupos[0];
     const segs = ((princ && princ.segmentos) || []).map(Number).filter(Number.isInteger);
-    const ruta = segs.length ? { ...desdeSegmentos(segs), fuente: 'modelo', segmentos: segs } : null;
+    // Temporada (Navidad…) solo si el cliente la pide; si el grupo principal era solo de temporada, o no tiene ubicación, responde el índice con lo que sí hay
+    const quiereTemporada = /NAVID|TEMPORAD|PESEBRE|VILLANCIC|NOCHEBUENA|PAPA NOEL|SANTA CLAUS/.test(tokens(text).join(' '));
+    const segsOk = quiereTemporada ? segs : segs.filter(sg => !esTemporada(sg));
+    let ruta = segsOk.length ? { ...desdeSegmentos(segsOk), fuente: 'modelo', segmentos: segsOk } : null;
+    if (segs.length && (!ruta || ruta.decision === 'sin_destino')) ruta = (!answers.length && rapido(text, { laxo: true })) || ruta;
     if (ruta && ruta.decision !== 'directo') ruta.pregunta = ruta.decision === 'preguntar' ? '¿Cuál de estos buscas?' : '¿Para qué lo necesitas?';
     const v = { plan, ruta, catalogo: recorte ? { segmentos: recorte.segs, ms: recorte.ms } : 'completo' };
     await cacheSet(key, v);

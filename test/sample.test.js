@@ -255,3 +255,20 @@ test('400 y 405 no se registran', async () => {
   await run('');
   assert.strictEqual(registros.length, 0);
 });
+
+test('el modelo elige solo un grupo de Temporada para «tapete para mi casa» → responde el índice con los tapetes reales', async () => {
+  const plan = JSON.stringify({ necesidad: 'tapete', grupos: [{ rol: 'Principal', segmentos: [2499] }], preguntas: [], consejo: '' }); // 2499 = TEMPORADA>LIMPIAPIES / TAPETES DE ENTRADA
+  escenario({ nv: () => resp(200, { choices: [{ message: { content: plan } }] }) });
+  const r = await run('quiero un tapete para mi casa');
+  assert.strictEqual(r.code, 200);
+  assert.strictEqual(r.body.ruta.fuente, 'indice');
+  const pasillos = r.body.ruta.destinos.flatMap(d => d.pasillos);
+  assert.ok(pasillos.includes('20A') && pasillos.includes('31A'));
+  assert.ok(!pasillos.includes('25B') && !pasillos.includes('27B'));
+});
+test('si el cliente pide Navidad, el grupo de Temporada se respeta', async () => {
+  const plan = JSON.stringify({ necesidad: 'navidad', grupos: [{ rol: 'Principal', segmentos: [2499] }], preguntas: [], consejo: '' });
+  escenario({ nv: () => resp(200, { choices: [{ message: { content: plan } }] }) });
+  const r = await run(Q(7) + ' navidad');
+  assert.strictEqual(r.body.ruta.fuente, 'modelo');
+});
