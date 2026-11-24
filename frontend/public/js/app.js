@@ -344,7 +344,7 @@ function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
   $('mapa').classList.toggle('con-ruta',!!R.ruta); // resultado (Figma 58:16142): plano limpio
-  if(R.ruta){ const p=/pasillo (.+)$/.exec(R.origenTxt||''); c.appendChild(el('span','aqui'+(p?' tu':''),p?p[1].toLowerCase():'Entrada')); } // el pasillo de partida, o «Entrada»
+  if(R.ruta&&!A.pideOrigen){ const p=/pasillo (.+)$/.exec(R.origenTxt||''); c.appendChild(el('span','aqui'+(p?' tu':''),p?p[1].toLowerCase():'Entrada')); } // el pasillo de partida, o «Entrada»
   layoutCallouts();
 }
 // ícono de la categoría: del uso (Sala, Baño…) si se repite la zona; si no, de la zona; si tampoco, del uso
@@ -611,7 +611,7 @@ function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} if(window.VB0) $('mapa').setAttribute('viewBox',window.VB0); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
 // Ruta completa de una vez (el trazo se dibuja en ~1 s, sin mover la cámara)
 function openRoute(s,aisle,btn,dest,sinGuia){
-  cancelGuide(); R.uz=false;
+  cancelGuide(); R.uz=false; { const g0=rutaGrupo(); if(g0) g0.style.display=''; } // la capa de la ruta se oculta mientras se pregunta el origen
   document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); btn?.closest('.card,.dcard')?.classList.add('sel');
   $('rutaTitulo').textContent=dest&&dest.lugar?'Cómo llegar al '+dest.lugar.toLowerCase()+' '+dest.rango:dest&&dest.pasillos.length>1?'Cómo llegar a los pasillos '+dest.rango:'Cómo llegar al pasillo '+aisle.toUpperCase();
   $('rutaProducto').textContent=s.d+(s.sku?' · SKU '+s.sku:'');
@@ -636,8 +636,8 @@ function openRoute(s,aisle,btn,dest,sinGuia){
     R.pasos.forEach((t,i)=>{ const li=el('li',null,t); li.onclick=()=>goStep(i); ol.appendChild(li); });
     $('rutaPlay').disabled=false;
   }
-  // con la pregunta de origen abierta la ruta se ve completa y quieta; el recorrido animado sale al responder
-  if(R.ruta&&sinGuia) place(R.L);
+  // con la pregunta de origen abierta solo se ve el pasillo destino (sin ruta); el recorrido animado sale al responder
+  if(R.ruta&&sinGuia){ place(R.L); const g=rutaGrupo(); if(g) g.style.display='none'; } // se pregunta el origen: solo el pasillo destino, sin ruta (se traza una sola vez al responder)
   else if(R.ruta) setTimeout(()=>{ if(R.ruta===r) guided(); },120);
 }
 $('rutaCerrar').onclick=()=>{ const b=document.querySelector('.sel .go'); hideRoute(); if(b) b.focus(); };
