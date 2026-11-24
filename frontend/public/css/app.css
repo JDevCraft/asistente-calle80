@@ -97,7 +97,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 /* Resultado con ruta: «Dirígete al pasillo **26a**» en una línea y «Buscar otro» a la derecha; sin ícono ni buscador (la categoría va en la pill seleccionada) */
 .sheet:not(.con-salir) .sh-row .salir{display:none}
 .sheet.con-salir .sh-t2{display:none}
-.sheet.con-salir .sh-t{font:400 15px/22px var(--body)} /* pasillo en un renglón en celulares de 360–390 px */
+.sheet.con-salir .sh-t{font:400 clamp(15px,4.4vw,18px)/22px var(--body)} /* crece con el ancho de pantalla y sigue en un renglón (360–390 px) */
 .sheet.con-salir .sh-t b{font-weight:700}
 .sheet.con-salir .sh-top{padding-bottom:16px}
 .sheet.con-salir .askbox{display:none}
