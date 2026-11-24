@@ -353,9 +353,9 @@ function elegir(enMapa,fuera){
   const xs=enMapa.map(d=>({d,x:izq(d)})).sort((a,b)=>a.x-b.x).map(o=>o.d);
   $('mapa').classList.add('con-opciones','elige'); // sin número de pasillo hasta elegir categoría
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
-  // Nombre de cada categoría junto a sus pasillos: solo texto, sin aspecto de botón (la elección se hace en el panel)
+  // Nombre de cada categoría junto a sus pasillos: sin aspecto de botón, pero al tocarlo elige la categoría igual que su pill
   const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  xs.forEach((d,i)=>{ const e=el('button','callout cat',etiquetaInfo(d).txt); e.type='button'; e.onclick=()=>{ $('need').blur(); A.sel=d.id; renderPlan(); }; if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
