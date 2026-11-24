@@ -921,7 +921,8 @@ $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen
   if(vv){ vv.addEventListener('resize',kb); vv.addEventListener('scroll',kb); }
   need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
   need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); kb(); });
-  $('scrim').addEventListener('click',()=>need.blur());
+  // El velo recibe el primer toque con el teclado abierto: si hay un pasillo o etiqueta de categoría debajo, lo elige en ese mismo toque (antes de cerrar el teclado, que cambia el layout)
+  $('scrim').addEventListener('click',e=>{ const t=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.matches('#mapa .dest,.callout.cat')); need.blur(); if(t) t.dispatchEvent(new MouseEvent('click',{bubbles:true})); });
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
   const grip=$('sheetGrip'); let y0=null, mov=false;
   const minimizar=v=>{
