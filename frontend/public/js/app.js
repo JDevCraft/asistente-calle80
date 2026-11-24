@@ -421,7 +421,7 @@ function renderPlan(){
       if(pedir) origenSheet();
       else {
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
-        const que=q&&q.length<=40?q+(varias?' de '+txt.toLowerCase():''):'';
+        const t0=txt.toLowerCase(), que=q&&q.length<=40?(varias?(t0.startsWith(q)?t0:q+' de '+t0):q):''; // sin «tapetes de tapetes para…»
         const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];

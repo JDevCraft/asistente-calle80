@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=46">
+<link rel="stylesheet" href="css/app.css?v=47">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -55,20 +55,22 @@
     <div class="sh-top">
       <button type="button" class="sh-grip" id="sheetGrip" aria-label="Contraer panel" aria-expanded="true"><i></i></button>
       <div class="sh-row">
+        <span class="sh-nav" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 12 20 4l-8 16-2-6z"/></svg></span>
         <div class="sh-head" id="sheetHead">
           <p class="sh-busy" id="aiStatus" role="status" aria-live="polite"></p>
           <h1 class="sh-t" id="sheetTitle">¿Qué estás buscando?</h1>
           <p class="sh-t2" id="sheetTitle2" hidden></p>
           <p class="sh-s" id="sheetSub">Estás en la tienda de Calle 80</p>
         </div>
+        <span class="sh-div" aria-hidden="true"></span>
+        <button type="button" class="salir" id="sheetSalir">Buscar otro</button>
       </div>
-      <!-- Resultado con ruta: «Escanea y paga» (deep link a la app Homecenter vía OneLink: abre la app o la tienda de descargas) es la acción principal; «Buscar otro» queda como secundaria -->
+      <!-- Resultado con ruta: «Escanea y paga» (deep link a la app Homecenter vía OneLink: abre la app o la tienda de descargas) es la acción principal; «Buscar otro» queda arriba a la derecha, junto al pasillo -->
       <div class="sh-act" id="sheetAct" hidden>
         <a class="pay" id="sheetPay" href="https://homecenterapp.onelink.me/xhcu/PILUBITDA" target="_blank" rel="noopener">
           <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16"/></svg>
-          <span class="pay-t"><b>Escanea y paga</b><small>Sin filas, desde tu celular</small></span>
+          <span class="pay-t"><b>Escanea y paga</b></span>
         </a>
-        <button type="button" class="salir" id="sheetSalir">Buscar otro</button>
       </div>
     </div>
     <div class="sh-opts" id="sheetOpts" role="group" aria-labelledby="sheetTitle"></div>
