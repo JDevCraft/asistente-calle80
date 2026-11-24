@@ -286,6 +286,12 @@ const PH={inicio:'Escribe el producto que buscas',origen:'Escribe tu pasillo, ej
 const STEP=REDUCE_UI?0:280; // ms entre una opción y la siguiente (pasillos y botones aparecen juntos, de izquierda a derecha)
 // texto con partes en negrita: ['Dirígete al pasillo ',['b','26a'],' para…']
 function rico(partes){ return partes.filter(Boolean).map(p=>Array.isArray(p)?el(p[0],null,p[1]):document.createTextNode(p)); }
+// «Escanea y paga»: no aparece al inicio; con la ruta a la vista espera PAY_MS y se despliega (el mapa se reacomoda). Salir del resultado la repliega y reinicia la espera
+const PAY_MS=10000; let payT=0;
+function payCard(on){ const a=$('sheetAct');
+  if(!on){ clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; return; }
+  if(payT||a.classList.contains('on')) return; // sheet() se repite en el resultado (pills, panel): no reinicia la espera
+  payT=setTimeout(()=>{ payT=0; a.inert=false; a.classList.add('on'); },PAY_MS); }
 function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=false}={}){
   SH.mode=mode; SH.info=null;
   const sh=$('sheet'); sh.dataset.mode=mode; sh.classList.remove('min');
@@ -293,7 +299,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   $('sheetTitle').replaceChildren(...(Array.isArray(t)?rico(t):[document.createTextNode(t)]));
   const T2=$('sheetTitle2'); T2.textContent=t2; T2.hidden=!t2;
   sh.classList.toggle('plegable',!!plegable); sh.classList.toggle('plegado',!!plegable); // resultado: las categorías se despliegan al subir el panel
-  sh.classList.toggle('con-salir',!!salir); $('sheetAct').hidden=!salir; // resultado con ruta: sin buscador, con «Salir»
+  sh.classList.toggle('con-salir',!!salir); payCard(!!salir); // resultado con ruta: sin buscador, con «Salir»
   const S=$('sheetSub'); S.textContent=s; S.classList.toggle('err',!!sErr);
   const o=$('sheetOpts'); o.replaceChildren(); o.scrollLeft=0;
   opts.forEach(x=>{
@@ -921,6 +927,8 @@ $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen
   if(vv){ vv.addEventListener('resize',kb); vv.addEventListener('scroll',kb); }
   need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
   need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); kb(); });
+  // Con el teclado abierto, tocar el mapa no le quita el foco al campo en el pointerdown (como las pills): si no, el teclado se cierra, el mapa se mueve y el clic se pierde (había que tocar dos veces)
+  $('cont').addEventListener('pointerdown',e=>{ if(document.activeElement===need&&e.target.closest('#scrim,.callout.cat,#mapa .dest')) e.preventDefault(); },true);
   // El velo recibe el primer toque con el teclado abierto: si hay un pasillo o etiqueta de categoría debajo, lo elige en ese mismo toque (antes de cerrar el teclado, que cambia el layout)
   $('scrim').addEventListener('click',e=>{ const t=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.matches('#mapa .dest,.callout.cat')); need.blur(); if(t) t.dispatchEvent(new MouseEvent('click',{bubbles:true})); });
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
