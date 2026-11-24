@@ -359,11 +359,9 @@ function elegir(enMapa,fuera){
   const xs=enMapa.map(d=>({d,x:izq(d)})).sort((a,b)=>a.x-b.x).map(o=>o.d);
   $('mapa').classList.add('con-opciones','elige'); // sin número de pasillo hasta elegir categoría
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
-  // Nombre de cada categoría junto a sus pasillos: sin aspecto de botón, pero al tocarlo elige la categoría igual que su pill
+  // Nombre de cada categoría junto a sus pasillos: solo texto, sin aspecto de botón (la elección se hace en el panel)
   const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const pick=()=>{ $('need').blur(); A.sel=d.id; renderPlan(); };
-    mapIds(d).forEach(m=>aisleEls(m).forEach(a=>{ a.onclick=pick; })); // los pasillos resaltados también eligen (CSS: solo con .elige)
-    const e=el('button','callout cat',etiquetaInfo(d).txt); e.type='button'; e.onclick=pick; if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
@@ -927,10 +925,7 @@ $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen
   if(vv){ vv.addEventListener('resize',kb); vv.addEventListener('scroll',kb); }
   need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
   need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); kb(); });
-  // Con el teclado abierto, tocar el mapa no le quita el foco al campo en el pointerdown (como las pills): si no, el teclado se cierra, el mapa se mueve y el clic se pierde (había que tocar dos veces)
-  $('cont').addEventListener('pointerdown',e=>{ if(document.activeElement===need&&e.target.closest('#scrim,.callout.cat,#mapa .dest')) e.preventDefault(); },true);
-  // El velo recibe el primer toque con el teclado abierto: si hay un pasillo o etiqueta de categoría debajo, lo elige en ese mismo toque (antes de cerrar el teclado, que cambia el layout)
-  $('scrim').addEventListener('click',e=>{ const t=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.matches('#mapa .dest,.callout.cat')); need.blur(); if(t) t.dispatchEvent(new MouseEvent('click',{bubbles:true})); });
+  $('scrim').addEventListener('click',()=>need.blur());
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
   const grip=$('sheetGrip'); let y0=null, mov=false;
   const minimizar=v=>{
