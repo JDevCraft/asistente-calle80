@@ -287,11 +287,13 @@ const STEP=REDUCE_UI?0:280; // ms entre una opción y la siguiente (pasillos y b
 // texto con partes en negrita: ['Dirígete al pasillo ',['b','26a'],' para…']
 function rico(partes){ return partes.filter(Boolean).map(p=>Array.isArray(p)?el(p[0],null,p[1]):document.createTextNode(p)); }
 // «Escanea y paga»: no aparece al inicio; con la ruta a la vista espera PAY_MS y se despliega (el mapa se reacomoda). Salir del resultado la repliega y reinicia la espera
-const PAY_MS=10000; let payT=0;
-function payCard(on){ const a=$('sheetAct');
-  if(!on){ clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; return; }
-  if(payT||a.classList.contains('on')) return; // sheet() se repite en el resultado (pills, panel): no reinicia la espera
+const PAY_MS=5000; let payT=0, payWant=false;
+function payStart(){ const a=$('sheetAct'); if(!payWant||payT||a.classList.contains('on')) return; // sheet() se repite en el resultado (pills, panel): no reinicia la espera
   payT=setTimeout(()=>{ payT=0; a.inert=false; a.classList.add('on'); },PAY_MS); }
+function payCard(on){ const a=$('sheetAct');
+  if(!on){ payWant=false; clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; return; }
+  if(payWant) return; payWant=true;
+  setTimeout(()=>{ if(!R.guiando) payStart(); },1500); } // respaldo: si el recorrido animado no arrancó, la cuenta empieza igual; si arrancó, la inicia su final (payStart en guided y al cortarlo)
 function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=false}={}){
   SH.mode=mode; SH.info=null;
   const sh=$('sheet'); sh.dataset.mode=mode; sh.classList.remove('min');
@@ -577,7 +579,7 @@ async function guided(){
   // ENCUESTA DESACTIVADA mientras se rediseña: if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
   await wait(900/V); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
-  endGuide();
+  endGuide(); payStart();
 }
 function goStep(i){
   if(!R.ruta) return;
@@ -636,12 +638,12 @@ function openRoute(s,aisle,btn,dest,sinGuia){
   else if(R.ruta) setTimeout(()=>{ if(R.ruta===r) guided(); },120);
 }
 $('rutaCerrar').onclick=()=>{ const b=document.querySelector('.sel .go'); hideRoute(); if(b) b.focus(); };
-$('rutaPlay').onclick=()=>{ if(R.guiando){ cancelGuide(); place(R.L); setPaso(R.pasos.length-1); } else guided(); };
+$('rutaPlay').onclick=()=>{ if(R.guiando){ cancelGuide(); payStart(); place(R.L); setPaso(R.pasos.length-1); } else guided(); };
 $('rutaPrev').onclick=()=>goStep(R.paso-1);
 $('rutaNext').onclick=()=>goStep(R.paso+1);
-$('verTodo').addEventListener('click',()=>cancelGuide(true));
-$('mapa').addEventListener('pointerdown',()=>{ if(R.guiando) cancelGuide(); });
-$('mapa').addEventListener('wheel',()=>{ if(R.guiando) cancelGuide(); },{passive:true});
+$('verTodo').addEventListener('click',()=>{ cancelGuide(true); payStart(); });
+$('mapa').addEventListener('pointerdown',()=>{ if(R.guiando){ cancelGuide(); payStart(); } });
+$('mapa').addEventListener('wheel',()=>{ if(R.guiando){ cancelGuide(); payStart(); } },{passive:true});
 
 // Mensaje de error con botón "Reintentar" (la consulta vuelve a salir con el mismo texto)
 function setError(msg){ setStatus(msg,true); const s=$('aiStatus'); const b=document.createElement('button'); b.type='button'; b.className='retry'; b.textContent='Reintentar'; b.onclick=()=>{ if(!A.busy) ask(); }; s.append(' ',b); }
