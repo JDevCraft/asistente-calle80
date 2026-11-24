@@ -8,7 +8,7 @@
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=63">
+<link rel="stylesheet" href="css/app.css?v=65">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -45,6 +45,10 @@
         <div class="callouts" id="callouts" role="group" aria-label="Ubicación en el mapa"></div>
         <div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="scrim" id="scrim" aria-hidden="true"></div>
+        <!-- controles del mapa: ojo (muestra/oculta los números de pasillo, visibles por defecto); el zoom es con pellizco -->
+        <div class="mapctl">
+          <button type="button" class="eye" id="verNums" aria-pressed="true" aria-label="Ocultar números de pasillo" title="Ocultar números de pasillo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="off" d="M4 4l16 16"/></svg></button>
+        </div>
       </div>
     </div>
     <!-- Resultado con ruta (Figma 06): tarjeta debajo del mapa, oculta al inicio; aparece 5 s después de que termina la animación de la ruta de mostrar la ruta (payCard en app.js). «Escanea y paga» = deep link a la app Homecenter vía OneLink -->

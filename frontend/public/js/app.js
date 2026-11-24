@@ -212,6 +212,7 @@ function layoutCallouts(){
 }
 // Durante el recorrido guiado R.mr (tamaño del mapa) está congelado: si el panel se pliega o despliega, se mide de nuevo y la cámara se reencuadra con la nueva proporción
 if(window.ResizeObserver) new ResizeObserver(()=>{
+  if(R.uz&&!R.guiando){ setVB(getVB()); return; } // el cliente acercó el mapa: se conserva su vista (solo se reajusta al nuevo tamaño)
   if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
   else if(!R.guiando&&!R.ruta&&MAPA.enc&&MAPA.items.length){ encuadre(MAPA.enc); return; } // vista de opciones: acerca o aleja la cámara según el alto disponible
   else if(!R.guiando&&R.ruta&&R.fit&&trail()){ // ruta en reposo (p. ej. al ocultarse las categorías): el mapa llena el área, recortando a los lados o arriba/abajo sobre el centro de la ruta
@@ -339,11 +340,11 @@ function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Estás en la t
 function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e.closest('#gondolas')) e.style.transitionDelay=ms+'ms'; e.classList.add(cls); })); }
 // borde izquierdo en pantalla de los pasillos de un destino: ordena las opciones de izquierda a derecha
 function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(q.width||q.height) l=Math.min(l,q.left); })); return l; }
-// «Tú estás aquí» (desde la entrada) o «Tú» (punto de partida elegido) al inicio de la ruta
+// «Entrada» (desde la entrada) o el número del pasillo de partida elegido, al inicio de la ruta
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
   $('mapa').classList.toggle('con-ruta',!!R.ruta); // resultado (Figma 58:16142): plano limpio
-  if(R.ruta){ const tu=!!A.origenElegido; c.appendChild(el('span','aqui'+(tu?' tu':''),tu?'Tú':'Tú estás aquí')); }
+  if(R.ruta){ const p=/pasillo (.+)$/.exec(R.origenTxt||''); c.appendChild(el('span','aqui'+(p?' tu':''),p?p[1].toLowerCase():'Entrada')); } // el pasillo de partida, o «Entrada»
   layoutCallouts();
 }
 // ícono de la categoría: del uso (Sala, Baño…) si se repite la zona; si no, de la zona; si tampoco, del uso
@@ -475,6 +476,8 @@ const ZONA_UX={"1545.5,325.3":[1556.2,288.1,"H"],"1547.6,494.2":[1534.3,495,"V"]
     const v=ZONA_UX[x0+','+y0]; if(!v) return;
     t.setAttribute('x',v[0]); t.setAttribute('y',v[1]); t.setAttribute('font-size','45'); t.setAttribute('dominant-baseline','central'); t.removeAttribute('stroke-width');
     if(v[2]==='H') t.setAttribute('transform',`rotate(90 ${v[0]} ${v[1]})`); else t.removeAttribute('transform'); }); })();
+// Laterales (01L, 03L…): no son pasillos; su número solo se muestra si son el destino
+$('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(/^l-\d+l(-\d+)?$/.test(g.id)) g.classList.add('lat'); });
 // Puntos de pago y Rampas eléctricas: mismo texto que los nombres de zona (sin la pastilla de fondo)
 $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(!g.id.startsWith('l-')&&/puntos de pago|rampas el/i.test(g.textContent)) g.classList.add('ref'); });
 // Puntos de pago: la góndola que contiene el punto de cajas y su rótulo se marcan para teñirlos de verde al preguntar el origen
@@ -603,12 +606,12 @@ function styleRoute(r){
   j.querySelectorAll(':scope > line').forEach(l=>l.setAttribute('display','none'));
 }
 function clearDest(){ $('mapa').classList.remove('con-ruta'); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt'); e.style.transitionDelay=''; }); clearCallouts(); }
-function hideRoute(){ clearDest(); R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
+function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} if(window.VB0) $('mapa').setAttribute('viewBox',window.VB0); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
 // Ruta completa de una vez (el trazo se dibuja en ~1 s, sin mover la cámara)
 function openRoute(s,aisle,btn,dest,sinGuia){
-  cancelGuide();
+  cancelGuide(); R.uz=false;
   document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); btn?.closest('.card,.dcard')?.classList.add('sel');
   $('rutaTitulo').textContent=dest&&dest.lugar?'Cómo llegar al '+dest.lugar.toLowerCase()+' '+dest.rango:dest&&dest.pasillos.length>1?'Cómo llegar a los pasillos '+dest.rango:'Cómo llegar al pasillo '+aisle.toUpperCase();
   $('rutaProducto').textContent=s.d+(s.sku?' · SKU '+s.sku:'');
@@ -644,6 +647,22 @@ $('rutaNext').onclick=()=>goStep(R.paso+1);
 $('verTodo').addEventListener('click',()=>{ cancelGuide(true); payStart(); });
 $('mapa').addEventListener('pointerdown',()=>{ if(R.guiando){ cancelGuide(); payStart(); } });
 $('mapa').addEventListener('wheel',()=>{ if(R.guiando){ cancelGuide(); payStart(); } },{passive:true});
+// Zoom del mapa: pellizco con dos dedos (y rueda en escritorio); arrastrar mueve el plano acercado. R.uz impide que el reencuadre automático lo deshaga
+(function(){ const cont=$('cont'), P=new Map(); let d0=0;
+  const zoom=(f,px,py)=>{ if(document.body.classList.contains('escribiendo')) return;
+    if(R.guiando){ cancelGuide(true); payStart(); }
+    const r=cont.getBoundingClientRect(); if(!r.width||!r.height) return;
+    const v=clampVB(getVB()), nw=Math.max(300,v[2]/f), nh=nw*r.height/r.width, sx=v[0]+(px-r.left)*v[2]/r.width, sy=v[1]+(py-r.top)*v[3]/r.height;
+    R.uz=true; setVB([sx-(px-r.left)*nw/r.width, sy-(py-r.top)*nh/r.height, nw, nh]); };
+  const pan=(dx,dy)=>{ if(R.guiando) return; const r=cont.getBoundingClientRect(), v=clampVB(getVB()); if(!r.width) return; R.uz=true; setVB([v[0]-dx*v[2]/r.width, v[1]-dy*v[3]/r.height, v[2], v[3]]); };
+  cont.addEventListener('pointerdown',e=>{ if(e.target.closest('button')||document.body.classList.contains('escribiendo')) return; P.set(e.pointerId,[e.clientX,e.clientY]); try{ cont.setPointerCapture(e.pointerId); }catch(_){}
+    if(P.size===2){ const [a,b]=[...P.values()]; d0=Math.hypot(a[0]-b[0],a[1]-b[1]); } });
+  cont.addEventListener('pointermove',e=>{ const prev=P.get(e.pointerId); if(!prev) return; P.set(e.pointerId,[e.clientX,e.clientY]);
+    if(P.size===2){ const [a,b]=[...P.values()], d=Math.hypot(a[0]-b[0],a[1]-b[1]); if(d0&&d) zoom(d/d0,(a[0]+b[0])/2,(a[1]+b[1])/2); d0=d; }
+    else if(P.size===1) pan(e.clientX-prev[0],e.clientY-prev[1]); });
+  const fin=e=>{ P.delete(e.pointerId); d0=0; }; cont.addEventListener('pointerup',fin); cont.addEventListener('pointercancel',fin);
+  cont.addEventListener('wheel',e=>{ e.preventDefault(); zoom(Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX,e.clientY); },{passive:false});
+})();
 
 // Mensaje de error con botón "Reintentar" (la consulta vuelve a salir con el mismo texto)
 function setError(msg){ setStatus(msg,true); const s=$('aiStatus'); const b=document.createElement('button'); b.type='button'; b.className='retry'; b.textContent='Reintentar'; b.onclick=()=>{ if(!A.busy) ask(); }; s.append(' ',b); }
@@ -904,6 +923,7 @@ sampleFn={ async json(opts){
 } };
 initTracking();
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
+$('verNums').onclick=()=>{ const b=$('verNums'), ver=b.getAttribute('aria-pressed')!=='true'; $('cont').classList.toggle('sin-nums',!ver); b.setAttribute('aria-pressed',String(ver)); const x=(ver?'Ocultar':'Mostrar')+' números de pasillo'; b.setAttribute('aria-label',x); b.title=x; };
 $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen=false; A.origen=''; A.origenElegido=false; hideRoute(); $('need').value=''; inicio(); };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){

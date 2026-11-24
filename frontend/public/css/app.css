@@ -80,8 +80,8 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .sh-row{display:flex;align-items:center;gap:16px;min-width:0}
 .sh-row .sh-head{flex:1 1 auto}
 .sh-t2{margin:0;font:400 16px/22px var(--body);color:var(--text);overflow-wrap:anywhere}
-.salir{flex:none;white-space:nowrap;min-height:40px;padding:8px 12px;border:0;border-radius:4px;background:transparent;color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);font:400 14px/20px var(--body)}
-.salir:hover{background:#E6F1FA}
+.salir{flex:none;white-space:nowrap;min-height:40px;padding:8px 12px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body)} /* acción principal: azul */
+.salir:hover{background:var(--primary-hover)}
 /* Resultado con ruta (Figma 06): tarjeta debajo del mapa «¿Encontraste tu producto?» + «Escanea y paga» sobre el mapa; «Buscar otro» va arriba a la derecha, junto al pasillo */
 /* La tarjeta nace colgada (altura 0) y se despliega con 1fr: el mapa (ResizeObserver de #cont) se reacomoda en cada fotograma */
 .pay-wrap{display:grid;grid-template-rows:0fr;margin:0 -6px;visibility:hidden;transition:grid-template-rows .55s cubic-bezier(.2,.8,.2,1),visibility 0s linear .55s}
@@ -94,8 +94,8 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .pay-msg b{font:400 clamp(12px,4.2cqw,16px)/1.3 var(--body)}
 .pay-msg span{font:400 clamp(10px,3.4cqw,13px)/1.3 var(--body)}
 .pay-msg span b{font:inherit;font-weight:700}
-.pay{flex:none;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:8px;border-radius:4px;background:var(--primary);color:#fff;text-decoration:none;font:400 13px/20px var(--body);white-space:nowrap}
-.pay:hover{background:var(--primary-hover)}
+.pay{flex:none;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:8px;border-radius:4px;background:transparent;color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);text-decoration:none;font:400 13px/20px var(--body);white-space:nowrap} /* secundaria: sin fondo */
+.pay:hover{background:#E6F1FA}
 .pay:active{transform:scale(.98)}
 .pay svg{flex:none;width:20px;height:20px}
 /* Resultado con ruta: «Dirígete al pasillo **26a**» en una línea y «Buscar otro» a la derecha; sin ícono ni buscador (la categoría va en la pill seleccionada) */
@@ -281,10 +281,18 @@ body.escribiendo .sh-top{gap:0}
 #mapa #etiquetas .pl:not([id^="l-"]):not(.ref){display:none}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
-/* El número de pasillo solo se ve en los pasillos de un resultado */
-#mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-alt){display:none}
-/* mientras se elige categoría no se muestran los números de pasillo */
-#mapa.elige #etiquetas .pl.dest{display:none}
+/* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
+#cont.sin-nums #mapa #etiquetas .pl[id^="l-"]{display:none}
+#mapa #etiquetas .pl.lat:not(.dest):not(.dest-alt){display:none}
+/* mientras se elige categoría los pasillos señalados llevan el número como los demás (sin el azul del resultado) */
+#mapa.elige #etiquetas .pl.dest rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
+#mapa.elige #etiquetas .pl.dest text{fill:#6b7682}
+.mapctl{position:absolute;top:8px;right:8px;z-index:3;display:flex;flex-direction:column;gap:8px}
+.eye{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:#fff;color:var(--text);box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1);transition:opacity .3s ease}
+.eye .off{display:none}
+.eye[aria-pressed="false"] .off{display:block}
+#cont.cargando .mapctl{opacity:0;pointer-events:none}
+#cont{touch-action:none} /* el pellizco y el arrastre mueven el mapa, no la página */
 /* «ir mostrando los pasillos a medida»: cada opción se ilumina con su retardo (style.transitionDelay en app.js) */
 #mapa #zonas-nombre{transition:opacity .9s ease}
 #mapa #gondolas rect{transition:fill .6s ease,stroke .6s ease}
