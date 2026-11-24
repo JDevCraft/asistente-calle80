@@ -83,18 +83,21 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .salir{flex:none;white-space:nowrap;min-height:40px;padding:8px 12px;border:0;border-radius:4px;background:transparent;color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);font:400 14px/20px var(--body)}
 .salir:hover{background:#E6F1FA}
 /* Resultado con ruta (Figma 06): tarjeta debajo del mapa «¿Encontraste tu producto?» + «Escanea y paga» sobre el mapa; «Buscar otro» va arriba a la derecha, junto al pasillo */
-.pay-card{flex:none;margin-top:12px;display:flex;align-items:center;gap:10px;min-height:56px;padding:8px;border-radius:4px;background:#fff;box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1)}
+.pay-card{flex:none;margin-top:12px;container-type:inline-size;display:flex;align-items:center;gap:8px;min-height:56px;padding:8px;border-radius:4px;background:#fff;box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1)}
 .pay-card[hidden]{display:none}
-.pay-msg{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;color:var(--text)}
-.pay-msg b{font:400 16px/22px var(--body)}
-.pay-msg span{font:400 12px/18px var(--body);opacity:.6}
-.pay{flex:none;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:8px 12px;border-radius:4px;background:var(--primary);color:#fff;text-decoration:none;font:400 14px/20px var(--body);white-space:nowrap}
+/* cada mensaje en un solo renglón: el tamaño sigue el ancho de la tarjeta (360–390 px) */
+.pay-msg{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;color:var(--text);white-space:nowrap}
+.pay-msg b{font:400 clamp(12px,4.2cqw,16px)/1.3 var(--body)}
+.pay-msg span{font:400 clamp(10px,3.1cqw,12px)/1.3 var(--body);opacity:.6}
+.pay{flex:none;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:8px;border-radius:4px;background:var(--primary);color:#fff;text-decoration:none;font:400 13px/20px var(--body);white-space:nowrap}
 .pay:hover{background:var(--primary-hover)}
 .pay:active{transform:scale(.98)}
-.pay svg{flex:none}
+.pay svg{flex:none;width:20px;height:20px}
 /* Resultado con ruta: «Dirígete al pasillo **26a**» en una línea y «Buscar otro» a la derecha; sin ícono ni buscador (la categoría va en la pill seleccionada) */
 .sheet:not(.con-salir) .sh-row .salir{display:none}
 .sheet.con-salir .sh-t2{display:none}
+.sheet.con-salir .sh-t{font:400 15px/22px var(--body)} /* pasillo en un renglón en celulares de 360–390 px */
+.sheet.con-salir .sh-t b{font-weight:700}
 .sheet.con-salir .sh-top{padding-bottom:16px}
 .sheet.con-salir .askbox{display:none}
 /* Resultado con varias categorías: al subir el panel (asa) se despliegan las pills debajo del título (Figma «Product Items» 8 8 16 16) */
