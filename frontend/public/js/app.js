@@ -167,7 +167,9 @@ function layoutCallouts(){
       let x0=s.x-cr.left+10, y0=s.y-cr.top-h/2;
       if(sale==='der') x0=s.x-cr.left-10-w;
       else if(sale==='izq') x0=s.x-cr.left+10;
-      if(x0+w>W-pad) x0=s.x-cr.left-10-w; x0=Math.max(pad,x0); y0=Math.min(Math.max(pad,y0),H-h-pad);
+      if(x0+w>W-pad) x0=s.x-cr.left-10-w;
+      if(x0<pad&&sale==='der'){ x0=Math.min(Math.max(pad,s.x-cr.left-w/2),W-w-pad); y0=s.y-cr.top-h-8; if(y0<pad) y0=s.y-cr.top+8; } // pegado al borde izquierdo: no cabe a un lado, va sobre el punto
+      x0=Math.max(pad,x0); y0=Math.min(Math.max(pad,y0),H-h-pad);
       aq.style.left=x0+'px'; aq.style.top=y0+'px'; aq.style.display=''; puestos.push([x0-14,y0-6,w+20,h+12]); ok=true;
     }catch(e){}
     if(!ok) aq.style.display='none'; }
@@ -344,7 +346,9 @@ function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
   $('mapa').classList.toggle('con-ruta',!!R.ruta); // resultado (Figma 58:16142): plano limpio
-  if(R.ruta&&!A.pideOrigen){ const p=/pasillo (.+)$/.exec(R.origenTxt||''); c.appendChild(el('span','aqui'+(p?' tu':''),p?p[1].toLowerCase():'Entrada')); } // el pasillo de partida, o «Entrada»
+  if(R.ruta&&!A.pideOrigen){ const p=/pasillo (.+)$/.exec(R.origenTxt||'');
+    if(p){ const id=p[1].toLowerCase(); $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(g.id==='l-'+id||g.id.startsWith('l-'+id+'-')) g.classList.add('orig'); }); } // su número ya lo dice la etiqueta de partida: no se repite en la píldora del pasillo
+    c.appendChild(el('span','aqui'+(p?' tu':''),p?p[1].toLowerCase():'Entrada')); } // el pasillo de partida, o «Entrada»
   layoutCallouts();
 }
 // ícono de la categoría: del uso (Sala, Baño…) si se repite la zona; si no, de la zona; si tampoco, del uso
@@ -605,7 +609,7 @@ function styleRoute(r){
   j.querySelectorAll(':scope > circle').forEach(c=>{ c.setAttribute('r','14'); c.setAttribute('fill','#0072ce'); c.setAttribute('stroke','none'); });
   j.querySelectorAll(':scope > line').forEach(l=>l.setAttribute('display','none'));
 }
-function clearDest(){ $('mapa').classList.remove('con-ruta'); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt'); e.style.transitionDelay=''; }); clearCallouts(); }
+function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt'); e.style.transitionDelay=''; }); clearCallouts(); }
 function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} if(window.VB0) $('mapa').setAttribute('viewBox',window.VB0); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
