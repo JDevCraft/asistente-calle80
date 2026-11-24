@@ -355,7 +355,9 @@ function elegir(enMapa,fuera){
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
   // Nombre de cada categoría junto a sus pasillos: sin aspecto de botón, pero al tocarlo elige la categoría igual que su pill
   const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const e=el('button','callout cat',etiquetaInfo(d).txt); e.type='button'; e.onclick=()=>{ $('need').blur(); A.sel=d.id; renderPlan(); }; if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  xs.forEach((d,i)=>{ const pick=()=>{ $('need').blur(); A.sel=d.id; renderPlan(); };
+    mapIds(d).forEach(m=>aisleEls(m).forEach(a=>{ a.onclick=pick; })); // los pasillos resaltados también eligen (CSS: solo con .elige)
+    const e=el('button','callout cat',etiquetaInfo(d).txt); e.type='button'; e.onclick=pick; if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
   MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
