@@ -88,7 +88,8 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 /* cada mensaje en un solo renglón: el tamaño sigue el ancho de la tarjeta (360–390 px) */
 .pay-msg{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;color:var(--text);white-space:nowrap}
 .pay-msg b{font:400 clamp(12px,4.2cqw,16px)/1.3 var(--body)}
-.pay-msg span{font:400 clamp(10px,3.1cqw,12px)/1.3 var(--body);opacity:.6}
+.pay-msg span{font:400 clamp(10px,3.4cqw,13px)/1.3 var(--body)}
+.pay-msg span b{font:inherit;font-weight:700}
 .pay{flex:none;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:8px;border-radius:4px;background:var(--primary);color:#fff;text-decoration:none;font:400 13px/20px var(--body);white-space:nowrap}
 .pay:hover{background:var(--primary-hover)}
 .pay:active{transform:scale(.98)}
