@@ -293,8 +293,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
   $('sheetTitle').replaceChildren(...(Array.isArray(t)?rico(t):[document.createTextNode(t)]));
   const T2=$('sheetTitle2'); T2.textContent=t2; T2.hidden=!t2;
   sh.classList.toggle('plegable',!!plegable); sh.classList.toggle('plegado',!!plegable); // resultado: las categorías se despliegan al subir el panel
-  sh.classList.toggle('con-salir',!!salir); $('sheetAct').hidden=!salir; $('sheetSalir').hidden=!salir; // resultado con ruta: sin buscador; «Buscar otro» en la barra superior
-  const alt=$('sheetAlt'); alt.hidden=!plegable; alt.setAttribute('aria-expanded','false'); alt.textContent='Otras categorías ('+(opts.length-1)+')';
+  sh.classList.toggle('con-salir',!!salir); $('sheetAct').hidden=!salir; // resultado con ruta: sin buscador, con «Salir»
   const S=$('sheetSub'); S.textContent=s; S.classList.toggle('err',!!sErr);
   const o=$('sheetOpts'); o.replaceChildren(); o.scrollLeft=0;
   opts.forEach(x=>{
@@ -422,12 +421,12 @@ function renderPlan(){
       if(pedir) origenSheet();
       else {
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
-        const t0=txt.toLowerCase(), que=q&&q.length<=40?(varias?(t0.startsWith(q)?t0:q+' de '+t0):q):''; // sin «tapetes de tapetes para…»
+        const que=q&&q.length<=40?q+(varias?' de '+txt.toLowerCase():''):'';
         const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
-        sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta,plegable:cats.length>1, // categorías tras el chip «Otras categorías»; la elegida va en modo seleccionado
-
+        sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta, // categorías fijas a la vista; la elegida va en modo seleccionado
+          
           opts:cats.map((x,i)=>({txt:etiquetaInfo(x).txt,pill:true,d:x,actual:x===d,delay:i*STEP,fn:()=>{ if(x===d) return; A.sel=x.id; renderPlan(); }}))});
       }
     } else {
@@ -897,7 +896,6 @@ sampleFn={ async json(opts){
 } };
 initTracking();
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
-$('sheetAlt').onclick=()=>$('sheetGrip').click(); // el chip hace lo mismo que el asa
 $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen=false; A.origen=''; A.origenElegido=false; hideRoute(); $('need').value=''; inicio(); };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
@@ -925,7 +923,7 @@ $('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
   const grip=$('sheetGrip'); let y0=null, mov=false;
   const minimizar=v=>{
-    if(sh.classList.contains('plegable')){ sh.classList.toggle('plegado',v); $('sheetAlt').setAttribute('aria-expanded',String(!v)); grip.setAttribute('aria-expanded',String(!v)); grip.setAttribute('aria-label',v?'Ver categorías':'Ocultar categorías'); return; }
+    if(sh.classList.contains('plegable')){ sh.classList.toggle('plegado',v); grip.setAttribute('aria-expanded',String(!v)); grip.setAttribute('aria-label',v?'Ver categorías':'Ocultar categorías'); return; }
     sh.classList.toggle('min',v); grip.setAttribute('aria-expanded',String(!v)); grip.setAttribute('aria-label',v?'Expandir panel':'Contraer panel'); };
   grip.addEventListener('pointerdown',e=>{ y0=e.clientY; mov=false; try{ grip.setPointerCapture(e.pointerId); }catch(_){} });
   grip.addEventListener('pointermove',e=>{ if(y0==null) return; const dy=e.clientY-y0; if(Math.abs(dy)>24){ mov=true; minimizar(dy>0); y0=null; } });
