@@ -80,9 +80,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .sh-row{display:flex;align-items:center;gap:16px;min-width:0}
 .sh-row .sh-head{flex:1 1 auto}
 .sh-t2{margin:0;font:400 16px/22px var(--body);color:var(--text);overflow-wrap:anywhere}
-.salir{flex:none;white-space:nowrap;min-height:40px;padding:8px 12px;border:0;border-radius:4px;background:var(--primary);color:#fff;font:400 14px/20px var(--body)} /* acción principal: azul */
-.salir:hover{background:var(--primary-hover)}
-/* Resultado con ruta (Figma 06): tarjeta debajo del mapa «¿Encontraste tu producto?» + «Escanea y paga» sobre el mapa; «Buscar otro» va arriba a la derecha, junto al pasillo */
+/* Resultado con ruta (Figma 06): tarjeta debajo del mapa «¿Encontraste tu producto?» + «Escanea y paga» sobre el mapa; el buscador queda a la vista (Figma v3, sin «Buscar otro») */
 /* La tarjeta nace colgada (altura 0) y se despliega con 1fr: el mapa (ResizeObserver de #cont) se reacomoda en cada fotograma */
 .pay-wrap{display:grid;grid-template-rows:0fr;margin:0 -6px;visibility:hidden;transition:grid-template-rows .55s cubic-bezier(.2,.8,.2,1),visibility 0s linear .55s}
 .pay-wrap.on{grid-template-rows:1fr;visibility:visible;transition:grid-template-rows .55s cubic-bezier(.2,.8,.2,1),visibility 0s}
@@ -98,13 +96,12 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .pay:hover{background:#E6F1FA}
 .pay:active{transform:scale(.98)}
 .pay svg{flex:none;width:20px;height:20px}
-/* Resultado con ruta: «Dirígete al pasillo **26a**» en una línea y «Buscar otro» a la derecha; sin ícono ni buscador (la categoría va en la pill seleccionada) */
-.sheet:not(.con-salir) .sh-row .salir{display:none}
-.sheet.con-salir .sh-t2{display:none}
-.sheet.con-salir .sh-t{font:400 clamp(18px,5.2vw,22px)/24px var(--body)} /* grande y legible: si no cabe junto a «Buscar otro», el pasillo baja entero al segundo renglón */
-.sheet.con-salir .sh-t b{font-weight:700;white-space:nowrap}
+/* Resultado con ruta (Figma v3): título, categoría, caja «Saliendo desde…» y el buscador debajo */
+/* Figma v3 «Drawer - Header»: título Medium 20/24 con el pasillo en ExtraBold, subtítulo (categoría) Light 20, color #333 */
+.sheet.con-salir .sh-t2{font:300 20px/22px var(--body);color:var(--text)} /* Figma usa 14 px de alto de línea: aquí 22 para que no se corten los descendentes */
+.sheet.con-salir .sh-t{font:500 20px/24px var(--body)}
+.sheet.con-salir .sh-t b{font-weight:800;white-space:nowrap}
 .sheet.con-salir .sh-top{padding-bottom:16px}
-.sheet.con-salir .askbox{display:none}
 /* Resultado con varias categorías: al subir el panel (asa) se despliegan las pills debajo del título (Figma «Product Items» 8 8 16 16) */
 .sheet.plegado .sh-opts{display:none}
 .sheet.plegable:not(.plegado) .sh-top{padding-bottom:8px}
@@ -153,8 +150,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.pill.verde:hover{background:#d8ecd8}
 .opt.pill.verde .ic-pin{color:#006200}
 /* ¿En qué pasillo estás? (Figma 06): la zona de Puntos de pago se tiñe de verde y pierde su rótulo */
-body:has(#sheet[data-mode="origen"]) #mapa #gondolas rect.pago{fill:#E3F2E0;transition:fill .3s}
-body:has(#sheet[data-mode="origen"]) #mapa #etiquetas .pl.ref.pago{display:none}
+#mapa #gondolas rect.pago{fill:#E3F2E0} /* Figma v3: la zona del punto de pago va en verde claro */
 .sh-opts:has(.pill){gap:10px;padding:8px 8px 8px 16px}
 /* Botones de «¿En qué pasillo estás?»: ícono de indicaciones con el rombo de indicaciones, en blanco con la flecha calada */
 .opt .ic-dir{color:#fff;width:22px;height:22px}
@@ -227,16 +223,12 @@ body:has(#sheet[data-mode="origen"]) #mapa #etiquetas .pl.ref.pago{display:none}
 /* Escribiendo: el panel sube con el teclado y el encabezado se recoge (frame 2, comentario «animación hacia arriba») */
 body.escribiendo .sh-head{height:0;opacity:0}
 body.escribiendo .sh-opts{display:none}
-body.escribiendo .sheet[data-mode="origen"] .sh-head{height:auto;opacity:1}
-body.escribiendo .sheet[data-mode="origen"] .sh-s{display:none}
-body.escribiendo .sheet[data-mode="origen"] .sh-top{gap:8px}
-body.escribiendo .sheet[data-mode="origen"] .sh-opts{display:flex}
 body.escribiendo .sh-top{gap:0}
 /* Con el teclado abierto: sin gris sobre el mapa (el toque fuera sigue cerrando el teclado), sin la barra de título y sin hueco donde iba el título */
 @media (max-width:599px){
   body.escribiendo .scrim{background:transparent}
   body.escribiendo .appbar{display:none}
-  body.escribiendo .sheet:not([data-mode="origen"]) .sh-top{padding-top:8px}
+  body.escribiendo .sheet .sh-top{padding-top:8px}
 }
 /* Panel contraído con el asa: solo queda el campo */
 .sheet.min .sh-head{height:0;opacity:0}
@@ -278,8 +270,12 @@ body.escribiendo .sh-top{gap:0}
 /* Nombres del mapa: las zonas/categorías no se muestran; solo quedan Puntos de pago y Rampas eléctricas (.pl.ref),
    igual al inicio que al elegir categoría. En el resultado con ruta tampoco (Figma 58:13495) */
 #mapa #zonas-nombre{opacity:0;pointer-events:none}
+#start:not(.has-res) #mapa #zonas-nombre{opacity:1} /* Figma v3 P-01: el inicio muestra los nombres de categoría */
 #mapa #etiquetas .pl:not([id^="l-"]):not(.ref){display:none}
 #mapa #etiquetas .pl.ref rect{display:none}
+#mapa #etiquetas .pl.ref{visibility:hidden} /* su lugar lo ocupan los pines fijos (#pines) */
+#pines text{fill:#005192;font:700 42px var(--body);stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
+#mapa.con-ruta #pin-entrada{display:none} /* en la ruta, «Entrada» ya es la etiqueta de partida */
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
 #cont.sin-nums #mapa #etiquetas .pl[id^="l-"]{display:none}
@@ -289,9 +285,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa.elige #etiquetas .pl.dest rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa.elige #etiquetas .pl.dest text{fill:#6b7682}
 .mapctl{position:absolute;top:8px;right:8px;z-index:3;display:flex;flex-direction:column;gap:8px}
-.eye{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:#fff;color:var(--text);box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1);transition:opacity .3s ease}
-.eye .off{display:none}
-.eye[aria-pressed="false"] .off{display:block}
+.eye{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 10px;border:1px solid #B0D3F0;border-radius:100px;background:#fff;color:var(--primary);font:400 12px/18px var(--body);white-space:nowrap;box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1);transition:opacity .3s ease}
 #cont.cargando .mapctl{opacity:0;pointer-events:none}
 #cont{touch-action:none} /* el pellizco y el arrastre mueven el mapa, no la página */
 /* «ir mostrando los pasillos a medida»: cada opción se ilumina con su retardo (style.transitionDelay en app.js) */
@@ -326,10 +320,11 @@ body.escribiendo .sh-top{gap:0}
 .sh-opts.f-izq,.sh-opts.f-der{--mi:#000;--md:#000;-webkit-mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md));mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md))}
 .sh-opts.f-izq{--mi:transparent}
 .sh-opts.f-der{--md:transparent}
+.sheet[data-mode="categoria"] .sh-opts{flex-wrap:wrap;overflow-x:visible} /* Figma v3 P-02: las categorías se acomodan en varias líneas, sin scroll lateral */
 /* Pills de 28 px (diseño) con área táctil de 44 px */
 .opt.pill{position:relative}
 .opt.pill::after{content:"";position:absolute;inset:-8px -2px}
-.salir,.appbar button{position:relative}
+.appbar button{position:relative}
 .appbar button::after{content:"";position:absolute;inset:-10px}
 /* Muesca del teléfono en horizontal */
 .app{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
@@ -369,3 +364,23 @@ body.escribiendo .sh-top{gap:0}
   .wave i{transition:none}
   .dic span,.dic span.n,.dic:empty::before{transition:none;animation:none}
 }
+
+/* Inline Alert (Figma v3 163:13172 · 173:19748): fondo #e6f1fa, borde #b0d3f0, radio 4, texto #005192 14/20, «Cambiar» #0072ce subrayado */
+.sh-ori{display:flex;align-items:center;gap:8px;padding:2px 16px;background:#e6f1fa;border:1px solid #b0d3f0;border-radius:4px;overflow:hidden}
+.sh-ori[hidden]{display:none}
+.sh-ori img{flex:none;width:20px;height:20px}
+.sh-ori p{flex:1 1 0;min-width:0;margin:0;font:400 14px/20px var(--body);color:#005192;text-align:left}
+.sh-ori p b{font-weight:700}
+.ori-cambiar{flex:none;width:76px;padding:10px 16px;border:0;border-radius:4px;background:none;color:var(--primary);font:400 14px/20px var(--body);text-decoration:underline;text-underline-position:from-font;white-space:nowrap}
+
+/* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
+#start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl{display:none}
+#start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt{fill:#e7ebf0;stroke:none}
+#start.ubic #mapa.con-ruta #pin-entrada{display:inline} /* sin ruta a la vista, «Entrada» vuelve a verse */
+#start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
+#start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
+/* Snackbar (Figma 166:14292): #333, radio 4, padding 12 16, texto 14/20 blanco y acción Bold #b0d3f0 */
+.snack{position:absolute;left:9px;right:9px;top:8px;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:4px;background:#333;box-shadow:0 4px 7px rgba(0,0,0,.25);font:400 14px/20px var(--body)}
+.snack[hidden]{display:none}
+.snack p{flex:1 1 0;min-width:0;margin:0;color:#fff}
+.snack button{flex:none;padding:0;border:0;background:none;color:#b0d3f0;font:700 14px/20px var(--body)}

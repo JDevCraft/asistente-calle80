@@ -7,8 +7,8 @@
 <meta name="description" content="Encuentra en la tienda Calle 80 lo que necesitas para tu proyecto, con la ubicación en el mapa.">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="css/app.css?v=68">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700;800;900&display=swap">
+<link rel="stylesheet" href="css/app.css?v=77">
 </head>
 <body>
 <noscript>Esta herramienta necesita JavaScript activado para funcionar.</noscript>
@@ -40,14 +40,16 @@
   <section class="ruta idle" id="rutaModal" aria-labelledby="rutaTitulo">
     <div class="ruta-top" hidden><div class="t"><h2 id="rutaTitulo">Cómo llegar</h2><p id="rutaProducto"></p></div><button class="cerrar" id="rutaCerrar" type="button">Cerrar mapa</button></div>
     <div class="ruta-body">
-      <div id="cont" class="cargando" aria-busy="true">
+      <div id="cont" class="cargando sin-nums" aria-busy="true">
         <svg id="mapa" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Mapa de la tienda con la ruta al pasillo"></svg>
         <div class="callouts" id="callouts" role="group" aria-label="Ubicación en el mapa"></div>
         <div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="scrim" id="scrim" aria-hidden="true"></div>
-        <!-- controles del mapa: ojo (muestra/oculta los números de pasillo, visibles por defecto); el zoom es con pellizco -->
+        <!-- Snackbar (Figma v3 166:14292): «Toca el pasillo donde estás · Cancelar» y «Ubicación actualizada · Deshacer» -->
+        <div class="snack" id="snack" role="status" hidden></div>
+        <!-- controles del mapa (Figma v3 P-01): botón con texto que muestra/oculta los números de pasillo (ocultos por defecto); el zoom es con pellizco -->
         <div class="mapctl">
-          <button type="button" class="eye" id="verNums" aria-pressed="true" aria-label="Ocultar números de pasillo" title="Ocultar números de pasillo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="off" d="M4 4l16 16"/></svg></button>
+          <button type="button" class="eye" id="verNums"><img src="img/eye-enabled.svg" width="20" height="20" alt=""><span>Ver números de pasillo</span></button>
         </div>
       </div>
     </div>
@@ -73,8 +75,9 @@
           <p class="sh-t2" id="sheetTitle2" hidden></p>
           <p class="sh-s" id="sheetSub">Estás en la tienda de Calle 80</p>
         </div>
-        <button type="button" class="salir" id="sheetSalir">Buscar otro</button>
       </div>
+      <!-- Inline Alert (Figma v3 163:13172): origen de la ruta + «Cambiar» -->
+      <div class="sh-ori" id="sheetOri" hidden></div>
     </div>
     <div class="sh-opts" id="sheetOpts" role="group" aria-labelledby="sheetTitle"></div>
     <div id="survey" role="status" hidden></div>
@@ -85,7 +88,7 @@
       <div class="field">
         <label class="sr" for="need">Lo que buscas</label>
         <div class="dic" id="dic" aria-hidden="true"></div>
-        <textarea id="need"rows="1" data-clarity-unmask="True" placeholder="Escribe el producto que buscas" autocomplete="off" enterkeyhint="search"></textarea>
+        <textarea id="need"rows="1" data-clarity-unmask="True" placeholder="Buscar producto" autocomplete="off" enterkeyhint="search"></textarea>
         <div class="fbar">
           <button class="qa x lst" id="micCancel" type="button" aria-label="Cancelar dictado" title="Cancelar dictado"><span class="ic ic-close" aria-hidden="true"></span></button>
           <span class="hold-hint" aria-hidden="true">desliza para cancelar</span>

@@ -1,5 +1,4 @@
 import { initTracking } from './tracking.js';
-import { normalizarPasillo } from './pasillo.js';
 
 // Segmentos del asistente (ai.json, generado desde el Excel). Los SKUs no se usan en el cliente.
 let AI;
@@ -31,7 +30,7 @@ function pretty(s){
 
 // ================= ASISTENTE DE NECESIDADES =================
 const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(name)}));
-const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',nOk:0};
+const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',nOk:0,ubic:false};
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -281,11 +280,11 @@ function showMotivos(id){
   e.hidden=false;
 }
 // ================= BOTTOM SHEET =================
-// Un solo panel inferior cambia de estado (data-mode): inicio · buscando · categoria · resultado · origen · info.
+// Un solo panel inferior cambia de estado (data-mode): inicio · buscando · categoria · resultado · info.
 // Figma «Frames finales»: el mapa queda arriba y todas las preguntas y respuestas van en el panel.
 const REDUCE_UI=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SH={mode:'inicio',info:null};
-const PH={inicio:'Escribe el producto que buscas',origen:'Escribe tu pasillo, ej. 13B'};
+const PH={inicio:'Buscar producto'}; // Figma v3: «Buscar producto» en inicio, categoría y resultado
 const STEP=REDUCE_UI?0:280; // ms entre una opción y la siguiente (pasillos y botones aparecen juntos, de izquierda a derecha)
 // texto con partes en negrita: ['Dirígete al pasillo ',['b','26a'],' para…']
 function rico(partes){ return partes.filter(Boolean).map(p=>Array.isArray(p)?el(p[0],null,p[1]):document.createTextNode(p)); }
@@ -297,15 +296,18 @@ function payCard(on){ const a=$('sheetAct');
   if(!on){ payWant=false; clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; return; }
   if(payWant) return; payWant=true;
   setTimeout(()=>{ if(!R.guiando) payStart(); },1500); } // respaldo: si el recorrido animado no arrancó, la cuenta empieza igual; si arrancó, la inicia su final (payStart en guided y al cortarlo)
-function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=false}={}){
+function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=false,ori=null}={}){
   SH.mode=mode; SH.info=null;
   const sh=$('sheet'); sh.dataset.mode=mode; sh.classList.remove('min');
   $('sheetGrip').setAttribute('aria-expanded','true'); $('sheetGrip').setAttribute('aria-label','Contraer panel'); $('barInfo').setAttribute('aria-expanded','false');
   $('sheetTitle').replaceChildren(...(Array.isArray(t)?rico(t):[document.createTextNode(t)]));
   const T2=$('sheetTitle2'); T2.textContent=t2; T2.hidden=!t2;
   sh.classList.toggle('plegable',!!plegable); sh.classList.toggle('plegado',!!plegable); // resultado: las categorías se despliegan al subir el panel
-  sh.classList.toggle('con-salir',!!salir); payCard(!!salir); // resultado con ruta: sin buscador, con «Salir»
+  sh.classList.toggle('con-salir',!!salir); payCard(!!salir); // resultado con ruta: aparece «Escanea y paga»; el buscador sigue visible
   const S=$('sheetSub'); S.textContent=s; S.classList.toggle('err',!!sErr);
+  const O=$('sheetOri'); O.hidden=!ori; O.replaceChildren(); // Figma Inline Alert: ícono, «Saliendo desde…» y «Cambiar»
+  if(ori){ const i=el('img'); i.src='img/location-pin.svg'; i.width=i.height=20; i.alt=''; const p=el('p'); p.append(...rico(ori)); const b=el('button','ori-cambiar','Cambiar'); b.type='button';
+    b.onclick=ubicCambiar; O.append(i,p,b); }
   const o=$('sheetOpts'); o.replaceChildren(); o.scrollLeft=0;
   opts.forEach(x=>{
     const b=el('button','opt'+(x.pill?' pill':'')+(x.delay!=null?' entra':'')); b.type='button';
@@ -320,7 +322,7 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
     if(x.actual){ b.classList.add('actual'); b.setAttribute('aria-current','true'); }
     b.onclick=()=>{ $('need').blur(); x.fn(); }; o.append(b);
   });
-  $('need').placeholder=PH[mode]||'¿Cómo podemos ayudarte?';
+  $('need').placeholder=PH[mode]||'Buscar producto';
   if(mode!=='buscando') setStatus('');
   requestAnimationFrame(()=>{ fadeOpts(); empujon(opts.length); });
 }
@@ -382,35 +384,35 @@ function ultimoPasillo(){
   const id=idsOrigen().find(x=>x.toLowerCase()===u.toLowerCase()||x.toLowerCase()===u.toLowerCase().replace(/-[nsew]$/,''));
   return id?{id,txt:id.toLowerCase().replace(/-[nsew]$/,'')}:null;
 }
-function origenSheet(err){
-  const ultimo=ultimoPasillo();
-  sheet('origen',{t:'¿En qué pasillo estás?',s:err||'Arriba están los pasillos',sErr:!!err,opts:[
-    {txt:'Punto de pago',icon:'pin',pill:true,verde:true,delay:0,fn:()=>fijarOrigen(pasilloCajas())}, // Figma 06: va primero y en verde, igual que su zona en el mapa
-    {txt:'Entrada',icon:'pin',pill:true,delay:STEP,fn:()=>fijarOrigen('')},
-    ...(ultimo?[{txt:'Pasillo '+ultimo.txt,icon:'pin',pill:true,delay:2*STEP,fn:()=>fijarOrigen(ultimo.id)}]:[])]});
-}
+// Texto del Inline Alert: «Saliendo desde la entrada» o «…el pasillo 23b (tu última búsqueda)» si el origen es el de la búsqueda anterior y no se eligió otro
+function oriTxt(){ const m=/pasillo (.+)$/.exec(R.origenTxt||''); if(!m) return ['Saliendo desde la ',['b','entrada']];
+  const id=m[1].toLowerCase(), u=ultimoPasillo();
+  return ['Saliendo desde el pasillo ',['b',id+(!A.origenElegido&&u&&u.id.toLowerCase()===id?' (tu última búsqueda)':'')]]; }
 function fijarOrigen(id){ A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan(); }
 function idsOrigen(){ return [...$('desde').options].map(o=>o.value).filter(Boolean); }
-function origenEscrito(txt){
-  const r=normalizarPasillo(txt,idsOrigen());
-  if(r.id){ fijarOrigen(r.id); return; }
-  origenSheet(r.error==='ambiguo'?'¿Cuál de estos? '+r.opciones.join(', ')+'. Escribe el número con la letra.'
-    :r.error==='vacio'?'Escribe el número del pasillo, como aparece en el letrero.'
-    :'No encuentro ese pasillo. Escríbelo como aparece en el letrero, por ejemplo 13B.');
-}
-// Punto de pago: el motor de rutas solo sale desde pasillos; se usa el pasillo del plano más cercano a los puntos de pago
-const CAJAS=[211.1,911.7];
-function pasilloCajas(){
-  let best='',bd=1e18; const ok=new Set(idsOrigen().map(x=>x.toLowerCase()));
-  $('mapa').querySelectorAll('#gondolas rect[id^="g-"]').forEach(r=>{
-    let id=r.id.slice(2).toLowerCase(); if(!ok.has(id)) id=id.replace(/-[nsew]$/,''); if(!/^\d/.test(id)||!ok.has(id)) return; // fuera rampas, patio y demás hitos
-    const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height');
-    const dx=Math.max(x-CAJAS[0],0,CAJAS[0]-(x+w)), dy=Math.max(y-CAJAS[1],0,CAJAS[1]-(y+h)), d=dx*dx+dy*dy;
-    if(d<bd){ bd=d; best=id; } });
-  return best;
-}
+// Cambiar ubicación (Figma P-04b/c): mapa a pantalla completa con todos los números de pasillo y un snackbar; tocar un pasillo traza la ruta desde ahí
+let snackT=0;
+function snack(txt,accion,fn,ms){ const s=$('snack'); clearTimeout(snackT);
+  s.replaceChildren(el('p',null,txt)); const b=el('button',null,accion); b.type='button'; b.onclick=()=>{ clearTimeout(snackT); s.hidden=true; fn(); }; s.append(b); s.hidden=false;
+  if(ms) snackT=setTimeout(()=>{ s.hidden=true; },ms); }
+function ubicModo(on){ const c=$('cont');
+  if(on&&!A.ubic){ A.ubic=true; A.numsPrev=c.classList.contains('sin-nums'); c.classList.remove('sin-nums'); } // se ven todos los números
+  else if(!on&&A.ubic){ A.ubic=false; c.classList.toggle('sin-nums',A.numsPrev); }
+  $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; }
+function ubicCambiar(){ A.pideOrigen=true; renderPlan(); R.uz=true; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
+function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
+  const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(base);
+  snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); } // la ruta ya se actualizó sola; «Deshacer» dura 2,5 s
+let ubicDn=null; $('cont').addEventListener('pointerdown',e=>{ ubicDn=[e.clientX,e.clientY]; },true);
+// #mapa no recibe punteros: el pasillo tocado se busca por geometría (el más pequeño que contenga el toque, con 4 px de margen)
+$('cont').addEventListener('click',e=>{ if(!A.ubic||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack')) return; // arrastrar el mapa no es tocar
+  const ids=idsOrigen().map(x=>x.toLowerCase()); let best=null, ba=1e12;
+  $('mapa').querySelectorAll('#gondolas rect[id^="g-"]').forEach(r=>{ const id=r.id.slice(2).toLowerCase(); if(!ids.includes(id)&&!ids.includes(id.replace(/-[nsew]$/,''))) return;
+    const q=r.getBoundingClientRect(); if(e.clientX>=q.left-4&&e.clientX<=q.right+4&&e.clientY>=q.top-4&&e.clientY<=q.bottom+4&&q.width*q.height<ba){ ba=q.width*q.height; best=id; } });
+  if(best) ubicTocar(best); });
 function renderPlan(){
   hideRoute();
+  ubicModo(A.pideOrigen); // «Cambiar ubicación»: mapa completo, sin panel
   const p=A.plan, ru=A.ruta;
   $('start').classList.toggle('has-res',!!(p||ru));
   if(!p&&!ru){ inicio(); return; }
@@ -431,14 +433,13 @@ function renderPlan(){
       openDest(d,null,pedir);
       if(unaCategoria) paint(otros.flatMap(mapIds),'dest');
       drawHere();
-      if(pedir) origenSheet();
-      else {
+      if(!pedir) {
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
         const t0=txt.toLowerCase(), que=q&&q.length<=40?(varias?(t0.startsWith(q)?t0:q+' de '+t0):q):''; // sin «tapetes de tapetes para…»
         const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
         // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
         const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
-        sheet('resultado',{t:dondeTxt(d),t2:que,s:sub,salir:!!R.ruta, // categorías fijas a la vista; la elegida va en modo seleccionado
+        sheet('resultado',{t:dondeTxt(d),t2:R.ruta?txt:que,s:sub,salir:!!R.ruta,ori:R.ruta?oriTxt():null, // categorías fijas a la vista; la elegida va en modo seleccionado
           
           opts:cats.map((x,i)=>({txt:etiquetaInfo(x).txt,pill:true,d:x,actual:x===d,delay:i*STEP,fn:()=>{ if(x===d) return; A.sel=x.id; renderPlan(); }}))});
       }
@@ -486,6 +487,23 @@ $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(/^l-\d+l(-\d+)?$/.t
 $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(!g.id.startsWith('l-')&&/puntos de pago|rampas el/i.test(g.textContent)) g.classList.add('ref'); });
 // Puntos de pago: la góndola que contiene el punto de cajas y su rótulo se marcan para teñirlos de verde al preguntar el origen
 $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago/i.test(g.textContent)) g.classList.add('pago'); });
+// Pines fijos (Figma v3): Patio Constructor, Punto de pago, Escaleras y Entrada, siempre visibles con su nombre (los rótulos grises .pl.ref quedan ocultos).
+// Íconos = los SVG del Figma (img/pin-*.svg, door-windows.svg); k = unidades del plano por px de Figma (el plano mide ~286 px/1747 u en el Figma)
+(function(){ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return;
+  const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
+    const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
+    const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
+    let ico, tx, ty, ta='start';
+    if(id==='entrada'){ // pastilla azul con la puerta; el nombre va a su izquierda
+      ico=`<rect x="${p.x-10*k}" y="${p.y-12*k}" width="${20*k}" height="${24*k}" rx="${10*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8*k,p.y-8*k,16*k,16*k); tx=p.x-14*k; ty=p.y; ta='end'; }
+    else { // pin de 36 px con la punta en el punto; la sombra del archivo mide 40,87 px de alto
+      ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18*k,p.y-33.5*k,36*k,40.87*k);
+      if(id==='patio'){ tx=p.x+18*k; ty=p.y-41*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: el nombre queda sobre el pin; los demás, a su derecha
+    g.insertAdjacentHTML('beforeend',`<g id="pin-${id}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
+  const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); })(); // en la raíz (#etiquetas viene girado) y antes de la capa de la ruta, que debe seguir siendo el último <g>
 $('mapa').querySelectorAll('#gondolas rect').forEach(r=>{ const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height'); if(x<=211.1&&211.1<=x+w&&y<=911.7&&911.7<=y+h) r.classList.add('pago'); });
 const MAPIDS=new Set((typeof window.pasillosDelPlano==='function'?window.pasillosDelPlano():[]).map(x=>String(x).toLowerCase()));
 const REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -693,7 +711,7 @@ async function ask(){
   if(window.gtag) gtag('event','search_submit',{canal:window.__canalBusqueda||'texto',sesion_id:sesionId()});
   hideSurvey(); A.lastSearchId=null; // un aviso viejo nunca puede responder a otra búsqueda
   if(A.proxUltimo){ A.ultimoPasillo=A.proxUltimo; A.proxUltimo=null; }
-  A.origen=''; A.origenElegido=false; A.pideOrigen=false; // el punto de partida elegido vale solo para esta búsqueda
+  { const u=ultimoPasillo(); A.origen=u?u.id:''; } A.origenElegido=false; A.pideOrigen=false; // Figma v3: el origen por defecto es el último pasillo buscado (o la entrada); lo elegido vale solo para esta búsqueda
   hideRoute(); // búsqueda nueva: fuera la ruta y los pasillos de la anterior
   const FR=[(text.length<=32?'Buscando '+text.toLowerCase():'Buscando lo que necesitas…'),...THINK.slice(1)];
   const t0=Date.now(); let ti=0; setStatus(FR[0],false,true);
@@ -711,7 +729,7 @@ async function ask(){
     }
     A.plan=j.plan?clean(j.plan):null; A.ruta=j.ruta||null; A.sel=null; A.source=A.ruta&&A.ruta.fuente==='indice'?'indice':'ai'; A.rutaVista=false; A.svVisto=false; A.lastSearchId=j.id||null;
     const ok=(A.ruta&&A.ruta.destinos&&A.ruta.destinos.length)||(A.plan&&A.plan.grupos.length);
-    A.pideOrigen=!!(ok&&A.nOk>0); // segunda búsqueda en adelante: el panel pregunta dónde empieza el recorrido
+    A.pideOrigen=false; // Figma v3: ya no se pregunta; el origen va en la caja «Saliendo desde…»
     if(ok) A.nOk++;
     renderPlan();
     const dt=Date.now()-t0;
@@ -732,11 +750,6 @@ async function ask(){
 // marca __vozPendiente durante su click() síncrono); clics, Enter y todo lo demás son 'texto'.
 $('askBtn').onclick=()=>{
   const v=$('need').value;
-  if(SH.mode==='origen'&&v.trim()){
-    const r=normalizarPasillo(v,idsOrigen());
-    if(r.id||r.error==='ambiguo'||/\d/.test(v)){ $('need').value=''; $('need').blur(); origenEscrito(v); return; }
-    A.pideOrigen=false; // no parece un pasillo: es una búsqueda nueva
-  }
   window.__canalBusqueda=window.__vozPendiente?'voz':'texto'; if(v.trim()!==A.text.trim()) A.answers=[]; A.text=v; $('need').blur(); ask(); };
 // el botón no le quita el foco al campo (el teclado no se cierra antes del clic); ask() lo cierra
 $('askBtn').addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse'||document.activeElement===$('need')) e.preventDefault(); });
@@ -927,8 +940,7 @@ sampleFn={ async json(opts){
 } };
 initTracking();
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
-$('verNums').onclick=()=>{ const b=$('verNums'), ver=b.getAttribute('aria-pressed')!=='true'; $('cont').classList.toggle('sin-nums',!ver); b.setAttribute('aria-pressed',String(ver)); const x=(ver?'Ocultar':'Mostrar')+' números de pasillo'; b.setAttribute('aria-label',x); b.title=x; };
-$('sheetSalir').onclick=()=>{ A.plan=null; A.ruta=null; A.sel=null; A.pideOrigen=false; A.origen=''; A.origenElegido=false; hideRoute(); $('need').value=''; inicio(); };
+$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar número de pasillo':'Ver números de pasillo'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
   const box=$('need'), ab=document.querySelector('.askbox'); let ult=null, lenMulti=0;
