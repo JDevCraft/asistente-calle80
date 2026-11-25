@@ -317,7 +317,6 @@ body.escribiendo .sh-top{gap:0}
 .sh-opts.f-izq,.sh-opts.f-der{--mi:#000;--md:#000;-webkit-mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md));mask-image:linear-gradient(to right,var(--mi),#000 36px,#000 calc(100% - 36px),var(--md))}
 .sh-opts.f-izq{--mi:transparent}
 .sh-opts.f-der{--md:transparent}
-.sheet[data-mode="categoria"] .sh-opts{flex-wrap:wrap;overflow-x:visible} /* Figma v3 P-02: las categorías se acomodan en varias líneas, sin scroll lateral */
 /* Pills de 28 px (diseño) con área táctil de 44 px */
 .opt.pill{position:relative}
 .opt.pill::after{content:"";position:absolute;inset:-8px -2px}
