@@ -275,7 +275,6 @@ body.escribiendo .sh-top{gap:0}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref{visibility:hidden} /* su lugar lo ocupan los pines fijos (#pines) */
 #pines text{fill:#005192;font:700 45.5px var(--body);stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
-#mapa.con-ruta #pin-entrada{display:none} /* en la ruta, «Entrada» ya es la etiqueta de partida */
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
 #cont.sin-nums #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-sel):not(.dest-alt){display:none} /* con los números ocultos, el pasillo destino conserva el suyo (Figma P-05c) */
@@ -379,7 +378,6 @@ body.escribiendo .sh-top{gap:0}
 /* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
 #start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl{display:none}
 #start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt,#start.ubic #mapa #gondolas rect.orig-sel{fill:#e7ebf0;stroke:none}
-#start.ubic #mapa.con-ruta #pin-entrada{display:inline} /* sin ruta a la vista, «Entrada» vuelve a verse */
 #start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
 #start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
 /* Snackbar (Figma 166:14292): #333, radio 4, padding 12 16, texto 14/20 blanco y acción Bold #b0d3f0 */
