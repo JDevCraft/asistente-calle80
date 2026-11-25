@@ -213,6 +213,7 @@ function layoutCallouts(){
 }
 // Durante el recorrido guiado R.mr (tamaño del mapa) está congelado: si el panel se pliega o despliega, se mide de nuevo y la cámara se reencuadra con la nueva proporción
 if(window.ResizeObserver) new ResizeObserver(()=>{
+  desestirar();
   if(A.ubic){ setVB(STORE.slice()); layoutCallouts(); return; } // «Cambiar ubicación»: siempre el plano completo
   if(R.uz&&!R.guiando){ setVB(getVB()); return; } // el cliente acercó el mapa: se conserva su vista (solo se reajusta al nuevo tamaño)
   if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
@@ -493,9 +494,9 @@ function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if
     else { // pin de 36 px con la punta en el punto; la sombra del archivo mide 40,87 px de alto
       ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18*k,p.y-33.5*k,36*k,40.87*k);
       if(id==='patio'){ tx=p.x-21*k; ty=p.y-18*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
-    g.insertAdjacentHTML('beforeend',`<g id="pin-${id}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
+    g.insertAdjacentHTML('beforeend',`<g id="pin-${id}" data-ax="${p.x}" data-ay="${p.y}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
   const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); }catch(e){} }
-pines(); if(document.fonts) document.fonts.ready.then(pines); // se recalculan al cargar la fuente: el ancho de los rótulos cambia su posición
+pines(); if(document.fonts) document.fonts.ready.then(()=>{ pines(); desK=0; desestirar(); }); // se recalculan al cargar la fuente: el ancho de los rótulos cambia su posición
 // en la raíz (#etiquetas viene girado) y antes de la capa de la ruta, que debe seguir siendo el último <g>
 $('mapa').querySelectorAll('#gondolas rect').forEach(r=>{ const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height'); if(x<=211.1&&211.1<=x+w&&y<=911.7&&911.7<=y+h) r.classList.add('pago'); });
 const MAPIDS=new Set((typeof window.pasillosDelPlano==='function'?window.pasillosDelPlano():[]).map(x=>String(x).toLowerCase()));
@@ -531,7 +532,29 @@ function proyectar(c){
   const W=R.mr.width, H=R.mr.height, sc=W/c[2];
   R.proj.forEach(p=>{ const x=(p.ax-c[0])*sc-(p.izq?p.w:0), y=(p.ay-c[1])*sc; p.e.style.left=x+'px'; p.e.style.top=y+'px'; p.e.style.visibility=(x+p.w<0||x>W||y+p.h<0||y>H)?'hidden':''; });
 }
+// Rótulos e íconos independientes del plano: cuando el SVG se estira (preserveAspectRatio=none) cada nombre, número de pasillo y pin
+// recibe la transformación inversa del estiramiento (T = u·P⁻¹, con P la parte simétrica de su matriz a pantalla) alrededor de su ancla,
+// así conserva su forma y tamaño y solo el dibujo del plano se estira
+let desK=0;
+function desestirar(){
+  const sv=$('mapa'), m=sv.getScreenCTM(); if(!m||!m.a) return; const k=m.d/m.a; if(Math.abs(k-desK)<.003) return; desK=k;
+  const parar=Math.abs(k-1)<.003;
+  sv.querySelectorAll('#etiquetas .pl, #zonas-nombre text, #pines > g').forEach(el=>{
+    if(el.dataset.t0===undefined) el.dataset.t0=el.getAttribute('transform')||'';
+    const t0=el.dataset.t0; if(t0) el.setAttribute('transform',t0); else el.removeAttribute('transform');
+    if(parar) return;
+    let cx,cy; if(el.dataset.ax){ cx=+el.dataset.ax; cy=+el.dataset.ay; }
+    else if(el.tagName==='text'){ cx=+el.getAttribute('x'); cy=+el.getAttribute('y'); }
+    else { const r=el.querySelector('rect'); if(!r) return; cx=+r.getAttribute('x')+ +r.getAttribute('width')/2; cy=+r.getAttribute('y')+ +r.getAttribute('height')/2; }
+    const pc=el.parentNode.getScreenCTM(); if(!pc||!isFinite(cx+cy)) return;
+    const E=el.transform.baseVal.numberOfItems?el.transform.baseVal.consolidate().matrix:null, S=E?pc.multiply(E):pc;
+    const det=Math.abs(S.a*S.d-S.b*S.c); if(!det) return;
+    const m11=S.a*S.a+S.b*S.b, m12=S.a*S.c+S.b*S.d, m22=S.c*S.c+S.d*S.d, s=Math.sqrt(m11+m22+2*det), p11=(m11+det)/s, p12=m12/s, p22=(m22+det)/s, f=1/Math.sqrt(det);
+    const a=f*p22, b=-f*p12, c=-f*p12, d=f*p11, e=cx-(a*cx+c*cy), g=cy-(b*cx+d*cy);
+    el.setAttribute('transform',(t0?t0+' ':'')+`matrix(${a} ${b} ${c} ${d} ${e} ${g})`); });
+}
 function setVB(v){ const c=clampVB(v); $('mapa').setAttribute('viewBox',c.map(n=>n.toFixed(1)).join(' '));
+  desestirar();
   if(R.guiando){ if(R.proj) proyectar(c); return; }
   if(MAPA.items.length||MAPA.here) layoutCallouts(); }
 // Vista inicial: plano completo sin recorte (el SVG lo encaja en el espacio disponible)
