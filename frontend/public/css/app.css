@@ -51,8 +51,8 @@ img{max-width:100%}
 .app{flex:1 1 auto;min-height:0;width:100%;max-width:var(--app-w);margin:0 auto;display:flex;flex-direction:column;position:relative}
 /* El panel mide lo que su contenido; el mapa ocupa el resto y el plano se encaja completo (sin recortes) */
 .ruta{flex:1 1 auto;min-height:160px;display:flex;flex-direction:column;padding:16px 16px 12px}
-.ruta-body{flex:1 1 auto;min-height:0;position:relative;display:flex}
-#cont{position:relative;flex:1 1 auto;min-height:0;background:#fff;overflow:hidden;border-radius:8px}
+.ruta-body{flex:1 1 auto;min-height:0;position:relative;display:flex;margin:0 -16px} /* el mapa llena todo el ancho de la pantalla */
+#cont{position:relative;flex:1 1 auto;min-height:0;background:#fff;overflow:hidden;border-radius:0}
 #mapa{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none;transition:opacity .4s ease}
 #mapa text{font-family:var(--body)}
 
@@ -342,6 +342,7 @@ body.escribiendo .sh-top{gap:0}
   .askbox.listening .wave{width:72px}
   .askbox.listening.hold .hold-hint{font-size:12px}
   .ruta{padding:12px 12px 8px}
+  .ruta-body{margin:0 -12px}
 }
 /* Teléfono en horizontal (alto ≤ 500 px): mapa a la izquierda y panel a la derecha */
 /* min-width: con el teclado abierto un teléfono en vertical queda casi cuadrado (ancho > alto) y no debe tomarse como horizontal */
@@ -350,6 +351,8 @@ body.escribiendo .sh-top{gap:0}
   .appbar .in{height:40px} .appbar h2{font-size:18px}
   .app{max-width:none;flex-direction:row}
   .ruta{flex:1 1 auto;min-height:0;padding:8px 8px 8px 16px}
+  .ruta-body{margin:0}
+  #cont{border-radius:8px}
   .sheet{flex:0 0 min(380px,50vw);max-height:none;height:auto;border-radius:16px 0 0 0;box-shadow:-2px 0 4px rgba(0,0,0,.10),0 4px 7px rgba(0,0,0,.25);transform:none}
   .sh-grip{display:none}
   .sh-top{padding-top:12px}
