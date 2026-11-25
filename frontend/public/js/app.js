@@ -295,8 +295,10 @@ function rico(partes){ return partes.filter(Boolean).map(p=>Array.isArray(p)?el(
 const PAY_MS=5000; let payT=0, payWant=false;
 function payStart(){ const a=$('sheetAct'); if(!payWant||payT||a.classList.contains('on')) return; // sheet() se repite en el resultado (pills, panel): no reinicia la espera
   payT=setTimeout(()=>{ payT=0; a.inert=false; a.classList.add('on'); },PAY_MS); }
-function payCard(on){ const a=$('sheetAct');
-  if(!on){ payWant=false; clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; return; }
+// Oculta la tarjeta y cancela su espera; se llama al empezar cada ruta o recorrido para que solo vuelva a salir 5 s después de que este termine
+function payReset(){ const a=$('sheetAct'); clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; }
+function payCard(on){
+  if(!on){ payWant=false; payReset(); return; }
   if(payWant) return; payWant=true;
   setTimeout(()=>{ if(!R.guiando) payStart(); },1500); } // respaldo: si el recorrido animado no arrancó, la cuenta empieza igual; si arrancó, la inicia su final (payStart en guided y al cortarlo)
 function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=false,ori=null}={}){
@@ -497,7 +499,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=108" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=109" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -620,7 +622,7 @@ async function guided(){
   if(!R.ruta||!trail()) return;
   const V=1.5; // velocidad del recorrido guiado
   cancelAnimationFrame(R.anim);
-  const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
+  payReset(); const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
   caption('Así llegas a tu producto '+(R.origenTxt||'desde la entrada')+'.');
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
@@ -669,7 +671,7 @@ function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} setVB(STORE.slice()); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
 // Ruta completa de una vez (el trazo se dibuja en ~1 s, sin mover la cámara)
 function openRoute(s,aisle,btn,dest,sinGuia){
-  cancelGuide(); R.uz=false; { const g0=rutaGrupo(); if(g0) g0.style.display=''; } // la capa de la ruta se oculta mientras se pregunta el origen
+  cancelGuide(); payReset(); R.uz=false; { const g0=rutaGrupo(); if(g0) g0.style.display=''; } // la capa de la ruta se oculta mientras se pregunta el origen
   document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); btn?.closest('.card,.dcard')?.classList.add('sel');
   $('rutaTitulo').textContent=dest&&dest.lugar?'Cómo llegar al '+dest.lugar.toLowerCase()+' '+dest.rango:dest&&varios(dest)?'Cómo llegar a los pasillos '+dest.rango:'Cómo llegar al pasillo '+aisle.toUpperCase();
   $('rutaProducto').textContent=s.d+(s.sku?' · SKU '+s.sku:'');
