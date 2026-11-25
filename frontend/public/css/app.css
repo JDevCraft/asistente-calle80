@@ -268,8 +268,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa #etiquetas .pl.dest-alt text{fill:#fff}
 /* Nombres del mapa: las zonas/categorías no se muestran; solo quedan Puntos de pago y Rampas eléctricas (.pl.ref),
    igual al inicio que al elegir categoría. En el resultado con ruta tampoco (Figma 58:13495) */
-#mapa #zonas-nombre{opacity:0;pointer-events:none}
-#start:not(.has-res) #mapa #zonas-nombre{opacity:1} /* Figma v3 P-01: el inicio muestra los nombres de categoría */
+#mapa #zonas-nombre{opacity:1;pointer-events:none} /* Figma v3: los nombres de familia van siempre a la vista (inicio, categorías y resultado); solo se ocultan en «Cambiar ubicación» */
 #mapa #etiquetas .pl:not([id^="l-"]):not(.ref){display:none}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref{visibility:hidden} /* su lugar lo ocupan los pines fijos (#pines) */
@@ -304,7 +303,7 @@ body.escribiendo .sh-top{gap:0}
   text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff;animation:catIn .45s ease both;animation-delay:var(--d,0ms)}
 @keyframes catIn{from{opacity:0}to{opacity:1}}
 /* Pantalla de resultado (Figma 58:16142): plano limpio, sin nombres de zona; el halo del punto solo durante el recorrido animado */
-#mapa.con-ruta #etiquetas .pl.dest:not(.dest-sel),#mapa.con-ruta #zonas-nombre,#mapa.con-ruta #etiquetas .pl.ref,#mapa.con-ruta #ent-base{opacity:0}
+#mapa.con-ruta #etiquetas .pl.dest:not(.dest-sel),#mapa.con-ruta #etiquetas .pl.ref,#mapa.con-ruta #ent-base{opacity:0}
 #mapa .halo{display:none}
 #cont:has(.callouts.guiando) #mapa .halo{display:inline}
 
@@ -386,3 +385,4 @@ body.escribiendo .sh-top{gap:0}
 .snack[hidden]{display:none}
 .snack p{flex:1 1 0;min-width:0;margin:0;color:#fff}
 .snack button{flex:none;padding:0;border:0;background:none;color:#b0d3f0;font:700 14px/20px var(--body)}
+#start.ubic #mapa #zonas-nombre{opacity:0}
