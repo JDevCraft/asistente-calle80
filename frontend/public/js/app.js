@@ -498,7 +498,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=110" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=111" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -630,7 +630,8 @@ async function guided(){
   await wait(700); if(tk!==R.token) return;
   await tweenVB(getVB(),camAt(toSvg(trail().getPointAtLength(0)),W),1200,tk); if(tk!==R.token) return;
   setPaso(0);
-  const dur=Math.max(5000,Math.min(16000,R.L*9))/V, t0=performance.now();
+  const Vr=V+.7*Math.min(1,Math.max(0,(R.L-1200)/1000)); // recorridos largos (1200 → 2200 u, el máximo del plano): la velocidad sube de 1.5x a 2.2x; los cortos no cambian
+  const dur=Math.max(5000,Math.min(16000,R.L*9))/Vr, t0=performance.now();
   let cc=null, tp=0; // cámara con seguimiento suavizado (media exponencial, ~200 ms de retraso)
   await new Promise(res=>{ const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur), len=R.L*(.5*u+.5*ease(u)); /* arranque y llegada suaves, sin parar en seco */ const pt=place(len);
       if(pt){ const g=toSvg(pt); if(cc){ const k=1-Math.exp(-(t-tp)/200); cc=[cc[0]+(g[0]-cc[0])*k,cc[1]+(g[1]-cc[1])*k]; } else cc=g; tp=t; setVB(camAt(cc,W)); }
