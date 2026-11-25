@@ -315,7 +315,6 @@ function sheet(mode,{t='',t2='',s='',sErr=false,opts=[],salir=false,plegable=fal
     else if(x.pill){ if(x.d) b.append(svgIcono(iconoDe(x.d))); b.append(el('span',null,x.txt)); } // Figma «Badge»: ícono de la categoría + texto
     else if(x.icon==='pin'){ const a=el('span','ic ic-pin'); a.setAttribute('aria-hidden','true'); b.append(a,el('span',null,x.txt)); } // ubicación a la izquierda
     else { b.append(el('span',null,x.txt)); const a=el('span','ic '+(x.icon==='dir'?'ic-dir':'ic-arrow')); a.setAttribute('aria-hidden','true'); b.append(a); }
-    if(x.verde) b.classList.add('verde');
     if(x.delay) b.style.setProperty('--d',x.delay+'ms');
     // con el teclado abierto el botón no le quita el foco al campo (si no, el panel se reacomoda y el toque se pierde)
     b.addEventListener('pointerdown',e=>{ if(document.activeElement===$('need')) e.preventDefault(); });
@@ -401,6 +400,7 @@ function ubicModo(on){ const c=$('cont');
   $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; }
 function ubicCambiar(){ A.pideOrigen=true; renderPlan(); R.uz=true; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
 function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
+  if(base.toLowerCase()===String(R.ruta&&R.ruta.destino||'').toLowerCase()) return; // ya vas hacia ahí: la ruta saldría de la entrada y la caja mentiría
   const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(base);
   snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); } // la ruta ya se actualizó sola; «Deshacer» dura 2,5 s
 let ubicDn=null; $('cont').addEventListener('pointerdown',e=>{ ubicDn=[e.clientX,e.clientY]; },true);
@@ -485,11 +485,11 @@ const ZONA_UX={"1545.5,325.3":[1556.2,288.1,"H"],"1547.6,494.2":[1534.3,495,"V"]
 $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(/^l-\d+l(-\d+)?$/.test(g.id)) g.classList.add('lat'); });
 // Puntos de pago y Rampas eléctricas: mismo texto que los nombres de zona (sin la pastilla de fondo)
 $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(!g.id.startsWith('l-')&&/puntos de pago|rampas el/i.test(g.textContent)) g.classList.add('ref'); });
-// Puntos de pago: la góndola que contiene el punto de cajas y su rótulo se marcan para teñirlos de verde al preguntar el origen
+// Puntos de pago: la góndola que contiene el punto de cajas y su rótulo se marcan para teñir de verde su zona (Figma v3)
 $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago/i.test(g.textContent)) g.classList.add('pago'); });
 // Pines fijos (Figma v3): Patio Constructor, Punto de pago, Escaleras y Entrada, siempre visibles con su nombre (los rótulos grises .pl.ref quedan ocultos).
 // Íconos = los SVG del Figma (img/pin-*.svg, door-windows.svg); k = unidades del plano por px de Figma (el plano mide ~286 px/1747 u en el Figma)
-(function(){ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return;
+function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
   const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
@@ -503,7 +503,9 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
       ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18*k,p.y-33.5*k,36*k,40.87*k);
       if(id==='patio'){ tx=p.x-21*k; ty=p.y-18*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
     g.insertAdjacentHTML('beforeend',`<g id="pin-${id}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
-  const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); })(); // en la raíz (#etiquetas viene girado) y antes de la capa de la ruta, que debe seguir siendo el último <g>
+  const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); }catch(e){} }
+pines(); if(document.fonts) document.fonts.ready.then(pines); // se recalculan al cargar la fuente: el ancho de los rótulos cambia su posición
+// en la raíz (#etiquetas viene girado) y antes de la capa de la ruta, que debe seguir siendo el último <g>
 $('mapa').querySelectorAll('#gondolas rect').forEach(r=>{ const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height'); if(x<=211.1&&211.1<=x+w&&y<=911.7&&911.7<=y+h) r.classList.add('pago'); });
 const MAPIDS=new Set((typeof window.pasillosDelPlano==='function'?window.pasillosDelPlano():[]).map(x=>String(x).toLowerCase()));
 const REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;

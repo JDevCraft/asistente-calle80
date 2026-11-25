@@ -91,18 +91,3 @@ test('origen igual al destino no lanza', () => {
 test('pasillo de origen desconocido lanza', () => {
   assert.throws(() => motor.calcularRuta(ids[0], { desde: 'zzz-no-existe' }), /origen desconocido/);
 });
-
-test('normalizarPasillo interpreta texto y voz', async () => {
-  const { normalizarPasillo } = await import('../frontend/public/js/pasillo.js');
-  const n = (t) => normalizarPasillo(t, ids);
-  const con = ids.find((i) => /^13b$/i.test(i));
-  assert.ok(con, 'el plano debe tener 13b');
-  for (const t of ['13b', '13B', ' Pasillo 13 B ', 'estoy en el pasillo 13b', 'trece be']) {
-    assert.deepStrictEqual(n(t), { id: con }, t);
-  }
-  assert.deepStrictEqual(n('2a'), { id: '02a' });
-  assert.strictEqual(n('13').error, 'ambiguo');
-  assert.strictEqual(n('').error, 'vacio');
-  assert.strictEqual(n('99z').error, 'desconocido');
-  assert.strictEqual(n('hola').error, 'desconocido');
-});

@@ -146,10 +146,6 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.pill:hover{background:#d6e8f7}
 .opt.pill svg{flex:none;width:20px;height:20px;color:#005192}
 .opt.pill .ic-pin{width:20px;height:20px;color:#005192}
-.opt.pill.verde{background:#E6F3E6;border-color:#B5DAB5;color:#006200}
-.opt.pill.verde:hover{background:#d8ecd8}
-.opt.pill.verde .ic-pin{color:#006200}
-/* ¿En qué pasillo estás? (Figma 06): la zona de Puntos de pago se tiñe de verde y pierde su rótulo */
 #mapa #gondolas rect.pago{fill:#E3F2E0} /* Figma v3: la zona del punto de pago va en verde claro */
 .sh-opts:has(.pill){gap:10px;padding:8px 8px 8px 16px}
 /* Botones de «¿En qué pasillo estás?»: ícono de indicaciones con el rombo de indicaciones, en blanco con la flecha calada */
@@ -222,6 +218,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 
 /* Escribiendo: el panel sube con el teclado y el encabezado se recoge (frame 2, comentario «animación hacia arriba») */
 body.escribiendo .sh-head{height:0;opacity:0}
+body.escribiendo .sh-ori{display:none}
 body.escribiendo .sh-opts{display:none}
 body.escribiendo .sh-top{gap:0}
 /* Con el teclado abierto: sin gris sobre el mapa (el toque fuera sigue cerrando el teclado), sin la barra de título y sin hueco donde iba el título */
@@ -356,6 +353,7 @@ body.escribiendo .sh-top{gap:0}
   .sh-grip{display:none}
   .sh-top{padding-top:12px}
   .sheet.min .sh-head,body.escribiendo .sh-head{height:auto;opacity:1}
+  body.escribiendo .sh-ori:not([hidden]){display:flex}
   .sheet.plegado .sh-opts{display:flex} /* sin asa en horizontal: las categorías del resultado quedan a la vista */
 }
 @media (prefers-reduced-motion:reduce){
