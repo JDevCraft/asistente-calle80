@@ -278,7 +278,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa.con-ruta #pin-entrada{display:none} /* en la ruta, «Entrada» ya es la etiqueta de partida */
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
-#cont.sin-nums #mapa #etiquetas .pl[id^="l-"]{display:none}
+#cont.sin-nums #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-sel):not(.dest-alt){display:none} /* con los números ocultos, el pasillo destino conserva el suyo (Figma P-05c) */
 #mapa #etiquetas .pl.lat:not(.dest):not(.dest-alt){display:none}
 #mapa #etiquetas .pl.orig{display:none}
 /* mientras se elige categoría los pasillos señalados llevan el número como los demás (sin el azul del resultado) */
