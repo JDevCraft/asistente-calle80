@@ -111,8 +111,9 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 .opt.pill.actual svg{color:#E6F1FA}
 .opt.pill.actual:hover{background:var(--primary)}
 /* Resultado con varias categorías: pills fijas debajo del título */
-.sheet.con-salir .sh-top{padding-bottom:8px}
-.sheet.con-salir .sh-opts{padding-bottom:16px}
+.sheet.con-salir .sh-top{padding-top:10px;padding-bottom:4px;gap:8px} /* panel compacto: menos aire sobre el título y entre título, «Saliendo desde…» y buscador */
+.sheet.con-salir .sh-opts{padding-bottom:8px}
+.sheet.con-salir .askbox{padding-top:8px;padding-bottom:12px}
 .sh-s{margin:0;font:500 14px/20px var(--body);color:var(--text-light);overflow-wrap:anywhere}
 .sh-s:empty{display:none}
 .sh-s.err{color:var(--danger)}
