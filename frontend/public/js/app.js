@@ -115,7 +115,9 @@ function nombreCorto(d){
   const ids=mapIds(d); for(const m of ids){ const z=zonaDe(m); if(z) return z; }
   return String(d.etiqueta).split(/[:,]/)[0].trim();
 }
-function lugarTxt(d){ return d.lugar?d.lugar.toLowerCase()+' '+d.rango:(d.pasillos.length>1?'los pasillos ':'el pasillo ')+d.rango; }
+// «pasillo» o «pasillos» según los pasillos que se muestran en el mapa (d.pasillos también trae los que aún no tienen mapa; d.rango solo nombra los del mapa)
+function varios(d){ return (mapIds(d).length||d.pasillos.length)>1; }
+function lugarTxt(d){ return d.lugar?d.lugar.toLowerCase()+' '+d.rango:(varios(d)?'los pasillos ':'el pasillo ')+d.rango; }
 const MAPA={items:[],here:false};
 function clearCallouts(){ const c=$('callouts'); if(c){ const ant=[...c.querySelectorAll('.callout:not(.saliendo)')]; if(ant.length){ MAPA.prev=ant; MAPA.prevT=performance.now(); } c.innerHTML=''; c.classList.remove('guiando'); } MAPA.items=[]; MAPA.here=false; $('mapa').classList.remove('con-opciones','elige'); }
 // Subcategoría para distinguir opciones de la misma zona: el uso (Sala, Baño…) o, si el uso coincide,
@@ -360,8 +362,8 @@ function fueraTxt(xs){ return xs.length?'También hay en '+xs.map(lugarTxt).join
 function dondeTxt(d){ // el lugar va en negrita (Figma: «Dirígete al pasillo **26a**»)
   if(rutaAisle(d)==='patio') return ['Dirígete a ',['b','Patio Constructor']];
   if(d.lugar) return ['Dirígete a ',['b',d.lugar.toLowerCase()+' '+d.rango]];
-  if(d.pasillos.length>1) return ['Dirígete a los pasillos ',['b',String(d.rango).toLowerCase()]];
-  return ['Dirígete al pasillo ',['b',String(d.pasillos[0]||d.rango).toLowerCase()]];
+  if(varios(d)) return ['Dirígete a los pasillos ',['b',String(d.rango).toLowerCase()]];
+  return ['Dirígete al pasillo ',['b',String(mapIds(d)[0]||d.pasillos[0]||d.rango).toLowerCase()]];
 }
 function elegir(enMapa,fuera){
   if(!enMapa.length){ sheet('resultado',{t:'Está en varios lugares de la tienda',s:fueraTxt(fuera)}); return; }
@@ -495,7 +497,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=103" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=104" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -633,6 +635,8 @@ async function guided(){
   await wait(900/V); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
   endGuide(); payStart();
+  const sh=$('sheet'), grip=$('sheetGrip'); // al terminar el recorrido el panel se contrae: quedan «Dirígete…» y el buscador (el cliente puede volver a desplegarlo)
+  if(sh.classList.contains('con-salir')&&!sh.classList.contains('plegable')){ sh.classList.add('min'); grip.setAttribute('aria-expanded','false'); grip.setAttribute('aria-label','Expandir panel'); }
 }
 function goStep(i){
   if(!R.ruta) return;
@@ -663,7 +667,7 @@ function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R
 function openRoute(s,aisle,btn,dest,sinGuia){
   cancelGuide(); R.uz=false; { const g0=rutaGrupo(); if(g0) g0.style.display=''; } // la capa de la ruta se oculta mientras se pregunta el origen
   document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); btn?.closest('.card,.dcard')?.classList.add('sel');
-  $('rutaTitulo').textContent=dest&&dest.lugar?'Cómo llegar al '+dest.lugar.toLowerCase()+' '+dest.rango:dest&&dest.pasillos.length>1?'Cómo llegar a los pasillos '+dest.rango:'Cómo llegar al pasillo '+aisle.toUpperCase();
+  $('rutaTitulo').textContent=dest&&dest.lugar?'Cómo llegar al '+dest.lugar.toLowerCase()+' '+dest.rango:dest&&varios(dest)?'Cómo llegar a los pasillos '+dest.rango:'Cómo llegar al pasillo '+aisle.toUpperCase();
   $('rutaProducto').textContent=s.d+(s.sku?' · SKU '+s.sku:'');
   window.ultimaRuta=null; R.marker=null; R.trail=null; R.len=0; R.paso=-1;
   clearDest();
