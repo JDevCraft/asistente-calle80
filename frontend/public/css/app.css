@@ -33,18 +33,19 @@ img{max-width:100%}
 
 /* ---------- Header HC (Figma 58:10399) ---------- */
 .hc-top{flex:none;position:relative;z-index:3;background:#fff;filter:drop-shadow(0 4px 2px rgba(0,0,0,.1))}
-.hc-in{max-width:var(--app-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 12px}
-.hc-l{display:flex;align-items:center;gap:16px}
-.hc-l .ic-menu{width:20px;height:20px;color:var(--text)}
-.hc-logo{display:block;width:32px;height:24px}
+.hc-in{max-width:var(--app-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:4px 12px}
+.hc-l{display:flex;align-items:center;gap:12px}
+.hc-l .ic-menu{width:16px;height:16px;color:var(--text)}
+.hc-logo{display:block;width:26px;height:20px}
 .hc-r{display:flex;align-items:flex-start;gap:4px;color:var(--text)}
-.hc-r .ic{width:32px;height:32px}
+.hc-r .ic{width:26px;height:26px}
 
 /* ---------- Top App Bar (Figma 58:10412) ---------- */
 .appbar{flex:none;position:relative;z-index:2;background:var(--surface);box-shadow:var(--lvl1-b)}
-.appbar .in{max-width:var(--app-w);margin:0 auto;height:48px;display:flex;align-items:center;padding:0 16px}
+.appbar .in{max-width:var(--app-w);margin:0 auto;height:36px;display:flex;align-items:center;padding:0 16px}
 .appbar button{flex:none;width:24px;height:24px;padding:0;border:0;background:none;color:var(--text);display:grid;place-items:center;border-radius:50%}
-.appbar h2{flex:1;min-width:0;margin:0;font:400 20px/24px var(--body);color:var(--text);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar button{display:none} /* sin íconos de volver ni info a los lados del título */
+.appbar h2{flex:1;min-width:0;margin:0;font:400 16px/20px var(--body);color:var(--text);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appbar #barInfo[aria-expanded="true"]{color:var(--primary)}
 
 /* ---------- App: mapa arriba, sheet abajo ---------- */
@@ -332,8 +333,8 @@ body.escribiendo .sh-top{gap:0}
 .sheet{max-height:calc(100dvh - 96px - 120px);overflow-y:auto;overscroll-behavior:contain}
 /* Pantallas muy angostas (≤ 340 px) */
 @media (max-width:340px){
-  .hc-in{padding-top:6px;padding-bottom:6px} .hc-r .ic{width:28px;height:28px}
-  .appbar h2{font-size:18px}
+  .hc-in{padding-top:6px;padding-bottom:6px} .hc-r .ic{width:24px;height:24px}
+  .appbar h2{font-size:15px}
   .sh-top{padding:14px 14px 8px 12px}
   .sh-t{font-size:18px;line-height:22px}
   .askbox{padding:12px}
@@ -348,7 +349,7 @@ body.escribiendo .sh-top{gap:0}
 /* min-width: con el teclado abierto un teléfono en vertical queda casi cuadrado (ancho > alto) y no debe tomarse como horizontal */
 @media (orientation:landscape) and (max-height:500px) and (min-width:600px){
   .hc-top{display:none}
-  .appbar .in{height:40px} .appbar h2{font-size:18px}
+  .appbar .in{height:32px} .appbar h2{font-size:15px}
   .app{max-width:none;flex-direction:row}
   .ruta{flex:1 1 auto;min-height:0;padding:8px 8px 8px 16px}
   .ruta-body{margin:0}
