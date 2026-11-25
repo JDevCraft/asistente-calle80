@@ -439,11 +439,7 @@ function renderPlan(){
         const q=consulta(), txt=etiquetaInfo(d).txt, varias=!unaCategoria&&enMapa.length>1&&txt.toLowerCase()!==q;
         const t0=txt.toLowerCase(), que=q&&q.length<=40?(varias?(t0.startsWith(q)?t0:q+' de '+t0):q):''; // sin «tapetes de tapetes para…»
         const sub=!R.ruta?(rutaAisle(d)==='patio'?'Pide ayuda a un asesor.':'No pudimos trazar la ruta; pide ayuda a un asesor.'):(unaCategoria?fueraTxt(fuera):'');
-        // Figma 58:13495 (panel subido): las categorías de la búsqueda quedan guardadas debajo; al subir el panel se despliegan
-        const cats=(!unaCategoria&&enMapa.length>1&&R.ruta)?enMapa.map(x=>({x,l:izq(x)})).sort((a,b)=>a.l-b.l).map(o=>o.x):[];
-        sheet('resultado',{t:dondeTxt(d),t2:R.ruta?txt:que,s:sub,salir:!!R.ruta,ori:R.ruta?oriTxt():null, // categorías fijas a la vista; la elegida va en modo seleccionado
-          
-          opts:cats.map((x,i)=>({txt:etiquetaInfo(x).txt,pill:true,d:x,actual:x===d,delay:i*STEP,fn:()=>{ if(x===d) return; A.sel=x.id; renderPlan(); }}))});
+        sheet('resultado',{t:dondeTxt(d),t2:R.ruta?txt:que,s:sub,salir:!!R.ruta,ori:R.ruta?oriTxt():null}); // elegida la categoría, ya no se vuelven a mostrar las demás
       }
     } else {
       paint(otros.flatMap(mapIds),'dest');
@@ -484,7 +480,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=93" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=94" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
