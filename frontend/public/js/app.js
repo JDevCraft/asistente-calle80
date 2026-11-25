@@ -386,9 +386,14 @@ function ultimoPasillo(){
   return id?{id,txt:id.toLowerCase().replace(/-[nsew]$/,'')}:null;
 }
 // Texto del Inline Alert: «Saliendo desde la entrada» o «…el pasillo 23b (tu última búsqueda)» si el origen es el de la búsqueda anterior y no se eligió otro
-function oriTxt(){ const m=/pasillo (.+)$/.exec(R.origenTxt||''); if(!m) return ['Saliendo desde la ',['b','entrada']];
+function oriTxt(){ const pto=PUNTOS[A.origen]; if(pto) return ['Saliendo desde ',['b',pto.txt]];
+  const m=/pasillo (.+)$/.exec(R.origenTxt||''); if(!m) return ['Saliendo desde la ',['b','entrada']];
   const id=m[1].toLowerCase(), u=ultimoPasillo();
   return ['Saliendo desde el pasillo ',['b',id+(!A.origenElegido&&u&&u.id.toLowerCase()===id?' (tu última búsqueda)':'')]]; }
+// Pines fijos que sirven de punto de partida; «Entrada» = origen por defecto del motor ('')
+const PUNTOS={'@pago':{id:'pin-pago',txt:'el punto de pago'}}, PIN_ORIGEN={'pin-entrada':'','pin-pago':'@pago'};
+// Punta del pin en coordenadas del motor de rutas (la capa de la ruta lleva su propia transformación respecto al plano)
+function puntoPin(id){ const g=$('mapa').querySelector('#'+id), t=rutaGrupo()&&rutaGrupo().transform.baseVal.consolidate(); if(!g||!t||!g.dataset.ax) return null; const q=new DOMPoint(+g.dataset.ax,+g.dataset.ay).matrixTransform(t.matrix.inverse()); return [q.x,q.y]; }
 function fijarOrigen(id){ A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan(); }
 function idsOrigen(){ return [...$('desde').options].map(o=>o.value).filter(Boolean); }
 // Cambiar ubicación (Figma P-04b/c): mapa a pantalla completa con todos los números de pasillo y un snackbar; tocar un pasillo traza la ruta desde ahí
@@ -407,7 +412,17 @@ function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.t
   snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); } // la ruta ya se actualizó sola; «Deshacer» dura 2,5 s
 let ubicDn=null; $('cont').addEventListener('pointerdown',e=>{ ubicDn=[e.clientX,e.clientY]; },true);
 // #mapa no recibe punteros: el pasillo tocado se busca por geometría (el más pequeño que contenga el toque, con 4 px de margen)
-$('cont').addEventListener('click',e=>{ if(!A.ubic||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack')) return; // arrastrar el mapa no es tocar
+// #pines no recibe punteros: el pin tocado se busca por su caja en pantalla (con 8 px de margen)
+function pinEn(e){ let best=null, bd=1e9; // si la caja de un rótulo cubre a otro pin, gana el pin cuyo ícono queda más cerca del toque
+  $('mapa').querySelectorAll('#pines > g').forEach(g=>{ if(!(g.id in PIN_ORIGEN)) return; const q=g.getBoundingClientRect(); if(e.clientX<q.left-8||e.clientX>q.right+8||e.clientY<q.top-8||e.clientY>q.bottom+8) return;
+    const i=(g.querySelector('image')||g).getBoundingClientRect(), d=Math.hypot(e.clientX-(i.left+i.width/2),e.clientY-(i.top+i.height/2)); if(d<bd){ bd=d; best=g.id; } });
+  return best; }
+// Con resultado y ruta (o en «Cambiar ubicación») tocar Entrada o Punto de pago traza la ruta desde ahí
+$('cont').addEventListener('click',e=>{ if(!(R.ruta||A.ubic)||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack,button')) return;
+  const pin=pinEn(e); if(!pin) return; const o=PIN_ORIGEN[pin]; if(o===A.origen) { if(A.ubic){ A.pideOrigen=false; renderPlan(); } return; } // ya sale de ahí
+  const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(o);
+  snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); });
+$('cont').addEventListener('click',e=>{ if(!A.ubic||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack')||pinEn(e)) return; // arrastrar el mapa no es tocar
   const ids=idsOrigen().map(x=>x.toLowerCase()); let best=null, ba=1e12;
   $('mapa').querySelectorAll('#gondolas rect[id^="g-"]').forEach(r=>{ const id=r.id.slice(2).toLowerCase(); if(!ids.includes(id)&&!ids.includes(id.replace(/-[nsew]$/,''))) return;
     const q=r.getBoundingClientRect(); if(e.clientX>=q.left-4&&e.clientX<=q.right+4&&e.clientY>=q.top-4&&e.clientY<=q.bottom+4&&q.width*q.height<ba){ ba=q.width*q.height; best=id; } });
@@ -480,7 +495,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=99" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=102" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -653,9 +668,10 @@ function openRoute(s,aisle,btn,dest,sinGuia){
   window.ultimaRuta=null; R.marker=null; R.trail=null; R.len=0; R.paso=-1;
   clearDest();
   // Origen: solo si el cliente eligió «desde donde estoy» y ese pasillo existe en el select y no es el destino; si no, la entrada.
-  let des=A.origen&&A.origen!==aisle?A.origen:''; $('desde').value=des; if($('desde').value!==des) des='';
+  const pto0=PUNTOS[A.origen], pos=pto0&&puntoPin(pto0.id), pto=pos?pto0:null; window.origenPunto=pos||null; window.origenNombre=pto?pto.txt:''; // ruta.js parte de la celda libre más cercana a la punta del pin
+  let des=A.origen&&!pto&&A.origen!==aisle?A.origen:''; $('desde').value=des; if($('desde').value!==des) des='';
   const nom=dest&&dest.lugar?'el '+dest.lugar.toLowerCase()+' '+dest.rango:'el pasillo '+aisle.toUpperCase();
-  R.origenTxt=des?'desde el pasillo '+des.toUpperCase():'desde la entrada';
+  R.origenTxt=pto?'desde '+pto.txt:des?'desde el pasillo '+des.toUpperCase():'desde la entrada';
   const sel=$('destino'); sel.value=aisle; if(sel.onchange) sel.onchange();
   const r=window.ultimaRuta, ol=$('rutaPasos'); ol.innerHTML=''; caption('');
   if(!r||r.destino!==aisle){
@@ -665,7 +681,7 @@ function openRoute(s,aisle,btn,dest,sinGuia){
     R.ruta=r; R.fit=STORE.slice(); setVB(R.fit); styleRoute(r); sinPastillaAqui();
     if(dest) paint(dest.pasillos.map(x=>x.toLowerCase()).filter(x=>MAPIDS.has(x)&&x!==aisle),'dest');
     // El motor genera giro por giro desde la entrada y desde cualquier pasillo; el primer paso nombra el origen.
-    R.pasos=[des?'Empiezas en el pasillo '+des.toUpperCase()+'.':'Empiezas en la entrada principal.',...r.instrucciones];
+    R.pasos=[pto?'Empiezas en '+pto.txt+'.':des?'Empiezas en el pasillo '+des.toUpperCase()+'.':'Empiezas en la entrada principal.',...r.instrucciones];
     R.dist=[0,...(r.tramos||[]).slice(0,r.instrucciones.length)];
     while(R.dist.length<R.pasos.length) R.dist.push(r.largo);
     R.pasos.forEach((t,i)=>{ const li=el('li',null,t); li.onclick=()=>goStep(i); ol.appendChild(li); });
