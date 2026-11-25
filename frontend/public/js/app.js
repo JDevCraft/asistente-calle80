@@ -480,16 +480,16 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=97" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=98" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
     let ico, tx, ty, ta='start';
     if(id==='entrada'){ // pastilla azul con la puerta; el nombre va a su izquierda
-      ico=`<rect x="${p.x-10*k}" y="${p.y-12*k}" width="${20*k}" height="${24*k}" rx="${10*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8*k,p.y-8*k,16*k,16*k); tx=p.x-14*k; ty=p.y; ta='end'; }
+      ico=`<rect x="${p.x-10.5*k}" y="${p.y-12.5*k}" width="${21*k}" height="${25*k}" rx="${10.5*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8.5*k,p.y-8.5*k,17*k,17*k); tx=p.x-14.5*k; ty=p.y; ta='end'; }
     else { // pin de 36 px con la punta en el punto; la sombra del archivo mide 40,87 px de alto
-      ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18*k,p.y-33.5*k,36*k,40.87*k);
-      if(id==='patio'){ tx=p.x-21*k; ty=p.y-18*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
+      ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18.5*k,p.y-34.4*k,37*k,42*k);
+      if(id==='patio'){ tx=p.x-21.5*k; ty=p.y-18.5*k; ta='end'; } else { tx=p.x+20.5*k; ty=p.y-18.5*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
     g.insertAdjacentHTML('beforeend',`<g id="pin-${id}" data-ax="${p.x}" data-ay="${p.y}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
   const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); }catch(e){} }
 pines(); if(document.fonts) document.fonts.ready.then(()=>{ pines(); desK=0; desestirar(); }); // se recalculan al cargar la fuente: el ancho de los rótulos cambia su posición

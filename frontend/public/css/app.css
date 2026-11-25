@@ -274,7 +274,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa #etiquetas .pl:not([id^="l-"]):not(.ref){display:none}
 #mapa #etiquetas .pl.ref rect{display:none}
 #mapa #etiquetas .pl.ref{visibility:hidden} /* su lugar lo ocupan los pines fijos (#pines) */
-#pines text{fill:#005192;font:700 42px var(--body);stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
+#pines text{fill:#005192;font:700 45.5px var(--body);stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 #mapa.con-ruta #pin-entrada{display:none} /* en la ruta, «Entrada» ya es la etiqueta de partida */
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
