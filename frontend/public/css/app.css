@@ -387,3 +387,4 @@ body.escribiendo .sh-top{gap:0}
 .snack button{flex:none;padding:0;border:0;background:none;color:#b0d3f0;font:700 14px/20px var(--body)}
 #start.ubic #mapa #zonas-nombre{opacity:0}
 #mapa.elige #zonas-nombre{opacity:0} /* pregunta de categoría (Figma v3 P-02): sin los nombres de todas las familias; solo los de las zonas resaltadas */
+#mapa > g#mapa > rect:first-child{display:none} /* marco redondeado del plano: sin recuadro ni bordes blancos a los lados */

@@ -519,7 +519,7 @@ function rutaGrupo(){ const gs=$('mapa').querySelectorAll(':scope > g'); return 
 function rutaPath(){ const j=rutaGrupo(); return j?j.querySelectorAll('path')[1]||null:null; }
 function getVB(){ return $('mapa').getAttribute('viewBox').split(/[\s,]+/).map(Number); }
 // Límites de la tienda en coordenadas del SVG: la vista nunca muestra espacio fuera del plano
-const STORE=[-44,-6,1410.3,1747.7];
+const STORE=[-30,-6,1382,1747.7]; // ancho = el de las góndolas (sin margen blanco a los lados: el mapa llena la pantalla)
 function mapRect(){ return (R.guiando&&R.mr)||$('mapa').getBoundingClientRect(); }
 function clampVB(v){
   const r=mapRect(); if(!r.width||!r.height) return v;
