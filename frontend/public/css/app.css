@@ -277,9 +277,12 @@ body.escribiendo .sh-top{gap:0}
 #pines text{fill:#005192;font:700 45.5px var(--body);stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 #mapa #etiquetas .pl.ref text{fill:#767676;font-family:var(--body);font-weight:400;font-size:45px;stroke:#fff;stroke-opacity:.9;stroke-width:8px;paint-order:stroke}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
-#cont.sin-nums #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-sel):not(.dest-alt){display:none} /* con los números ocultos, el pasillo destino conserva el suyo (Figma P-05c) */
+#cont.sin-nums #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-sel):not(.dest-alt):not(.orig){display:none} /* con los números ocultos, el pasillo destino conserva el suyo (Figma P-05c) */
 #mapa #etiquetas .pl.lat:not(.dest):not(.dest-alt){display:none}
-#mapa #etiquetas .pl.orig{display:none}
+/* Pasillo de partida y de destino con la misma etiqueta (azul oscuro, número blanco), 2 pt más grande: el círculo y el número se agrandan sobre su propio centro */
+#mapa #etiquetas .pl.orig rect{fill:#005192;stroke:#ffffff;stroke-width:3}
+#mapa #etiquetas .pl.orig text{fill:#ffffff}
+#mapa #etiquetas .pl.dest-sel rect,#mapa #etiquetas .pl.dest-sel text,#mapa #etiquetas .pl.orig rect,#mapa #etiquetas .pl.orig text{transform-box:fill-box;transform-origin:center;transform:scale(1.22)}
 /* mientras se elige categoría los pasillos señalados llevan el número como los demás (sin el azul del resultado) */
 #mapa.elige #etiquetas .pl.dest rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
 #mapa.elige #etiquetas .pl.dest text{fill:#6b7682}
@@ -297,8 +300,6 @@ body.escribiendo .sh-top{gap:0}
 /* Etiquetas sobre el mapa: solo «Tú estás aquí» / «Tú» (las categorías ahora van en el sheet) */
 #cont .callouts{position:absolute;inset:0;pointer-events:none;z-index:2;transition:opacity .4s ease}
 .callouts.guiando .k-alt{opacity:0}
-.callouts .aqui{position:absolute;left:0;top:0;z-index:1;pointer-events:none;white-space:nowrap;padding:0 2px;color:var(--primary);font:400 12px/18px var(--body);text-shadow:0 0 12px rgba(29,29,29,.2),0 0 2px #fff,0 0 2px #fff}
-.callouts .aqui.tu{font:700 14px/20px var(--body)}
 /* Nombres de las categorías señaladas mientras se elige (no son clicables: la elección está en el panel) */
 .callouts .callout.cat{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;padding:0 2px;color:var(--primary);font:700 12px/16px var(--body);
   text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff;animation:catIn .45s ease both;animation-delay:var(--d,0ms)}
@@ -384,8 +385,8 @@ body.escribiendo .sh-top{gap:0}
 /* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
 #start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl{display:none}
 #start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt,#start.ubic #mapa #gondolas rect.orig-sel{fill:#e7ebf0;stroke:none}
-#start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
-#start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
+#start.ubic #mapa #etiquetas .pl.orig rect,#start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
+#start.ubic #mapa #etiquetas .pl.orig text,#start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
 /* Snackbar (Figma 166:14292): #333, radio 4, padding 12 16, texto 14/20 blanco y acción Bold #b0d3f0 */
 .snack{position:absolute;left:9px;right:9px;top:8px;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:4px;background:#333;box-shadow:0 4px 7px rgba(0,0,0,.25);font:400 14px/20px var(--body)}
 .snack[hidden]{display:none}

@@ -348,13 +348,12 @@ function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Estás en la t
 function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e.closest('#gondolas')) e.style.transitionDelay=ms+'ms'; e.classList.add(cls); })); }
 // borde izquierdo en pantalla de los pasillos de un destino: ordena las opciones de izquierda a derecha
 function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(q.width||q.height) l=Math.min(l,q.left); })); return l; }
-// Número del pasillo de partida elegido, al inicio de la ruta
+// Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
   $('mapa').classList.toggle('con-ruta',!!R.ruta); // resultado (Figma 58:16142): plano limpio
   if(R.ruta&&!A.pideOrigen){ const p=/pasillo (.+)$/.exec(R.origenTxt||'');
-    if(p){ const id=p[1].toLowerCase(); aisleEls(id).forEach(e=>{ if(e.closest('#gondolas')) e.classList.add('orig-sel'); }); $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(g.id==='l-'+id||g.id.startsWith('l-'+id+'-')) g.classList.add('orig'); }); } // su número ya lo dice la etiqueta de partida: no se repite en la píldora del pasillo
-    if(p) c.appendChild(el('span','aqui tu',p[1].toLowerCase())); } // el pasillo de partida; desde la entrada no hay etiqueta propia: queda el pin fijo «Entrada»
+    if(p){ const id=p[1].toLowerCase(); aisleEls(id).forEach(e=>{ if(e.closest('#gondolas')) e.classList.add('orig-sel'); }); $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(g.id==='l-'+id||g.id.startsWith('l-'+id+'-')) g.classList.add('orig'); }); } } // desde la entrada no hay etiqueta propia: queda el pin fijo «Entrada»
   layoutCallouts();
 }
 // ícono de la categoría: del uso (Sala, Baño…) si se repite la zona; si no, de la zona; si tampoco, del uso
@@ -499,7 +498,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=109" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=110" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
