@@ -475,7 +475,7 @@ function openDest(d,btn,sinGuia){
 window.VB0=$('mapa').getAttribute('viewBox');
 // UX-07: nombres de zona como en el diseño de UX (Lato, azul, horizontales salvo la fila superior, letra un poco más grande).
 // Clave: posición original "x,y" del texto en el plano; valor: [x, y, H=horizontal en pantalla | V=vertical]
-const ZONA_UX={"1545.5,325.3":[1556.2,288.1,"H"],"1547.6,494.2":[1534.3,495,"V"],"1545.5,708.6":[1534.3,694.1,"V"],"1667.6,950.8":[1534.3,936.1,"V"],"1545.5,1198.2":[1552.5,1217.2,"V"],"1546.4,1464.3":[1552.5,1443.6,"V"],"1151.8,399.4":[1152.1,366.1,"H"],"944.8,346.9":[933.8,401.1,"H"],"629.4,442.9":[606.2,350.5,"H"],"259.0,376.6":[238.6,334.9,"H"],"1095.8,914.1":[1093.9,897.1,"H"],"862.1,979.2":[857.3,895.2,"H"],"597.4,962.9":[620.7,893.2,"H"],"532.4,1023.3":[486.1,893.2,"H"],"1129.3,1296.9":[1144.9,1342.1,"H"],"891.1,1298.0":[879.2,1342.1,"H"],"717.9,1298.0":[751.8,1342.1,"H"],"655.2,1263.0":[624.4,1342.1,"H"],"555.4,1351.8":[537,1357.7,"H"],"460.2,1301.1":[438.7,1400.6,"H"],"295.6,1388.1":[289.5,1333.7,"H"]};
+const ZONA_UX={"1545.5,325.3":[1556.2,288.1,"H"],"1547.6,494.2":[1534.3,495,"V"],"1545.5,708.6":[1534.3,694.1,"V"],"1667.6,950.8":[1534.3,936.1,"V"],"1545.5,1198.2":[1552.5,1217.2,"V"],"1546.4,1464.3":[1552.5,1443.6,"V"],"1151.8,399.4":[1152.1,366.1,"H"],"944.8,346.9":[933.8,401.1,"H"],"629.4,442.9":[606.2,350.5,"H"],"259.0,376.6":[238.6,334.9,"H"],"1095.8,914.1":[1093.9,897.1,"H"],"862.1,979.2":[857.3,895.2,"H"],"597.4,962.9":[620.7,893.2,"H"],"532.4,1023.3":[486.1,893.2,"H"],"1129.3,1296.9":[1144.9,1342.1,"H"],"891.1,1298.0":[879.2,1342.1,"H"],"717.9,1298.0":[751.8,1342.1,"H"],"655.2,1263.0":[624.4,1342.1,"H"],"555.4,1351.8":[537,1357.7,"H"],"460.2,1301.1":[438.7,1400.6,"H"],"295.6,1388.1":[359.5,1333.7,"H"]};
 (function(){ const g=$('mapa').querySelector('#zonas-nombre'); if(!g) return;
   g.querySelectorAll('text').forEach(t=>{ const x0=t.getAttribute('x'), y0=t.getAttribute('y'); t.dataset.x0=x0; t.dataset.y0=y0;
     const v=ZONA_UX[x0+','+y0]; if(!v) return;
@@ -501,7 +501,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
       ico=`<rect x="${p.x-10*k}" y="${p.y-12*k}" width="${20*k}" height="${24*k}" rx="${10*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8*k,p.y-8*k,16*k,16*k); tx=p.x-14*k; ty=p.y; ta='end'; }
     else { // pin de 36 px con la punta en el punto; la sombra del archivo mide 40,87 px de alto
       ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18*k,p.y-33.5*k,36*k,40.87*k);
-      if(id==='patio'){ tx=p.x+18*k; ty=p.y-41*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: el nombre queda sobre el pin; los demás, a su derecha
+      if(id==='patio'){ tx=p.x-21*k; ty=p.y-18*k; ta='end'; } else { tx=p.x+20*k; ty=p.y-18*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
     g.insertAdjacentHTML('beforeend',`<g id="pin-${id}">${ico}<text x="${tx}" y="${ty}" text-anchor="${ta}" dominant-baseline="central">${n}</text></g>`); });
   const rg=rutaGrupo(); if(rg&&!rg.id) sv.insertBefore(g,rg); else sv.appendChild(g); })(); // en la raíz (#etiquetas viene girado) y antes de la capa de la ruta, que debe seguir siendo el último <g>
 $('mapa').querySelectorAll('#gondolas rect').forEach(r=>{ const x=+r.getAttribute('x'),y=+r.getAttribute('y'),w=+r.getAttribute('width'),h=+r.getAttribute('height'); if(x<=211.1&&211.1<=x+w&&y<=911.7&&911.7<=y+h) r.classList.add('pago'); });
