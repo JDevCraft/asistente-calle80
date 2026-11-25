@@ -231,6 +231,7 @@ body.escribiendo .sh-top{gap:0}
 .sheet.min .sh-head{height:0;opacity:0}
 .sheet.con-salir.min .sh-head{height:auto;opacity:1} /* resultado con ruta: al ocultar las categorías quedan el título, el subtítulo y «Salir» (Figma) */
 .sheet.min .sh-opts{display:none}
+.sheet.con-salir.min .askbox{display:none} /* resultado con ruta: al ocultar las categorías también se oculta el buscador */
 .sheet.min .sh-top{gap:0}
 
 /* Micro-encuesta (desactivada mientras se rediseña; se conserva el contrato) */
@@ -260,6 +261,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa .destino-pulsa .pulso{animation:pulso .9s ease-out 3}
 @keyframes pulso{from{transform:scale(1);opacity:.95}to{transform:scale(3.4);opacity:0}}
 #mapa #gondolas rect.dest-sel{fill:#0072ce;stroke:#0072ce}
+#mapa #gondolas rect.orig-sel{fill:#0072ce;stroke:#0072ce} /* pasillo desde donde sale la ruta: resaltado como el destino (Figma P-05c) */
 #mapa #etiquetas .pl.dest-sel rect{fill:#005192}
 #mapa #gondolas rect.dest-alt{fill:#a9cdee;stroke:none}
 #mapa #etiquetas .pl.dest-alt rect{fill:#a9cdee;stroke:#fff}
@@ -372,7 +374,7 @@ body.escribiendo .sh-top{gap:0}
 
 /* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
 #start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl{display:none}
-#start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt{fill:#e7ebf0;stroke:none}
+#start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt,#start.ubic #mapa #gondolas rect.orig-sel{fill:#e7ebf0;stroke:none}
 #start.ubic #mapa.con-ruta #pin-entrada{display:inline} /* sin ruta a la vista, «Entrada» vuelve a verse */
 #start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
 #start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
