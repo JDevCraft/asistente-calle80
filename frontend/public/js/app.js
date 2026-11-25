@@ -215,6 +215,7 @@ function layoutCallouts(){
 if(window.ResizeObserver) new ResizeObserver(()=>{
   if(R.uz&&!R.guiando){ setVB(getVB()); return; } // el cliente acercó el mapa: se conserva su vista (solo se reajusta al nuevo tamaño)
   if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
+  else if(!R.guiando&&!R.ruta&&!MAPA.items.length&&!R.uz){ setVB(fitW()); } // reposo: sigue llenando el ancho si cambia el alto del área (teclado, panel)
   else if(!R.guiando&&!R.ruta&&MAPA.enc&&MAPA.items.length){ encuadre(MAPA.enc); return; } // vista de opciones: acerca o aleja la cámara según el alto disponible
   else if(!R.guiando&&R.ruta&&R.fit&&trail()){ // ruta en reposo (p. ej. al ocultarse las categorías): el mapa llena el área, recortando a los lados o arriba/abajo sobre el centro de la ruta
     const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ const a=r.height/r.width; let h=STORE[3], w=h/a; if(w>STORE[2]){ w=STORE[2]; h=w*a; }
@@ -399,7 +400,7 @@ function ubicModo(on){ const c=$('cont');
   if(on&&!A.ubic){ A.ubic=true; A.numsPrev=c.classList.contains('sin-nums'); c.classList.remove('sin-nums'); } // se ven todos los números
   else if(!on&&A.ubic){ A.ubic=false; c.classList.toggle('sin-nums',A.numsPrev); }
   $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; }
-function ubicCambiar(){ A.pideOrigen=true; renderPlan(); R.uz=true; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
+function ubicCambiar(){ A.pideOrigen=true; renderPlan(); R.uz=true; setVB(fitW()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
 function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
   if(base.toLowerCase()===String(R.ruta&&R.ruta.destino||'').toLowerCase()) return; // ya vas hacia ahí: la ruta saldría de la entrada y la caja mentiría
   const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(base);
@@ -458,7 +459,7 @@ function renderPlan(){
 function encuadre(ds){
   MAPA.enc=ds; // el observador de #cont lo repite cuando el panel cambia de alto
   const sv=$('mapa'), r=sv.getBoundingClientRect();
-  sv.setAttribute('viewBox',STORE.join(' '));
+  sv.setAttribute('viewBox',fitW().join(' '));
   if(!ds.length||!r.height||r.height>=340){ if(MAPA.items.length) layoutCallouts(); return; }
   const inv=sv.getScreenCTM().inverse(), pt=sv.createSVGPoint(); let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   ds.flatMap(mapIds).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(!q.width&&!q.height) return;
@@ -520,11 +521,14 @@ function rutaPath(){ const j=rutaGrupo(); return j?j.querySelectorAll('path')[1]
 function getVB(){ return $('mapa').getAttribute('viewBox').split(/[\s,]+/).map(Number); }
 // Límites de la tienda en coordenadas del SVG: la vista nunca muestra espacio fuera del plano
 const STORE=[-30,-6,1382,1747.7]; // ancho = el de las góndolas (sin margen blanco a los lados: el mapa llena la pantalla)
+// Encuadre en reposo: el plano llena siempre el ancho; si el área es más baja que el plano se recorta arriba y abajo (centrado) en vez de dejar blanco a los lados
+function fitW(){ const r=$('mapa').getBoundingClientRect(); if(!r.width||!r.height) return STORE.slice(); const h=STORE[2]*r.height/r.width; return h>=STORE[3]?STORE.slice():[STORE[0],STORE[1]+(STORE[3]-h)/2,STORE[2],h]; }
 function mapRect(){ return (R.guiando&&R.mr)||$('mapa').getBoundingClientRect(); }
 function clampVB(v){
   const r=mapRect(); if(!r.width||!r.height) return v;
   const a=r.height/r.width; let [x,y,w,h]=v; const cx=x+w/2, cy=y+h/2;
   if(h/w<a) h=w*a; else w=h/a;
+  if(w>STORE[2]){ w=STORE[2]; h=w*a; } // nunca más ancho que el plano: no queda blanco a los lados (si falta alto, se recorta arriba y abajo)
   // como máximo se ve el plano completo; si el recuadro es más alto (o ancho) que el plano, sobra blanco en ese eje en vez de recortar
   const k=Math.min(1,Math.max(STORE[2]/w,STORE[3]/h)); w*=k; h*=k;
   x=w>=STORE[2]?STORE[0]+STORE[2]/2-w/2:Math.min(Math.max(cx-w/2,STORE[0]),STORE[0]+STORE[2]-w);
@@ -544,7 +548,7 @@ function setVB(v){ const c=clampVB(v); $('mapa').setAttribute('viewBox',c.map(n=
   if(R.guiando){ if(R.proj) proyectar(c); return; }
   if(MAPA.items.length||MAPA.here) layoutCallouts(); }
 // Vista inicial: plano completo sin recorte (el SVG lo encaja en el espacio disponible)
-$('mapa').setAttribute('viewBox',STORE.join(' ')); window.VB0=$('mapa').getAttribute('viewBox');
+$('mapa').setAttribute('viewBox',fitW().join(' ')); window.VB0=$('mapa').getAttribute('viewBox');
 function toSvg(pt){ const m=rutaGrupo().transform.baseVal.consolidate().matrix; return [m.a*pt.x+m.c*pt.y+m.e, m.b*pt.x+m.d*pt.y+m.f]; }
 function camAt(c,w){ const r=mapRect(); const h=w*((r.height/r.width)||1); return [c[0]-w/2,c[1]-h/2,w,h]; }
 function trail(){
@@ -633,7 +637,7 @@ function styleRoute(r){
 function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); clearCallouts(); }
 function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
-  { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} if(window.VB0) $('mapa').setAttribute('viewBox',window.VB0); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
+  { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} $('mapa').setAttribute('viewBox',fitW().join(' ')); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
 // Ruta completa de una vez (el trazo se dibuja en ~1 s, sin mover la cámara)
 function openRoute(s,aisle,btn,dest,sinGuia){
   cancelGuide(); R.uz=false; { const g0=rutaGrupo(); if(g0) g0.style.display=''; } // la capa de la ruta se oculta mientras se pregunta el origen
