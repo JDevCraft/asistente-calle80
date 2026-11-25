@@ -367,10 +367,11 @@ function elegir(enMapa,fuera){
   const xs=enMapa.map(d=>({d,x:izq(d)})).sort((a,b)=>a.x-b.x).map(o=>o.d);
   $('mapa').classList.add('con-opciones','elige'); // sin número de pasillo hasta elegir categoría
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
-  // Nombre de cada categoría junto a sus pasillos: solo texto, sin aspecto de botón (la elección se hace en el panel)
-  const c=$('callouts'); c.innerHTML='';
-  xs.forEach((d,i)=>{ const e=el('span','callout cat',etiquetaInfo(d).txt); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
-  MAPA.items=xs.map(d=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
+  // Figma v3 P-02: en el mapa solo va el nombre de la familia (zona) donde están los pasillos resaltados; las categorías van en el panel
+  const c=$('callouts'); c.innerHTML=''; const vistas=new Set(), zs=[];
+  xs.forEach(d=>{ const z=mapIds(d).map(zonaDe).find(Boolean)||etiquetaInfo(d).nombre, k=z.toLowerCase(); if(!vistas.has(k)){ vistas.add(k); zs.push({d,z}); } });
+  zs.forEach(({z},i)=>{ const e=el('span','callout cat',z); e.setAttribute('aria-hidden','true'); if(i*STEP) e.style.setProperty('--d',i*STEP+'ms'); c.appendChild(e); });
+  MAPA.items=zs.map(({d})=>({d,kind:'cat'})); MAPA.here=false; layoutCallouts();
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
     s:'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
