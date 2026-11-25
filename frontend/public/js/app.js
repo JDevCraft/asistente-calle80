@@ -389,7 +389,7 @@ function ultimoPasillo(){
 }
 // Texto del Inline Alert: «Saliendo desde la entrada» o «…el pasillo 23b (tu última búsqueda)» si el origen es el de la búsqueda anterior y no se eligió otro
 function oriTxt(){ const pto=PUNTOS[A.origen]; if(pto) return ['Saliendo desde ',['b',pto.txt]];
-  const m=/pasillo (.+)$/.exec(R.origenTxt||''); if(!m) return ['Saliendo desde la ',['b','entrada']];
+  const m=/pasillo (.+)$/.exec(R.origenTxt||''); if(!m) return ['Saliendo desde la ',['b','Entrada']];
   const id=m[1].toLowerCase(), u=ultimoPasillo();
   return ['Saliendo desde el pasillo ',['b',id+(!A.origenElegido&&u&&u.id.toLowerCase()===id?' (tu última búsqueda)':'')]]; }
 // Pines fijos que sirven de punto de partida; «Entrada» = origen por defecto del motor ('')
@@ -497,7 +497,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=104" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=108" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -610,6 +610,12 @@ function endGuide(){ R.guiando=false; R.mr=null; R.proj=null; $('callouts').clas
 function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.guiando){ endGuide(); if(R.fit&&!keepView) setVB(R.fit); } }
 const easeOut=u=>1-Math.pow(1-u,3);
 function tweenVB(a,b,dur,tk,fn=ease){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*fn(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
+// Al llegar al pasillo el panel se contrae: quedan «Dirígete…» y el buscador (el cliente puede volver a desplegarlo); 4 s después el asa brinca para invitarlo
+function contraerPanel(){
+  const sh=$('sheet'), grip=$('sheetGrip');
+  if(sh.classList.contains('con-salir')&&!sh.classList.contains('plegable')){ sh.classList.add('min'); grip.setAttribute('aria-expanded','false'); grip.setAttribute('aria-label','Expandir panel');
+    grip.classList.remove('brinca'); void grip.offsetWidth; grip.classList.add('brinca'); setTimeout(()=>grip.classList.remove('brinca'),6000); }
+}
 async function guided(){
   if(!R.ruta||!trail()) return;
   const V=1.5; // velocidad del recorrido guiado
@@ -634,9 +640,7 @@ async function guided(){
   // ENCUESTA DESACTIVADA mientras se rediseña: if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
   await wait(900/V); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
-  endGuide(); payStart();
-  const sh=$('sheet'), grip=$('sheetGrip'); // al terminar el recorrido el panel se contrae: quedan «Dirígete…» y el buscador (el cliente puede volver a desplegarlo)
-  if(sh.classList.contains('con-salir')&&!sh.classList.contains('plegable')){ sh.classList.add('min'); grip.setAttribute('aria-expanded','false'); grip.setAttribute('aria-label','Expandir panel'); }
+  endGuide(); payStart(); contraerPanel(); // terminada la animación el panel se contrae; 4 s después el asa brinca
 }
 function goStep(i){
   if(!R.ruta) return;

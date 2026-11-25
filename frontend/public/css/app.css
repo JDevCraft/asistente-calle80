@@ -72,7 +72,7 @@ body.escribiendo .scrim{opacity:1;pointer-events:auto}
 /* ---------- Bottom sheet (Figma «Product - Bootom sheet») ---------- */
 .sheet{flex:none;display:flex;flex-direction:column;position:relative;z-index:4;background:var(--surface);border-radius:16px 16px 0 0;box-shadow:0 -2px 4px rgba(0,0,0,.10),0 4px 7px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0px);
   transform:translateY(calc(-1 * var(--kb)));transition:transform .28s cubic-bezier(.2,.8,.2,1)}
-.sh-top{padding:16px 20px 8px 16px;display:flex;flex-direction:column;gap:16px}
+.sh-top{padding:16px 20px 8px 16px;display:flex;flex-direction:column;gap:16px;transition:gap .35s ease}
 .sh-grip{align-self:center;display:grid;place-items:center;width:48px;height:20px;margin:-10px 0 -6px;padding:0;border:0;background:none;touch-action:none}
 .sh-grip i{display:block;width:30px;height:4px;border-radius:5px;background:var(--grip)}
 .sh-head{display:flex;flex-direction:column;gap:2px;min-width:0;interpolate-size:allow-keywords;overflow:hidden;transition:height .3s ease,opacity .25s ease}
@@ -233,7 +233,7 @@ body.escribiendo .sh-top{gap:0}
 .sheet.min .sh-head{height:0;opacity:0}
 .sheet.con-salir.min .sh-head{height:auto;opacity:1} /* resultado con ruta: al ocultar las categorías quedan el título, el subtítulo y «Salir» (Figma) */
 .sheet.min .sh-opts{display:none}
-.sheet.con-salir.min .sh-ori{display:none} /* resultado con ruta, panel oculto: se esconde «Saliendo desde…» y queda el buscador para una nueva búsqueda */
+.sheet.con-salir.min .sh-ori{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-width:0;visibility:hidden;transition:max-height .35s ease,opacity .25s ease,padding .35s ease,border-width .35s ease,visibility 0s .35s} /* resultado con ruta, panel oculto: «Saliendo desde…» se pliega con animación y queda el buscador para una nueva búsqueda */
 .sheet.min .sh-top{gap:0}
 
 /* Micro-encuesta (desactivada mientras se rediseña; se conserva el contrato) */
@@ -361,14 +361,20 @@ body.escribiendo .sh-top{gap:0}
   .sheet.plegado .sh-opts{display:flex} /* sin asa en horizontal: las categorías del resultado quedan a la vista */
 }
 @media (prefers-reduced-motion:reduce){
-  .sheet,.pay-wrap,.pay-card,.sh-head,.scrim,#mapa,#mapa #gondolas rect,#mapa #etiquetas .pl,#mapa #zonas-nombre{transition:none}
-  .skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,._x{animation:none}
+  .sheet,.pay-wrap,.pay-card,.sh-head,.sh-top,.sh-ori,.scrim,#mapa,#mapa #gondolas rect,#mapa #etiquetas .pl,#mapa #zonas-nombre{transition:none}
+  .sh-grip.brinca,.sh-grip.brinca i,.skel i,.callouts .callout.cat,.sh-busy.busy .ic-ia,.sh-busy .think-txt.swap,.opt.entra,#mapa .destino-pulsa .pulso,._x{animation:none}
   .wave i{transition:none}
   .dic span,.dic span.n,.dic:empty::before{transition:none;animation:none}
 }
 
 /* Inline Alert (Figma v3 163:13172 · 173:19748): fondo #e6f1fa, borde #b0d3f0, radio 4, texto #005192 14/20, «Cambiar» #0072ce subrayado */
-.sh-ori{display:flex;align-items:center;gap:8px;padding:2px 16px;background:#e6f1fa;border:1px solid #b0d3f0;border-radius:4px;overflow:hidden}
+.sh-ori{display:flex;align-items:center;gap:8px;padding:2px 16px;background:#e6f1fa;border:1px solid #b0d3f0;border-radius:4px;overflow:hidden;max-height:64px;transition:max-height .35s ease,opacity .25s ease,padding .35s ease,border-width .35s ease,visibility 0s}
+/* Al contraerse el panel, el asa «brinca» dos veces para avisar que se puede volver a desplegar */
+.sh-grip.brinca{animation:brinca .7s ease 4s 2}
+.sh-grip.brinca i{animation:asa-aviso .7s ease 4s 2}
+.sheet:not(.min) .sh-grip.brinca,.sheet:not(.min) .sh-grip.brinca i{animation:none} /* si el cliente ya lo desplegó, no brinca */
+@keyframes brinca{0%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}55%{transform:translateY(0)}75%{transform:translateY(-2px)}}
+@keyframes asa-aviso{0%,100%{background:var(--grip)}30%{background:var(--primary)}}
 .sh-ori[hidden]{display:none}
 .sh-ori img{flex:none;width:20px;height:20px}
 .sh-ori p{flex:1 1 0;min-width:0;margin:0;font:400 14px/20px var(--body);color:#005192;text-align:left}
