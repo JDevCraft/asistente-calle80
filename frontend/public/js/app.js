@@ -942,7 +942,7 @@ sampleFn={ async json(opts){
 } };
 initTracking();
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
-$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar número de pasillo':'Ver números de pasillo'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
+$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
   const box=$('need'), ab=document.querySelector('.askbox'); let ult=null, lenMulti=0;
