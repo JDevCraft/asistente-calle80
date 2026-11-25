@@ -480,7 +480,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=96" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=97" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -974,8 +974,10 @@ $('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.co
   // iOS no achica el layout con el teclado: el panel sube lo que ocupe el teclado (Android usa interactive-widget=resizes-content)
   const kb=()=>{ const h=vv&&body.classList.contains('escribiendo')?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0; document.documentElement.style.setProperty('--kb',Math.round(h)+'px'); };
   if(vv){ vv.addEventListener('resize',kb); vv.addEventListener('scroll',kb); }
-  need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
-  need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); kb(); });
+  // Con el teclado el plano se ve completo y sin deformar, con franjas blancas a los lados; sin teclado se estira a todo el ancho
+  const encaje=()=>{ $('mapa').setAttribute('preserveAspectRatio',body.classList.contains('escribiendo')?'xMidYMin meet':'none'); desK=0; desestirar(); };
+  need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); encaje(); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
+  need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); encaje(); kb(); });
   $('scrim').addEventListener('click',()=>need.blur());
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
   const grip=$('sheetGrip'); let y0=null, mov=false;
