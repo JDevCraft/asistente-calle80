@@ -285,9 +285,9 @@ body.escribiendo .sh-top{gap:0}
 /* Pasillo de partida y de destino con la misma etiqueta (azul oscuro, número blanco), 2 pt más grande: el círculo y el número se agrandan sobre su propio centro */
 #mapa #etiquetas .pl.orig rect{fill:#005192;stroke:#ffffff;stroke-width:3}
 #mapa #etiquetas .pl.orig text{fill:#ffffff}
-/* mientras se elige categoría los pasillos señalados llevan el número como los demás (sin el azul del resultado) */
-#mapa.elige #etiquetas .pl.dest rect{fill:#ffffff;stroke:#d6dce3;stroke-width:1.5}
-#mapa.elige #etiquetas .pl.dest text{fill:#6b7682}
+/* mientras se elige categoría los pasillos señalados llevan el número con el estilo azul de la ruta (el 1,22x va en escalarEtiquetas) */
+#mapa.elige #etiquetas .pl.dest rect{fill:#005192;stroke:#ffffff;stroke-width:3}
+#mapa.elige #etiquetas .pl.dest text{fill:#ffffff}
 .mapctl{position:absolute;top:8px;right:8px;z-index:3;display:flex;flex-direction:column;gap:8px}
 .eye{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 10px;border:1px solid #B0D3F0;border-radius:100px;background:#fff;color:var(--primary);font:400 12px/18px var(--body);white-space:nowrap;box-shadow:0 0 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.1);transition:opacity .3s ease}
 #cont.cargando .mapctl{opacity:0;pointer-events:none}
