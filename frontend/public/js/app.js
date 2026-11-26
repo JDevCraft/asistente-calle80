@@ -31,6 +31,7 @@ function pretty(s){
 // ================= ASISTENTE DE NECESIDADES =================
 const SEGS=AI.segs.map(([fam,name,n,esp],id)=>({id,fam,name,n,esp,pretty:pretty(name)}));
 const A={text:'',answers:[],plan:null,ruta:null,sel:null,source:null,busy:false,rutaVista:false,svVisto:false,lastSearchId:null,origen:'',nOk:0,ubic:false};
+const FAM={on:false,items:[],cv:null}; // nombres de familia (ver familias())
 let sampleFn=null, ctl=null, timer=null;
 
 function clean(plan){
@@ -215,7 +216,7 @@ function layoutCallouts(){
 }
 // Durante el recorrido guiado R.mr (tamaño del mapa) está congelado: si el panel se pliega o despliega, se mide de nuevo y la cámara se reencuadra con la nueva proporción
 if(window.ResizeObserver) new ResizeObserver(()=>{
-  desestirar();
+  desestirar(); if(FAM.on) familias();
   if(A.ubic){ setVB(STORE.slice()); layoutCallouts(); return; } // «Cambiar ubicación»: siempre el plano completo
   if(R.uz&&!R.guiando){ setVB(getVB()); return; } // el cliente acercó el mapa: se conserva su vista (solo se reajusta al nuevo tamaño)
   if(R.guiando&&R.mr){ const r=$('mapa').getBoundingClientRect(); if(r.width&&r.height){ R.mr=r; const v=getVB(); setVB([v[0],v[1]+v[3]/2-v[2]*r.height/r.width/2,v[2],v[2]*r.height/r.width]); } }
@@ -365,7 +366,34 @@ function escalarEtiquetas(){ const mp=$('mapa'), estatico=!mp.classList.contains
   $('cont').classList.toggle('mapa-estatico',estatico);
   mp.querySelectorAll('#etiquetas .pl[id^="l-"]').forEach(g=>{ const r=g.querySelector('rect'); if(!r) return;
   const on=estatico||g.classList.contains('orig')||g.classList.contains('dest-sel'), cx=+r.getAttribute('x')+ +r.getAttribute('width')/2, cy=+r.getAttribute('y')+ +r.getAttribute('height')/2;
-  g.querySelectorAll('rect,text').forEach(e=>{ if(on) e.setAttribute('transform',`translate(${cx} ${cy}) scale(1.22) translate(${-cx} ${-cy})`); else e.removeAttribute('transform'); }); }); }
+  g.querySelectorAll('rect,text').forEach(e=>{ if(on) e.setAttribute('transform',`translate(${cx} ${cy}) scale(1.22) translate(${-cx} ${-cy})`); else e.removeAttribute('transform'); }); }); familias(); }
+// Nombres de familia con «Ocultar pasillos» (vista estática): capa HTML en pantalla. Cada nombre se coloca en el hueco libre más cercano a su sitio
+// (horizontal; vertical solo si no cabe), sin montarse sobre números de pasillo, pines ni otros nombres. Se calcula en coordenadas del plano
+// (no cambia con el zoom) al entrar en la vista o cambiar el tamaño; con zoom o arrastre solo se reposiciona. Si un nombre no tiene hueco, no se muestra.
+function posFamilias(){ const mp=$('mapa'), m=mp.getScreenCTM(), cr=$('cont').getBoundingClientRect(); if(!m||!m.a) return;
+  FAM.items.forEach(({d,x,y,w,h})=>{ const px=w*m.a, py=h*m.d; d.style.cssText='left:'+(x*m.a+m.e-cr.left).toFixed(1)+'px;top:'+(y*m.d+m.f-cr.top).toFixed(1)+'px;width:'+px.toFixed(1)+'px;height:'+py.toFixed(1)+'px;font-size:'+(45*m.a).toFixed(1)+'px;line-height:'+(d.classList.contains('v')?px:py).toFixed(1)+'px'; }); } // en vertical el alto de línea es el ancho de la caja
+function familias(){
+  const cont=$('cont'), mp=$('mapa'), on=cont.classList.contains('mapa-estatico')&&!cont.classList.contains('sin-nums');
+  let box=$('fam-capa'); if(!on){ FAM.on=false; FAM.items=[]; if(box) box.hidden=true; return; }
+  const m=mp.getScreenCTM(); if(!m||!m.a) return;
+  if(!box){ box=el('div'); box.id='fam-capa'; box.setAttribute('aria-hidden','true'); cont.appendChild(box); }
+  box.hidden=false; box.replaceChildren(); FAM.on=true; FAM.items=[];
+  const inv=m.inverse(), aSvg=r=>{ const p=new DOMPoint(r.left,r.top).matrixTransform(inv), q=new DOMPoint(r.right,r.bottom).matrixTransform(inv); return [Math.min(p.x,q.x)-8,Math.min(p.y,q.y)-8,Math.abs(q.x-p.x)+16,Math.abs(q.y-p.y)+16]; };
+  const obst=[]; mp.querySelectorAll('#etiquetas .pl[id^="l-"], #pines > g').forEach(g=>{ if(getComputedStyle(g).display==='none'||g.classList.contains('lat')) return; const r=(g.querySelector('rect')||g).getBoundingClientRect(); if(r.width) obst.push(aSvg(r)); });
+  const zonas=[...mp.querySelectorAll('#zonas path')], enZona=(z,x,y)=>{ try{ return z.isPointInFill(new DOMPoint(x,y).matrixTransform(z.getCTM().inverse())); }catch(e){ return true; } };
+  const cv=FAM.cv||(FAM.cv=document.createElement('canvas').getContext('2d')); cv.font='400 45px '+(getComputedStyle(document.documentElement).getPropertyValue('--body')||'Arial');
+  const noms=[...mp.querySelectorAll('#zonas-nombre text')].map(t=>{ const r=t.getBoundingClientRect(), a=new DOMPoint(r.left+r.width/2,r.top+r.height/2).matrixTransform(inv), n=t.textContent.trim(), w=cv.measureText(n).width+16;
+    return {n,ax:a.x,ay:a.y,w,h:55,z:zonas.find(z=>enZona(z,a.x,a.y))}; }).sort((a,b)=>b.w-a.w);
+  const pu=[], choca=(X,Y,w,h)=>obst.concat(pu).some(p=>X<p[0]+p[2]&&X+w>p[0]&&Y<p[1]+p[3]&&Y+h>p[1]);
+  noms.forEach(nm=>{
+    const cand=[]; for(const v of [0,1]) for(let dx=-420;dx<=420;dx+=20) for(let dy=-330;dy<=330;dy+=20) cand.push([dx,dy,v,Math.hypot(dx,dy)+(v?70:0)]);
+    cand.sort((a,b)=>a[3]-b[3]);
+    for(const [dx,dy,v] of cand){ const w=v?nm.h:nm.w, h=v?nm.w:nm.h, X=nm.ax+dx-w/2, Y=nm.ay+dy-h/2;
+      if(X<STORE[0]||Y<STORE[1]||X+w>STORE[0]+STORE[2]||Y+h>STORE[1]+STORE[3]||choca(X,Y,w,h)) continue;
+      if(nm.z&&!enZona(nm.z,X+w/2,Y+h/2)) continue;
+      pu.push([X-8,Y-8,w+16,h+16]); const d=el('span','fam'+(v?' v':''),nm.n); box.appendChild(d); FAM.items.push({d,x:X,y:Y,w,h}); break; } });
+  posFamilias();
+}
 // Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
@@ -517,7 +545,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=118" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=119" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -570,7 +598,7 @@ function proyectar(c){
 // así conserva su forma y tamaño y solo el dibujo del plano se estira
 let desK=0;
 function desestirar(){
-  const sv=$('mapa'), m=sv.getScreenCTM(); if(!m||!m.a) return; const k=m.d/m.a; if(Math.abs(k-desK)<.003) return; desK=k;
+  const sv=$('mapa'), m=sv.getScreenCTM(); if(!m||!m.a) return; const k=m.d/m.a; if(Math.abs(k-desK)<.003) return false; desK=k;
   const parar=Math.abs(k-1)<.003;
   sv.querySelectorAll('#etiquetas .pl, #zonas-nombre text, #pines > g').forEach(el=>{
     if(el.dataset.t0===undefined) el.dataset.t0=el.getAttribute('transform')||'';
@@ -585,9 +613,10 @@ function desestirar(){
     const m11=S.a*S.a+S.b*S.b, m12=S.a*S.c+S.b*S.d, m22=S.c*S.c+S.d*S.d, s=Math.sqrt(m11+m22+2*det), p11=(m11+det)/s, p12=m12/s, p22=(m22+det)/s, f=1/Math.sqrt(det);
     const a=f*p22, b=-f*p12, c=-f*p12, d=f*p11, e=cx-(a*cx+c*cy), g=cy-(b*cx+d*cy);
     el.setAttribute('transform',(t0?t0+' ':'')+`matrix(${a} ${b} ${c} ${d} ${e} ${g})`); });
+  return true; // hubo cambio de proporción: las etiquetas cambiaron de tamaño en el plano
 }
 function setVB(v){ const c=clampVB(v); $('mapa').setAttribute('viewBox',c.map(n=>n.toFixed(1)).join(' '));
-  desestirar();
+  if(desestirar()&&FAM.on) familias(); else if(FAM.on) posFamilias(); // si cambia la proporción, los números cambian de tamaño en el plano: se acomodan de nuevo
   if(R.guiando){ if(R.proj) proyectar(c); return; }
   if(MAPA.items.length||MAPA.here) layoutCallouts(); }
 // Vista inicial: plano completo sin recorte (el SVG lo encaja en el espacio disponible)
@@ -1000,7 +1029,7 @@ sampleFn={ async json(opts){
 initTracking();
 escalarEtiquetas(); // mapa de inicio (estático): números con el estilo de la ruta
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); track('pago_click'); });
-$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); track('ver_pasillos',ver?'on':'off'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
+$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); track('ver_pasillos',ver?'on':'off'); setTimeout(familias,0); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
   const box=$('need'), ab=document.querySelector('.askbox'); let ult=null, lenMulti=0;
