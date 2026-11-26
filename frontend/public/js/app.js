@@ -348,13 +348,18 @@ function inicio(){ sheet('inicio',{t:'¿Qué estás buscando?',s:'Estás en la t
 function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e.closest('#gondolas')) e.style.transitionDelay=ms+'ms'; e.classList.add(cls); })); }
 // borde izquierdo en pantalla de los pasillos de un destino: ordena las opciones de izquierda a derecha
 function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(q.width||q.height) l=Math.min(l,q.left); })); return l; }
+// Etiquetas de partida y destino 1.22x sobre el centro de su círculo. Va como atributo transform: el CSS transform-box:fill-box dentro de grupos
+// rotados/estirados no se pinta bien en Safari de iPhone y la etiqueta desaparecía durante el recorrido animado
+function escalarEtiquetas(){ $('mapa').querySelectorAll('#etiquetas .pl[id^="l-"]').forEach(g=>{ const r=g.querySelector('rect'); if(!r) return;
+  const on=g.classList.contains('orig')||g.classList.contains('dest-sel'), cx=+r.getAttribute('x')+ +r.getAttribute('width')/2, cy=+r.getAttribute('y')+ +r.getAttribute('height')/2;
+  g.querySelectorAll('rect,text').forEach(e=>{ if(on) e.setAttribute('transform',`translate(${cx} ${cy}) scale(1.22) translate(${-cx} ${-cy})`); else e.removeAttribute('transform'); }); }); }
 // Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
 function drawHere(){
   const c=$('callouts'); c.innerHTML=''; MAPA.items=[]; MAPA.here=!!R.ruta;
   $('mapa').classList.toggle('con-ruta',!!R.ruta); // resultado (Figma 58:16142): plano limpio
   if(R.ruta&&!A.pideOrigen){ const p=/pasillo (.+)$/.exec(R.origenTxt||'');
     if(p){ const id=p[1].toLowerCase(); aisleEls(id).forEach(e=>{ if(e.closest('#gondolas')) e.classList.add('orig-sel'); }); $('mapa').querySelectorAll('#etiquetas .pl').forEach(g=>{ if(g.id==='l-'+id||g.id.startsWith('l-'+id+'-')) g.classList.add('orig'); }); } } // desde la entrada no hay etiqueta propia: queda el pin fijo «Entrada»
-  layoutCallouts();
+  escalarEtiquetas(); layoutCallouts();
 }
 // ícono de la categoría: del uso (Sala, Baño…) si se repite la zona; si no, de la zona; si tampoco, del uso
 function iconoDe(d){ const {nombre,rep}=etiquetaInfo(d), uso=String(d.etiqueta).split(/[:,]/)[0].trim();
@@ -499,7 +504,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=114" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=115" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -657,6 +662,7 @@ function styleRoute(r){
   // La ruta puede llegar a una mitad de un pasillo partido (11b-n, 29a-e…): se pinta el pasillo completo
   const base=String(m||'').replace(/-[nsew]$/i,'');
   [...new Set([m,base])].forEach(x=>aisleEls(x).forEach(e=>e.classList.add('dest','dest-sel')));
+  escalarEtiquetas();
   const j=rutaGrupo(); if(!j) return;
   // Figma 58:16142: línea azul de 2 px y un punto sólido en cada extremo (sin pin, sin borde blanco)
   const ps=j.querySelectorAll(':scope > path'); if(ps[0]) ps[0].setAttribute('stroke-width','0'); if(ps[1]){ ps[1].setAttribute('stroke','#b9d7f2'); ps[1].setAttribute('stroke-width','6'); }
@@ -666,7 +672,7 @@ function styleRoute(r){
   j.querySelectorAll(':scope > circle').forEach(c=>{ c.setAttribute('r','14'); c.setAttribute('fill','#0072ce'); c.setAttribute('stroke','none'); });
   j.querySelectorAll(':scope > line').forEach(l=>l.setAttribute('display','none'));
 }
-function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); clearCallouts(); }
+function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); escalarEtiquetas(); clearCallouts(); }
 function hideRoute(){ $('start').classList.remove('solo'); clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} setVB(STORE.slice()); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
