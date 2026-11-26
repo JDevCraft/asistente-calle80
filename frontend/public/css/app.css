@@ -233,7 +233,6 @@ body.escribiendo .sh-top{gap:0}
 .sheet.min .sh-head{height:0;opacity:0}
 .sheet.con-salir.min .sh-head{height:auto;opacity:1} /* resultado con ruta: al ocultar las categorías quedan el título, el subtítulo y «Salir» (Figma) */
 .sheet.min .sh-opts{display:none}
-.sheet.con-salir.min .sh-ori{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-width:0;visibility:hidden;transition:max-height .35s ease,opacity .25s ease,padding .35s ease,border-width .35s ease,visibility 0s .35s} /* resultado con ruta, panel oculto: «Saliendo desde…» se pliega con animación y queda el buscador para una nueva búsqueda */
 .sheet.min .sh-top{gap:0}
 
 /* Micro-encuesta (desactivada mientras se rediseña; se conserva el contrato) */
