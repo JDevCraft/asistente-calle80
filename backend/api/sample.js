@@ -5,6 +5,7 @@
 const { CATALOG, ESPS } = require('./_catalog');
 const { rapido, desdeSegmentos, esTemporada, tokens } = require('./_engine');
 const { catalogoPara } = require('./_recorte');
+const { clasificar } = require('./_alcance');
 const { limitado, cacheGet, cacheSet } = require('./_estado');
 const { registrarBusqueda, UUID_RE } = require('./_tracking');
 const { randomUUID } = require('crypto');
@@ -165,13 +166,19 @@ module.exports = async (req, res) => {
     .map(a => ({ q: String((a && a.q) || '').slice(0, MAX_ANSWER_LEN), a: String((a && a.a) || '').slice(0, MAX_ANSWER_LEN) }))
     .filter(a => a.q && a.a);
 
-  // Camino rápido: la consulta es un tipo de producto del índice → respuesta sin modelo, siempre igual
   const t0 = Date.now();
   // Único punto de registro de la búsqueda. Se espera (await) antes de cada respuesta: en Vercel una promesa
   // pendiente después de res.json() puede congelarse con la instancia y perder la fila. registrarBusqueda nunca
   // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
   const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, sesionId, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
   const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
+  // Fuera del propósito del piloto (basura, daño, ilegal, fraude, inyección, servicios de la tienda): ni índice ni modelo. Se registra como 'error' con motivo alcance_<tipo> (sin migrar el CHECK de resultado)
+  const fuera = clasificar([text, ...answers.map(a => a.a)].join('. '));
+  if (fuera) {
+    await registrar({ resultado: 'error', motivoRespaldo: 'alcance_' + fuera.tipo });
+    return res.status(200).json({ plan: { necesidad: '', proyecto: '', espacio: '', contexto: [], grupos: [], preguntas: [], consejo: '' }, ruta: null, aviso: fuera.aviso, ms: Date.now() - t0, id: rid });
+  }
+  // Camino rápido: la consulta es un tipo de producto del índice → respuesta sin modelo, siempre igual
   if (!answers.length && esMuebleGenerico(text)) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: MUEBLE_GENERICO, ms: Date.now() - t0, id: rid }); }
   if (!answers.length) {
     const r = rapido(text);
