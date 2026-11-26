@@ -401,7 +401,7 @@ body.escribiendo .sh-top{gap:0}
 #mapa > g#mapa > rect:first-child{display:none} /* marco redondeado del plano: sin recuadro ni bordes blancos a los lados */
 
 /* Nombres de familia: sin números a la vista (vista estática) solo quedan los pines de referencia; con «Ocultar pasillos» van en la capa #fam-capa (app.js, familias()) sin montarse sobre los números */
-#cont.mapa-estatico.sin-nums #mapa #zonas-nombre{opacity:0}
+#cont.mapa-estatico.sin-nums #mapa #zonas-nombre,#cont.sin-nums #mapa.con-ruta #zonas-nombre{opacity:0} /* con ruta animada, «Ocultar pasillos» tampoco muestra los nombres viejos del SVG */
 #fam-capa{position:absolute;inset:0;pointer-events:none;z-index:1}
 #fam-capa .fam{position:absolute;display:block;text-align:center;white-space:pre;color:#767676;font-family:var(--body);font-weight:400;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 4px #fff}
 #fam-capa .fam.v{writing-mode:vertical-rl;transform:rotate(180deg)}
