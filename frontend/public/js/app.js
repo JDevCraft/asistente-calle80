@@ -382,8 +382,9 @@ function familias(){
   if(!box){ box=el('div'); box.id='fam-capa'; box.setAttribute('aria-hidden','true'); cont.appendChild(box); }
   box.hidden=false; box.replaceChildren(); FAM.on=true; FAM.items=[];
   const cv=FAM.cv||(FAM.cv=document.createElement('canvas').getContext('2d')); cv.font='400 '+FAM_PX+'px '+(getComputedStyle(document.documentElement).getPropertyValue('--body')||'Arial');
-  FAM_FIG.forEach(([n,cx,cy,v])=>{ const ls=n.split('\n'), t=Math.ceil(Math.max(...ls.map(x=>cv.measureText(x).width))), l=Math.round(FAM_PX*1.75), w=v?l:t, h=v?t:l*ls.length;
-    const d=el('span','fam'+(v?' v':''),n); box.appendChild(d); FAM.items.push({d,x:cx-w/2,y:cy-h/2,w,h,n:ls.length}); });
+  // cada línea es un bloque propio (no depende del CSS)
+  FAM_FIG.forEach(([n,cx,cy,v])=>{ const ls=n.split('\n'), t=Math.ceil(Math.max(...ls.map(x=>cv.measureText(x).width))), l=Math.round(FAM_PX*(ls.length>1?1.4:1.75)), w=v?l:t, h=v?t:l*ls.length;
+    const d=el('span','fam'+(v?' v':'')); ls.forEach(x=>{ const r=el('span',null,x); r.style.display='block'; d.appendChild(r); }); box.appendChild(d); FAM.items.push({d,x:cx-w/2,y:cy-h/2,w,h,n:ls.length}); });
   posFamilias();
 }
 // Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
@@ -537,7 +538,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=130" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=131" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
