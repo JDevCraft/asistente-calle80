@@ -8,6 +8,7 @@
 // sepa que existen.
 const fs = require('fs'), path = require('path');
 const { CATALOG } = require('./_catalog');
+const IDX = require('./_destinos.json');
 
 const TOP = 150, MAX_PALABRA = 40, EMB_MS = 4000;
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
@@ -56,6 +57,12 @@ async function catalogoPara(text, key) {
     .flatMap(w => [w, w.replace(/ES$/, ''), w.replace(/S$/, '')]).filter(w => w.length >= 4);
   let extra = 0;
   if (ws.length) for (const [n, x] of d.info) { if (extra >= MAX_PALABRA) break; if (!elegidos.has(n) && ws.some(w => x.k.includes(' ' + w))) { elegidos.add(n); extra++; } }
+  // (2b) segmentos donde el índice ubica cada tipo de producto nombrado (p. ej. TEE → también «Accesorios cielos rasos», que ni el vector ni el nombre alcanzan)
+  let porTipo = 0;
+  for (const w of norm(text).replace(/[^A-Z0-9]+/g, ' ').split(' ')) {
+    if (w.length < 3 || STOP.has(w)) continue;
+    for (const c of Object.keys(IDX.tipos[w] || {})) { const sg = IDX.conjs[c] && IDX.conjs[c].s; if (porTipo < MAX_PALABRA && sg != null && d.info.has(sg) && !elegidos.has(sg)) { elegidos.add(sg); porTipo++; } }
+  }
   const porFam = new Map();
   for (const n of [...elegidos].sort((a, b) => a - b)) { const x = d.info.get(n); if (x) (porFam.get(x.fam) || porFam.set(x.fam, []).get(x.fam)).push(`${n} ${x.t}`); }
   const otras = d.familias.filter(f => !porFam.has(f));
