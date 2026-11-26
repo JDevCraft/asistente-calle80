@@ -201,7 +201,7 @@ module.exports = async (req, res) => {
   const key = 'v2|' + clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
   const hit = await cacheGet(key);
   // proveedor no se guarda en la caché: el registro de un acierto de caché lo deja en null
-  if (hit) { await registrar({ resultado: 'modelo' }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
+  if (hit) { await registrar({ resultado: 'modelo', consejo: hit.plan && hit.plan.consejo }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
   if (await limitado(ip)) return respaldo(429, 'rate_limited');
   const ans = answers.length ? `\n\nRespuestas del cliente a preguntas anteriores:\n${answers.map(a => `- ${a.q} → ${a.a}`).join('\n')}` : '';
 
@@ -242,7 +242,7 @@ module.exports = async (req, res) => {
     if (ruta && ruta.decision !== 'directo') ruta.pregunta = ruta.decision === 'preguntar' ? '¿Cuál de estos buscas?' : '¿Para qué lo necesitas?';
     const v = { plan, ruta, catalogo: recorte ? { segmentos: recorte.segs, ms: recorte.ms } : 'completo' };
     await cacheSet(key, v);
-    await registrar({ resultado: 'modelo', proveedor });
+    await registrar({ resultado: 'modelo', proveedor, consejo: plan.consejo });
     return res.status(200).json({ ...v, ms: Date.now() - t0, id: rid });
   } catch (e) {
     console.error('sample', e && e.message);

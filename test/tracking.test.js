@@ -153,3 +153,21 @@ test('registrarMotivo: motivo fuera de la lista o id no-UUID → no consulta ni 
   await assert.doesNotReject(registrarMotivo('no-es-uuid', 'otro', 'x'));
   assert.strictEqual(llamadas.length, 0);
 });
+
+test('registrarBusqueda con consejo: se guarda recortado a 300 caracteres', async () => {
+  reset();
+  await registrarBusqueda({ ...DATOS, consejo: '  ' + 'x'.repeat(400) });
+  const body = JSON.parse(llamadas[0].opts.body);
+  assert.match(body.query, /, consejo\) VALUES .*\$9\)/);
+  assert.strictEqual(body.params[8].length, 300);
+});
+
+test('registrarBusqueda: si la columna consejo no existe aún, la búsqueda se guarda sin ella', async () => {
+  reset();
+  const antes = global.fetch;
+  global.fetch = async (url, opts) => { llamadas.push({ url: String(url), opts }); return JSON.parse(opts.body).query.includes('consejo')
+    ? { ok: false, status: 400, json: async () => ({ message: 'column "consejo" does not exist' }), text: async () => 'column "consejo" does not exist' } : ok(); };
+  try { await registrarBusqueda({ ...DATOS, consejo: 'Pregunta a un asesor.' }); } finally { global.fetch = antes; }
+  assert.strictEqual(llamadas.length, 2);
+  assert.ok(!JSON.parse(llamadas[1].opts.body).query.includes('consejo'));
+});

@@ -19,19 +19,22 @@ const nulo = v => (v === undefined ? null : v);
 
 // Motivos cerrados del «No» en la micro-encuesta (deben coincidir con el CHECK de backend/sql/003_sesion.sql).
 const MOTIVOS = ['no_era', 'no_encontre', 'ruta_confusa', 'otro'];
-const MAX_COMENTARIO = 140;
+const MAX_COMENTARIO = 140, MAX_CONSEJO = 300;
 const uuidONulo = v => (typeof v === 'string' && UUID_RE.test(v) ? v : null);
 
 async function registrarBusqueda(datos) {
   if (!CONN) return;
   try {
     // La IP no se guarda: solo la usa api/_estado.js para el límite de tasa (con hash).
-    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs, sesionId } = datos || {};
-    await consultar(
-      'INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id) ' +
-      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [id, texto, canal, resultado, nulo(proveedor), nulo(motivoRespaldo), nulo(tiempoRespuestaMs), uuidONulo(sesionId)]
-    );
+    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs, sesionId, consejo } = datos || {};
+    const base = [id, texto, canal, resultado, nulo(proveedor), nulo(motivoRespaldo), nulo(tiempoRespuestaMs), uuidONulo(sesionId)];
+    const c = typeof consejo === 'string' ? consejo.trim().slice(0, MAX_CONSEJO) : '';
+    const insertar = (cols, vals) => consultar(
+      `INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id${cols}) ` +
+      `VALUES ($1, $2, $3, $4, $5, $6, $7, $8${vals})`, base.concat(cols ? [c] : []));
+    // Si la columna consejo aún no existe en Neon (004_consejo.sql sin ejecutar), la búsqueda se guarda igual sin ella
+    if (!c) await insertar('', '');
+    else try { await insertar(', consejo', ', $9'); } catch (e) { console.error('tracking consejo', e && e.message); await insertar('', ''); }
   } catch (e) { console.error('tracking registrarBusqueda', e && e.message); }
 }
 
