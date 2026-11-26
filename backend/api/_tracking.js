@@ -22,20 +22,51 @@ const MOTIVOS = ['no_era', 'no_encontre', 'ruta_confusa', 'otro'];
 const MAX_COMENTARIO = 140, MAX_CONSEJO = 300;
 const uuidONulo = v => (typeof v === 'string' && UUID_RE.test(v) ? v : null);
 
+// Valores cerrados (deben coincidir con los CHECK de backend/sql/005_analitica.sql)
+const ALCANCES = ['basura', 'dano', 'ilegal', 'fraude', 'inyeccion', 'tienda'];
+const DECISIONES = ['directo', 'preguntar', 'generico', 'sin_destino'];
+const PLATAFORMAS = ['ios', 'android', 'escritorio', 'otro'];
+const TIPOS_EVENTO = ['ver_pasillos', 'ubicacion_abrir', 'ubicacion_elegida', 'ubicacion_deshacer', 'recorrido_inicio', 'recorrido_fin', 'recorrido_detener', 'recorrido_repetir', 'paso_manual', 'opcion_elegida', 'pregunta_respondida', 'pago_click', 'voz_error'];
+const enLista = (l, v) => (l.includes(v) ? v : null);
+const versionONula = v => (typeof v === 'string' && /^[0-9A-Za-z._-]{1,12}$/.test(v) ? v : null);
+const MAX_EVENTOS = 10;
+
 async function registrarBusqueda(datos) {
   if (!CONN) return;
   try {
     // La IP no se guarda: solo la usa api/_estado.js para el límite de tasa (con hash).
-    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs, sesionId, consejo } = datos || {};
+    const { id, texto, canal, resultado, proveedor, motivoRespaldo, tiempoRespuestaMs, sesionId, consejo, alcance, destino, decision, cache, nRespuestas, plataforma, version } = datos || {};
     const base = [id, texto, canal, resultado, nulo(proveedor), nulo(motivoRespaldo), nulo(tiempoRespuestaMs), uuidONulo(sesionId)];
     const c = typeof consejo === 'string' ? consejo.trim().slice(0, MAX_CONSEJO) : '';
-    const insertar = (cols, vals) => consultar(
-      `INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id${cols}) ` +
-      `VALUES ($1, $2, $3, $4, $5, $6, $7, $8${vals})`, base.concat(cols ? [c] : []));
-    // Si la columna consejo aún no existe en Neon (004_consejo.sql sin ejecutar), la búsqueda se guarda igual sin ella
-    if (!c) await insertar('', '');
-    else try { await insertar(', consejo', ', $9'); } catch (e) { console.error('tracking consejo', e && e.message); await insertar('', ''); }
+    // Columnas de analítica: solo se incluyen las que traen valor válido (consejo primero)
+    const extra = [
+      ['consejo', c || null], ['alcance', enLista(ALCANCES, alcance)], ['destino', typeof destino === 'string' && destino ? destino.slice(0, 40) : null],
+      ['decision', enLista(DECISIONES, decision)], ['cache', typeof cache === 'boolean' ? cache : null],
+      ['n_respuestas', Number.isInteger(nRespuestas) && nRespuestas >= 0 && nRespuestas < 100 ? nRespuestas : null],
+      ['plataforma', enLista(PLATAFORMAS, plataforma)], ['version', versionONula(version)]
+    ].filter(([, v]) => v !== null);
+    const insertar = ex => consultar(
+      'INSERT INTO busquedas (id, texto, canal, resultado, proveedor, motivo_respaldo, tiempo_respuesta_ms, sesion_id' + ex.map(([k]) => ', ' + k).join('') + ') ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8' + ex.map((_, i) => ', $' + (i + 9)).join('') + ')', base.concat(ex.map(([, v]) => v)));
+    // Si las columnas nuevas aún no existen en Neon (migración sin ejecutar) o un valor no cabe, la búsqueda se guarda igual sin ellas
+    if (!extra.length) await insertar([]);
+    else try { await insertar(extra); } catch (e) { console.error('tracking columnas extra', e && e.message); await insertar([]); }
   } catch (e) { console.error('tracking registrarBusqueda', e && e.message); }
+}
+
+// Acciones del cliente (ver pasillos, recorrido, ubicación…). evs = [{t, d, b}]: tipo cerrado, detalle corto de vocabulario controlado
+// (nunca texto libre) y id de la búsqueda a la que pertenece. Descarta lo que no valida; nunca lanza.
+async function registrarEventos(sesionId, evs, plataforma, version) {
+  if (!CONN) return;
+  try {
+    const ses = uuidONulo(sesionId); if (!ses) return;
+    const filas = (Array.isArray(evs) ? evs : []).slice(0, MAX_EVENTOS)
+      .filter(e => e && TIPOS_EVENTO.includes(e.t))
+      .map(e => [ses, uuidONulo(e.b), e.t, typeof e.d === 'string' ? e.d.replace(/[^\p{L}\p{N} _\-–·:.]/gu, '').slice(0, 40) || null : null, enLista(PLATAFORMAS, plataforma), versionONula(version)]);
+    if (!filas.length) return;
+    await consultar('INSERT INTO eventos (sesion_id, busqueda_id, tipo, detalle, plataforma, version) VALUES ' +
+      filas.map((_, i) => '(' + [1, 2, 3, 4, 5, 6].map(k => '$' + (i * 6 + k)).join(', ') + ')').join(', '), filas.flat());
+  } catch (e) { console.error('tracking registrarEventos', e && e.message); }
 }
 
 async function registrarEncuesta(id, util) {
@@ -68,8 +99,9 @@ async function purgarBusquedas(dias = 30) {
   try {
     // fullResults: el driver devuelve { rowCount } en vez de solo las filas
     const r = await consultar("DELETE FROM busquedas WHERE creado_en < now() - ($1 || ' days')::interval", [String(dias)], { fullResults: true });
+    await consultar("DELETE FROM eventos WHERE creado_en < now() - ($1 || ' days')::interval", [String(dias)]).catch(e => console.error('tracking purgar eventos', e && e.message));
     return typeof r.rowCount === 'number' ? r.rowCount : null;
   } catch (e) { console.error('tracking purgarBusquedas', e && e.message); return null; }
 }
 
-module.exports = { registrarBusqueda, registrarEncuesta, registrarMotivo, purgarBusquedas, UUID_RE };
+module.exports = { registrarBusqueda, registrarEventos, registrarEncuesta, registrarMotivo, purgarBusquedas, UUID_RE };

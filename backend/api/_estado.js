@@ -35,14 +35,15 @@ async function cacheSet(key, value) {
   catch (e) { console.error('estado cacheSet', e && e.message); }
 }
 
-async function limitado(ip) {
+// prefijo/max permiten un contador aparte (p. ej. los eventos de analítica no gastan el límite de búsquedas)
+async function limitado(ip, { prefijo = 'rl', max = RATE_LIMIT } = {}) {
   if (!BASE) return false;
   try {
-    const key = `rl:${hash(ip)}`;
+    const key = `${prefijo}:${hash(ip)}`;
     // INCR y EXPIRE NX en el mismo pipeline (un solo viaje de red): si el INCR no llega,
     // el EXPIRE tampoco se envía, así nunca queda un contador sin TTL por una falla a medias.
     const [{ result: count } = {}] = await pipeline([['INCR', key], ['EXPIRE', key, RATE_WINDOW_S, 'NX']]);
-    return count > RATE_LIMIT;
+    return count > max;
   } catch (e) { console.error('estado limitado', e && e.message); return false; }
 }
 

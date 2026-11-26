@@ -171,3 +171,49 @@ test('registrarBusqueda: si la columna consejo no existe aún, la búsqueda se g
   assert.strictEqual(llamadas.length, 2);
   assert.ok(!JSON.parse(llamadas[1].opts.body).query.includes('consejo'));
 });
+
+test('registrarBusqueda con columnas de analítica: solo viajan las válidas', async () => {
+  reset();
+  await registrarBusqueda({ ...DATOS, destino: '14C–17C', decision: 'directo', cache: false, nRespuestas: 0, plataforma: 'ios', version: '117', alcance: 'inventado' });
+  const body = JSON.parse(llamadas[0].opts.body);
+  assert.match(body.query, /, destino, decision, cache, n_respuestas, plataforma, version\) VALUES/);
+  assert.ok(!body.query.includes('alcance'), 'un alcance fuera de la lista no se guarda');
+  assert.deepStrictEqual(body.params.slice(8), ['14C–17C', 'directo', 'false', '0', 'ios', '117']);
+});
+
+const { registrarEventos } = require('../backend/api/_tracking');
+
+test('registrarEventos: un INSERT con todas las filas válidas; descarta tipo desconocido y limpia el detalle', async () => {
+  reset();
+  await registrarEventos(SES, [
+    { t: 'ver_pasillos', d: 'on', b: ID }, { t: 'borrar_todo', d: 'x' }, { t: 'voz_error', d: '<b>not-allowed</b>' }, { t: 'pago_click' }
+  ], 'android', '117');
+  assert.strictEqual(llamadas.length, 1);
+  const body = JSON.parse(llamadas[0].opts.body);
+  assert.match(body.query, /INSERT INTO eventos/);
+  assert.strictEqual(body.params.length, 18); // 3 filas válidas × 6 columnas
+  assert.deepStrictEqual(body.params.slice(0, 6), [SES, ID, 'ver_pasillos', 'on', 'android', '117']);
+  assert.strictEqual(body.params[9], 'bnot-allowedb'); // sin < > /
+  assert.strictEqual(body.params[13], null); // sin b → sin búsqueda
+});
+
+test('registrarEventos: sin sesión válida, sin eventos o más de 10 → nada o recortado', async () => {
+  reset();
+  await registrarEventos('no-uuid', [{ t: 'ver_pasillos' }], 'ios', '1');
+  await registrarEventos(SES, [], 'ios', '1');
+  await registrarEventos(SES, 'x', 'ios', '1');
+  assert.strictEqual(llamadas.length, 0);
+  await registrarEventos(SES, Array.from({ length: 25 }, () => ({ t: 'paso_manual', d: '1' })), 'ios', '1');
+  assert.strictEqual(JSON.parse(llamadas[0].opts.body).params.length, 60); // 10 × 6
+});
+
+test('/api/evento: POST registra y responde 200 {}; otro método → 405', async () => {
+  reset();
+  const handler = require('../backend/api/evento');
+  const r = () => ({ status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; }, setHeader() {} });
+  const res = r();
+  await handler({ method: 'POST', headers: {}, body: JSON.stringify({ sesionId: SES, plataforma: 'ios', version: '117', eventos: [{ t: 'pago_click' }] }) }, res);
+  assert.strictEqual(res.code, 200); assert.deepStrictEqual(res.body, {}); assert.strictEqual(llamadas.length, 1);
+  const g = r(); await handler({ method: 'GET', headers: {} }, g); assert.strictEqual(g.code, 405);
+  const m = r(); await handler({ method: 'POST', headers: {}, body: 'no es json' }, m); assert.strictEqual(m.code, 200); // inválido: fail-open
+});

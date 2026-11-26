@@ -246,6 +246,17 @@ function sesionId(){
   if(!SES){ try{ SES=crypto.randomUUID(); }catch(e){ return null; } try{ sessionStorage.setItem('sesionId',SES); }catch(e){} }
   return SES;
 }
+// Analítica de acciones (tabla eventos de Neon, vía /api/evento): tipo cerrado y detalle corto, nunca texto libre.
+// Se juntan y se envían cada 2 s o al ocultar la página (sendBeacon). Plataforma gruesa y versión del frontend para separar iPhone de Android.
+const PLAT=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)?'ios':/Android/.test(navigator.userAgent)?'android':/Windows|Macintosh|Linux|CrOS/.test(navigator.userAgent)?'escritorio':'otro';
+const VER=new URL(import.meta.url).searchParams.get('v')||'';
+let evQ=[], evT=0;
+function evFlush(){ clearTimeout(evT); evT=0; const s=sesionId(); if(!evQ.length||!s){ evQ=[]; return; }
+  const body=JSON.stringify({sesionId:s,plataforma:PLAT,version:VER,eventos:evQ.splice(0,10)});
+  try{ if(!(navigator.sendBeacon&&navigator.sendBeacon('/api/evento',new Blob([body],{type:'application/json'})))) fetch('/api/evento',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{}); }catch(e){}
+  if(evQ.length) evT=setTimeout(evFlush,2000); }
+function track(t,d){ evQ.push({t,d:d==null?undefined:String(d),b:A.lastSearchId||undefined}); if(!evT) evT=setTimeout(evFlush,2000); }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') evFlush(); });
 // micro-encuesta: una sola vez por búsqueda, solo si la búsqueda se registró (hay id). Pasos: ¿te ayudó? →
 // (si fue «No») motivo. svTok invalida los temporizadores de una encuesta que ya se ocultó.
 let svTok=0;
@@ -384,7 +395,7 @@ function elegir(enMapa,fuera){
   const q=consulta();
   sheet('categoria',{t:q&&q.length<=40?'¿En qué categoría buscas '+q+'?':'¿En qué categoría lo buscas?',
     s:'Selecciona una categoría'+(fuera.length?'. '+fueraTxt(fuera):''),
-    opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ A.sel=d.id; renderPlan(); }}))});
+    opts:xs.map((d,i)=>({txt:etiquetaInfo(d).txt,pill:true,d,delay:i*STEP,fn:()=>{ track('opcion_elegida',d.id); A.sel=d.id; renderPlan(); }}))});
 }
 // «¿En qué pasillo estás?» (Figma 58:14973): reemplaza el modal; la ruta desde la entrada queda dibujada detrás
 // el último pasillo al que se le trazó ruta: lo más probable es que el cliente siga ahí
@@ -402,7 +413,7 @@ function oriTxt(){ const pto=PUNTOS[A.origen]; if(pto) return ['Saliendo desde '
 const PUNTOS={'@pago':{id:'pin-pago',txt:'el punto de pago'}}, PIN_ORIGEN={'pin-entrada':'','pin-pago':'@pago'};
 // Punta del pin en coordenadas del motor de rutas (la capa de la ruta lleva su propia transformación respecto al plano)
 function puntoPin(id){ const g=$('mapa').querySelector('#'+id), t=rutaGrupo()&&rutaGrupo().transform.baseVal.consolidate(); if(!g||!t||!g.dataset.ax) return null; const q=new DOMPoint(+g.dataset.ax,+g.dataset.ay).matrixTransform(t.matrix.inverse()); return [q.x,q.y]; }
-function fijarOrigen(id){ const manual=A.ubic; A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan();
+function fijarOrigen(id){ track('ubicacion_elegida',!id?'entrada':PUNTOS[id]?'pago':'pasillo'); const manual=A.ubic; A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan();
   if(manual&&R.ruta) $('start').classList.add('solo'); } // ubicación elegida a mano: el mapa sigue completo (sin panel) hasta que termine el recorrido
 function idsOrigen(){ return [...$('desde').options].map(o=>o.value).filter(Boolean); }
 // Cambiar ubicación (Figma P-04b/c): mapa a pantalla completa con todos los números de pasillo y un snackbar; tocar un pasillo traza la ruta desde ahí
@@ -414,11 +425,11 @@ function ubicModo(on){ const c=$('cont');
   if(on&&!A.ubic){ A.ubic=true; A.numsPrev=c.classList.contains('sin-nums'); c.classList.remove('sin-nums'); } // se ven todos los números
   else if(!on&&A.ubic){ A.ubic=false; c.classList.toggle('sin-nums',A.numsPrev); }
   $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; }
-function ubicCambiar(){ A.pideOrigen=true; renderPlan(); R.uz=false; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
+function ubicCambiar(){ track('ubicacion_abrir'); A.pideOrigen=true; renderPlan(); R.uz=false; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
 function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
   if(base.toLowerCase()===String(R.ruta&&R.ruta.destino||'').toLowerCase()) return; // ya vas hacia ahí: la ruta saldría de la entrada y la caja mentiría
   const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(base);
-  snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); } // la ruta ya se actualizó sola; «Deshacer» dura 2,5 s
+  snack('Ubicación actualizada','Deshacer',()=>{ track('ubicacion_deshacer'); A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); } // la ruta ya se actualizó sola; «Deshacer» dura 2,5 s
 let ubicDn=null; $('cont').addEventListener('pointerdown',e=>{ ubicDn=[e.clientX,e.clientY]; },true);
 // #mapa no recibe punteros: el pasillo tocado se busca por geometría (el más pequeño que contenga el toque, con 4 px de margen)
 // #pines no recibe punteros: el pin tocado se busca por su caja en pantalla (con 8 px de margen)
@@ -430,7 +441,7 @@ function pinEn(e){ let best=null, bd=1e9; // si la caja de un rótulo cubre a ot
 $('cont').addEventListener('click',e=>{ if(!(R.ruta||A.ubic)||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack,button')) return;
   const pin=pinEn(e); if(!pin) return; const o=PIN_ORIGEN[pin]; if(o===A.origen) { if(A.ubic){ A.pideOrigen=false; renderPlan(); } return; } // ya sale de ahí
   const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(o);
-  snack('Ubicación actualizada','Deshacer',()=>{ A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); });
+  snack('Ubicación actualizada','Deshacer',()=>{ track('ubicacion_deshacer'); A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); },2500); });
 $('cont').addEventListener('click',e=>{ if(!A.ubic||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack')||pinEn(e)) return; // arrastrar el mapa no es tocar
   const ids=idsOrigen().map(x=>x.toLowerCase()); let best=null, ba=1e12;
   $('mapa').querySelectorAll('#gondolas rect[id^="g-"]').forEach(r=>{ const id=r.id.slice(2).toLowerCase(); if(!ids.includes(id)&&!ids.includes(id.replace(/-[nsew]$/,''))) return;
@@ -504,7 +515,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=116" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=117" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -627,7 +638,7 @@ async function guided(){
   if(!R.ruta||!trail()) return;
   const V=1.5; // velocidad del recorrido guiado
   cancelAnimationFrame(R.anim);
-  payReset(); const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
+  track('recorrido_inicio'); payReset(); const tk=++R.token, p=rutaPath(); R.mr=$('mapa').getBoundingClientRect(); R.guiando=true; $('rutaPlay').textContent='Detener'; $('callouts').classList.add('guiando');
   p.style.opacity='.22'; place(0); setPaso(0); R.proj=null; setVB(R.fit); layoutCallouts(); anclar();
   caption('Así llegas a tu producto '+(R.origenTxt||'desde la entrada')+'.');
   const W=Math.max(700,Math.min(950,R.fit[2]*.85));
@@ -648,11 +659,11 @@ async function guided(){
   // ENCUESTA DESACTIVADA mientras se rediseña: if(!A.svVisto){ A.svVisto=true; showSurvey(); } // la encuesta sale al llegar al destino
   await wait(900/V); if(tk!==R.token) return;
   await tweenVB(getVB(),R.fit,1300/V,tk); if(tk!==R.token) return;
-  endGuide(); payStart(); contraerPanel(); // terminada la animación el panel se contrae; 4 s después el asa brinca
+  track('recorrido_fin'); endGuide(); payStart(); contraerPanel(); // terminada la animación el panel se contrae; 4 s después el asa brinca
 }
 function goStep(i){
   if(!R.ruta) return;
-  cancelGuide(); i=Math.max(0,Math.min(i,R.pasos.length-1)); setPaso(i);
+  track('paso_manual',i); cancelGuide(); i=Math.max(0,Math.min(i,R.pasos.length-1)); setPaso(i);
   const from=R.len, to=R.dist[i]; if(Math.abs(to-from)<1){ place(to); return; }
   const tk=R.token, dur=Math.min(4000,600+Math.abs(to-from)*3), t0=performance.now();
   const f=t=>{ if(tk!==R.token) return; const u=Math.min(1,(t-t0)/dur); place(from+(to-from)*ease(u)); if(u<1) R.anim=requestAnimationFrame(f); }; R.anim=requestAnimationFrame(f);
@@ -709,16 +720,16 @@ function openRoute(s,aisle,btn,dest,sinGuia){
   else if(R.ruta) setTimeout(()=>{ if(R.ruta===r) guided(); },120);
 }
 $('rutaCerrar').onclick=()=>{ const b=document.querySelector('.sel .go'); hideRoute(); if(b) b.focus(); };
-$('rutaPlay').onclick=()=>{ if(R.guiando){ cancelGuide(); payStart(); place(R.L); setPaso(R.pasos.length-1); } else guided(); };
+$('rutaPlay').onclick=()=>{ if(R.guiando){ track('recorrido_detener','boton'); cancelGuide(); payStart(); place(R.L); setPaso(R.pasos.length-1); } else { track('recorrido_repetir'); guided(); } };
 $('rutaPrev').onclick=()=>goStep(R.paso-1);
 $('rutaNext').onclick=()=>goStep(R.paso+1);
-$('verTodo').addEventListener('click',()=>{ cancelGuide(true); payStart(); });
-$('mapa').addEventListener('pointerdown',()=>{ if(R.guiando){ cancelGuide(); payStart(); } });
-$('mapa').addEventListener('wheel',()=>{ if(R.guiando){ cancelGuide(); payStart(); } },{passive:true});
+$('verTodo').addEventListener('click',()=>{ if(R.guiando) track('recorrido_detener','ver_todo'); cancelGuide(true); payStart(); });
+$('mapa').addEventListener('pointerdown',()=>{ if(R.guiando){ track('recorrido_detener','mapa'); cancelGuide(); payStart(); } });
+$('mapa').addEventListener('wheel',()=>{ if(R.guiando){ track('recorrido_detener','mapa'); cancelGuide(); payStart(); } },{passive:true});
 // Zoom del mapa: pellizco con dos dedos (y rueda en escritorio); arrastrar mueve el plano acercado. R.uz impide que el reencuadre automático lo deshaga
 (function(){ const cont=$('cont'), P=new Map(); let d0=0;
   const zoom=(f,px,py)=>{ if(document.body.classList.contains('escribiendo')) return;
-    if(R.guiando){ cancelGuide(true); payStart(); }
+    if(R.guiando){ track('recorrido_detener','zoom'); cancelGuide(true); payStart(); }
     const r=cont.getBoundingClientRect(); if(!r.width||!r.height) return;
     const v=clampVB(getVB()), nw=Math.max(300,v[2]/f), nh=nw*r.height/r.width, sx=v[0]+(px-r.left)*v[2]/r.width, sy=v[1]+(py-r.top)*v[3]/r.height;
     R.uz=true; setVB([sx-(px-r.left)*nw/r.width, sy-(py-r.top)*nh/r.height, nw, nh]); };
@@ -876,7 +887,7 @@ $('need').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.pr
       t=t.trim(); if(t){ heard=true; box.value=pre+sep(pre)+t; paint(pre,conf,parcial); }
       M.voz=performance.now(); log('result: '+t);
     };
-    rec.onerror=e=>{ log('error: '+e.error);
+    rec.onerror=e=>{ log('error: '+e.error); if(e.error!=='aborted') track('voz_error',e.error);
       if(e.error==='audio-capture'){ if(M.stream){ mStop(); } else fatal=true; }
       if(e.error==='network') fatal=true;
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){
@@ -977,7 +988,7 @@ $('stopBtn').onclick=()=>ctl&&ctl.abort();
 sampleFn={ async json(opts){
   // límite de 55 s por consulta (la función del servidor corta a los 60 s)
   const lim=new AbortController(), tl=setTimeout(()=>lim.abort(),55000), sg=opts&&opts.signal; if(sg) sg.addEventListener('abort',()=>lim.abort(),{once:true});
-  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers,canal:window.__canalBusqueda||'texto',sesionId:sesionId()}),signal:lim.signal}); }
+  let r; try{ r=await fetch('/api/sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:A.text,answers:A.answers,canal:window.__canalBusqueda||'texto',sesionId:sesionId(),plataforma:PLAT,version:VER}),signal:lim.signal}); }
   catch(e){ throw {code:(sg&&sg.aborted)?'cancelled':(e&&e.name==='AbortError')?'timeout':'network'}; }
   finally{ clearTimeout(tl); }
   let j=null; try{ j=await r.json(); }catch(e){}
@@ -985,8 +996,8 @@ sampleFn={ async json(opts){
   return j;
 } };
 initTracking();
-$('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); });
-$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
+$('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); track('pago_click'); });
+$('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); track('ver_pasillos',ver?'on':'off'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
 (function(){
   const box=$('need'), ab=document.querySelector('.askbox'); let ult=null, lenMulti=0;

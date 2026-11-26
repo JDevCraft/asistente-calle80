@@ -170,26 +170,28 @@ module.exports = async (req, res) => {
   // Único punto de registro de la búsqueda. Se espera (await) antes de cada respuesta: en Vercel una promesa
   // pendiente después de res.json() puede congelarse con la instancia y perder la fila. registrarBusqueda nunca
   // lanza y tiene su propio límite de 2 s. Con rechazado no se registra nada y la respuesta no lleva id.
-  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, sesionId, tiempoRespuestaMs: Date.now() - t0, ...extra }); };
+  const registrar = async extra => { if (!rechazado) await registrarBusqueda({ id, texto: text, canal, sesionId, tiempoRespuestaMs: Date.now() - t0, plataforma: body.plataforma, version: body.version, nRespuestas: answers.length, ...extra }); };
+  // destino principal y decisión de la ruta (para el análisis); null si no hay ruta
+  const meta = r => ({ destino: r && r.destinos && r.destinos[0] ? r.destinos[0].rango : null, decision: r && r.decision });
   const rid = rechazado ? undefined : id; // JSON.stringify omite undefined: "id" solo aparece si se registró
-  // Fuera del propósito del piloto (basura, daño, ilegal, fraude, inyección, servicios de la tienda): ni índice ni modelo. Se registra como 'error' con motivo alcance_<tipo> (sin migrar el CHECK de resultado)
+  // Fuera del propósito del piloto (basura, daño, ilegal, fraude, inyección, servicios de la tienda): ni índice ni modelo. Se registra como 'bloqueado' con su tipo en la columna alcance
   const fuera = clasificar([text, ...answers.map(a => a.a)].join('. '));
   if (fuera) {
-    await registrar({ resultado: 'error', motivoRespaldo: 'alcance_' + fuera.tipo });
+    await registrar({ resultado: 'bloqueado', alcance: fuera.tipo });
     return res.status(200).json({ plan: { necesidad: '', proyecto: '', espacio: '', contexto: [], grupos: [], preguntas: [], consejo: '' }, ruta: null, aviso: fuera.aviso, ms: Date.now() - t0, id: rid });
   }
   // Camino rápido: la consulta es un tipo de producto del índice → respuesta sin modelo, siempre igual
-  if (!answers.length && esMuebleGenerico(text)) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: MUEBLE_GENERICO, ms: Date.now() - t0, id: rid }); }
+  if (!answers.length && esMuebleGenerico(text)) { await registrar({ resultado: 'indice', ...meta(MUEBLE_GENERICO) }); return res.status(200).json({ ruta: MUEBLE_GENERICO, ms: Date.now() - t0, id: rid }); }
   if (!answers.length) {
     const r = rapido(text);
-    if (r) { await registrar({ resultado: 'indice' }); return res.status(200).json({ ruta: r, ms: Date.now() - t0, id: rid }); }
+    if (r) { await registrar({ resultado: 'indice', ...meta(r) }); return res.status(200).json({ ruta: r, ms: Date.now() - t0, id: rid }); }
   }
   // Respaldo cuando el modelo no está disponible (sin clave, cuota agotada, saturado, error): el índice con las palabras que entiende
   const respaldo = async (status, error) => {
     const r = !answers.length && rapido(text, { laxo: true });
     if (r) {
       console.error('respaldo indice', error);
-      await registrar({ resultado: 'respaldo', motivoRespaldo: error });
+      await registrar({ resultado: 'respaldo', motivoRespaldo: error, ...meta(r) });
       return res.status(200).json({ ruta: { ...r, respaldo: true, motivo: error }, ms: Date.now() - t0, id: rid });
     }
     await registrar({ resultado: 'error', motivoRespaldo: error });
@@ -201,7 +203,7 @@ module.exports = async (req, res) => {
   const key = 'v2|' + clave(text) + '|' + answers.map(a => clave(a.q) + '=' + clave(a.a)).join('|');
   const hit = await cacheGet(key);
   // proveedor no se guarda en la caché: el registro de un acierto de caché lo deja en null
-  if (hit) { await registrar({ resultado: 'modelo', consejo: hit.plan && hit.plan.consejo }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
+  if (hit) { await registrar({ resultado: 'modelo', consejo: hit.plan && hit.plan.consejo, cache: true, ...meta(hit.ruta) }); return res.status(200).json({ ...hit, cache: true, ms: Date.now() - t0, id: rid }); }
   if (await limitado(ip)) return respaldo(429, 'rate_limited');
   const ans = answers.length ? `\n\nRespuestas del cliente a preguntas anteriores:\n${answers.map(a => `- ${a.q} → ${a.a}`).join('\n')}` : '';
 
@@ -242,7 +244,7 @@ module.exports = async (req, res) => {
     if (ruta && ruta.decision !== 'directo') ruta.pregunta = ruta.decision === 'preguntar' ? '¿Cuál de estos buscas?' : '¿Para qué lo necesitas?';
     const v = { plan, ruta, catalogo: recorte ? { segmentos: recorte.segs, ms: recorte.ms } : 'completo' };
     await cacheSet(key, v);
-    await registrar({ resultado: 'modelo', proveedor, consejo: plan.consejo });
+    await registrar({ resultado: 'modelo', proveedor, consejo: plan.consejo, cache: false, ...meta(ruta) });
     return res.status(200).json({ ...v, ms: Date.now() - t0, id: rid });
   } catch (e) {
     console.error('sample', e && e.message);
