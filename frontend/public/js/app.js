@@ -361,8 +361,10 @@ function paintStag(ids,cls,ms){ ids.forEach(m=>aisleEls(m).forEach(e=>{ if(ms&&e
 function izq(d){ let l=1e9; mapIds(d).forEach(m=>aisleEls(m).forEach(e=>{ if(!e.closest('#gondolas')) return; const q=e.getBoundingClientRect(); if(q.width||q.height) l=Math.min(l,q.left); })); return l; }
 // Etiquetas de partida y destino 1.22x sobre el centro de su círculo. Va como atributo transform: el CSS transform-box:fill-box dentro de grupos
 // rotados/estirados no se pinta bien en Safari de iPhone y la etiqueta desaparecía durante el recorrido animado
-function escalarEtiquetas(){ $('mapa').querySelectorAll('#etiquetas .pl[id^="l-"]').forEach(g=>{ const r=g.querySelector('rect'); if(!r) return;
-  const on=g.classList.contains('orig')||g.classList.contains('dest-sel'), cx=+r.getAttribute('x')+ +r.getAttribute('width')/2, cy=+r.getAttribute('y')+ +r.getAttribute('height')/2;
+function escalarEtiquetas(){ const mp=$('mapa'), estatico=!mp.classList.contains('con-ruta')&&!mp.classList.contains('con-opciones')&&!A.ubic; // vista estática (mapa sin ruta ni opciones): todos los números llevan el estilo de la ruta
+  $('cont').classList.toggle('mapa-estatico',estatico);
+  mp.querySelectorAll('#etiquetas .pl[id^="l-"]').forEach(g=>{ const r=g.querySelector('rect'); if(!r) return;
+  const on=estatico||g.classList.contains('orig')||g.classList.contains('dest-sel'), cx=+r.getAttribute('x')+ +r.getAttribute('width')/2, cy=+r.getAttribute('y')+ +r.getAttribute('height')/2;
   g.querySelectorAll('rect,text').forEach(e=>{ if(on) e.setAttribute('transform',`translate(${cx} ${cy}) scale(1.22) translate(${-cx} ${-cy})`); else e.removeAttribute('transform'); }); }); }
 // Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
 function drawHere(){
@@ -385,7 +387,7 @@ function dondeTxt(d){ // el lugar va en negrita (Figma: «Dirígete al pasillo *
 function elegir(enMapa,fuera){
   if(!enMapa.length){ sheet('resultado',{t:'Está en varios lugares de la tienda',s:fueraTxt(fuera)}); return; }
   const xs=enMapa.map(d=>({d,x:izq(d)})).sort((a,b)=>a.x-b.x).map(o=>o.d);
-  $('mapa').classList.add('con-opciones','elige'); // sin número de pasillo hasta elegir categoría
+  $('mapa').classList.add('con-opciones','elige'); escalarEtiquetas(); // sin número de pasillo hasta elegir categoría
   xs.forEach((d,i)=>paintStag(mapIds(d),'dest',i*STEP));
   // Figma v3 P-02: en el mapa solo va el nombre de la familia (zona) donde están los pasillos resaltados; las categorías van en el panel
   const c=$('callouts'); c.innerHTML=''; const vistas=new Set(), zs=[];
@@ -424,7 +426,7 @@ function snack(txt,accion,fn,ms){ const s=$('snack'); clearTimeout(snackT);
 function ubicModo(on){ const c=$('cont');
   if(on&&!A.ubic){ A.ubic=true; A.numsPrev=c.classList.contains('sin-nums'); c.classList.remove('sin-nums'); } // se ven todos los números
   else if(!on&&A.ubic){ A.ubic=false; c.classList.toggle('sin-nums',A.numsPrev); }
-  $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; }
+  $('start').classList.toggle('ubic',!!A.ubic); if(!on) $('snack').hidden=true; escalarEtiquetas(); }
 function ubicCambiar(){ track('ubicacion_abrir'); A.pideOrigen=true; renderPlan(); R.uz=false; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
 function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
   if(base.toLowerCase()===String(R.ruta&&R.ruta.destino||'').toLowerCase()) return; // ya vas hacia ahí: la ruta saldría de la entrada y la caja mentiría
@@ -515,7 +517,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=117" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=118" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -683,7 +685,7 @@ function styleRoute(r){
   j.querySelectorAll(':scope > circle').forEach(c=>{ c.setAttribute('r','14'); c.setAttribute('fill','#0072ce'); c.setAttribute('stroke','none'); });
   j.querySelectorAll(':scope > line').forEach(l=>l.setAttribute('display','none'));
 }
-function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); escalarEtiquetas(); clearCallouts(); }
+function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); clearCallouts(); escalarEtiquetas(); }
 function hideRoute(){ $('start').classList.remove('solo'); clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} setVB(STORE.slice()); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
@@ -996,6 +998,7 @@ sampleFn={ async json(opts){
   return j;
 } };
 initTracking();
+escalarEtiquetas(); // mapa de inicio (estático): números con el estilo de la ruta
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); track('pago_click'); });
 $('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); track('ver_pasillos',ver?'on':'off'); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */

@@ -279,6 +279,9 @@ body.escribiendo .sh-top{gap:0}
 /* Números de pasillo visibles por defecto en todo el mapa; el ojo (#verNums) los oculta */
 #cont.sin-nums #mapa #etiquetas .pl[id^="l-"]:not(.dest):not(.dest-sel):not(.dest-alt):not(.orig){display:none} /* con los números ocultos, el pasillo destino conserva el suyo (Figma P-05c) */
 #mapa #etiquetas .pl.lat:not(.dest):not(.dest-alt){display:none}
+/* Vista estática (sin ruta ni opciones, fuera de «Cambiar ubicación»): todos los números con el estilo de la ruta, azul oscuro con número blanco (clase mapa-estatico y el 1,22x por atributo, ambos en escalarEtiquetas; #mapa está duplicado en el SVG, por eso no se usa :not(.con-ruta)) */
+#cont.mapa-estatico #mapa #etiquetas .pl[id^="l-"] rect{fill:#005192;stroke:#ffffff;stroke-width:3}
+#cont.mapa-estatico #mapa #etiquetas .pl[id^="l-"] text{fill:#ffffff}
 /* Pasillo de partida y de destino con la misma etiqueta (azul oscuro, número blanco), 2 pt más grande: el círculo y el número se agrandan sobre su propio centro */
 #mapa #etiquetas .pl.orig rect{fill:#005192;stroke:#ffffff;stroke-width:3}
 #mapa #etiquetas .pl.orig text{fill:#ffffff}
