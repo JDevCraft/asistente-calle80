@@ -452,8 +452,7 @@ function ubicModo(on){ const c=$('cont');
 function ubicCambiar(){ track('ubicacion_abrir'); A.pideOrigen=true; renderPlan(); R.uz=false; setVB(STORE.slice()); snack('Toca el pasillo donde estás','Cancelar',()=>{ A.pideOrigen=false; renderPlan(); }); }
 function ubicTocar(id){ const base=idsOrigen().find(x=>x.toLowerCase()===id||x.toLowerCase()===id.replace(/-[nsew]$/,'')); if(!base) return;
   if(base.toLowerCase()===String(R.ruta&&R.ruta.destino||'').toLowerCase()) return; // ya vas hacia ahí: la ruta saldría de la entrada y la caja mentiría
-  const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(base);
-  snack('Ubicación actualizada','Deshacer',()=>{ track('ubicacion_deshacer'); A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); }); } // la ruta ya se actualizó sola; el aviso se queda hasta tocar «Deshacer» o hasta que cambie el resultado (clearDest)
+  fijarOrigen(base); }
 let ubicDn=null; $('cont').addEventListener('pointerdown',e=>{ ubicDn=[e.clientX,e.clientY]; },true);
 // #mapa no recibe punteros: el pasillo tocado se busca por geometría (el más pequeño que contenga el toque, con 4 px de margen)
 // #pines no recibe punteros: el pin tocado se busca por su caja en pantalla (con 8 px de margen)
@@ -464,8 +463,7 @@ function pinEn(e){ let best=null, bd=1e9; // si la caja de un rótulo cubre a ot
 // Con resultado y ruta (o en «Cambiar ubicación») tocar Entrada o Punto de pago traza la ruta desde ahí
 $('cont').addEventListener('click',e=>{ if(!(R.ruta||A.ubic)||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack,button')) return;
   const pin=pinEn(e); if(!pin) return; const o=PIN_ORIGEN[pin]; if(o===A.origen) { if(A.ubic){ A.pideOrigen=false; renderPlan(); } return; } // ya sale de ahí
-  const prev={origen:A.origen,elegido:A.origenElegido}; fijarOrigen(o);
-  snack('Ubicación actualizada','Deshacer',()=>{ track('ubicacion_deshacer'); A.origen=prev.origen; A.origenElegido=prev.elegido; renderPlan(); }); });
+  fijarOrigen(o); });
 $('cont').addEventListener('click',e=>{ if(!A.ubic||!ubicDn||Math.hypot(e.clientX-ubicDn[0],e.clientY-ubicDn[1])>8||e.target.closest('#snack')||pinEn(e)) return; // arrastrar el mapa no es tocar
   const ids=idsOrigen().map(x=>x.toLowerCase()); let best=null, ba=1e12;
   $('mapa').querySelectorAll('#gondolas rect[id^="g-"]').forEach(r=>{ const id=r.id.slice(2).toLowerCase(); if(!ids.includes(id)&&!ids.includes(id.replace(/-[nsew]$/,''))) return;
@@ -539,7 +537,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=141" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=142" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
