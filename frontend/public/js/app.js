@@ -367,31 +367,23 @@ function escalarEtiquetas(){ const mp=$('mapa'), estatico=!mp.classList.contains
   mp.querySelectorAll('#etiquetas .pl[id^="l-"]').forEach(g=>{ const r=g.querySelector('rect'); if(!r) return;
   const on=estatico||g.classList.contains('orig')||g.classList.contains('dest-sel')||mp.classList.contains('elige'), cx=+r.getAttribute('x')+ +r.getAttribute('width')/2, cy=+r.getAttribute('y')+ +r.getAttribute('height')/2;
   g.querySelectorAll('rect,text').forEach(e=>{ if(on) e.setAttribute('transform',`translate(${cx} ${cy}) scale(1.22) translate(${-cx} ${-cy})`); else e.removeAttribute('transform'); }); }); familias(); }
-// Nombres de familia con «Ocultar pasillos» (vista estática): capa HTML en pantalla. Cada nombre se coloca en el hueco libre más cercano a su sitio
-// (horizontal; vertical solo si no cabe), sin montarse sobre números de pasillo, pines ni otros nombres. Se calcula en coordenadas del plano
-// (no cambia con el zoom) al entrar en la vista o cambiar el tamaño; con zoom o arrastre solo se reposiciona. Si un nombre no tiene hueco, no se muestra.
+// Nombres de familia con «Ocultar pasillos» (vista estática): capa HTML en pantalla, en el sitio y con el tamaño del Figma P-01 (8 px sobre un plano de 358 px).
+// Centros en unidades del plano; v = texto vertical (se lee de abajo hacia arriba). Se reposicionan con el zoom y el arrastre (posFamilias).
+const FAM_FIG=[['Autos',1206,1121,1],['Baños\n& Cocinas',986,400,0],['Decoración',470,203,1],['Pisos & Paredes',666,695,0],['Aire libre',62,1245,1],['Jardín',62,1621,1],['Iluminación',653,1388,0],['Plomería',1219,216,1],['Pinturas',492,1012,0],['Muebles',57,95,0],['Hogar & Menaje',62,869,1],['Electrohogar',714,219,1],['Herramientas',1012,947,1],['Puertas & Ventanas',1090,1559,0],['Organización',283,217,1],['Ferretería',1012,657,1],['Decoración',230,627,1],['Aseo',661,1202,0],['Eléctricos',1003,1320,0],['Cielo rasos',1130,1388,0],['Casa inteligente',973,1230,0]], FAM_PX=29.9;
+// Números de pasillo que el Figma P-01 pone en otro sitio: desplazamiento (en las unidades de su grupo) respecto al plano base; se aplica una sola vez
+const NUM_FIG={'05c':[-46,2],'05b-S':[-42,48],'06b-S':[-36,44],'07b-S':[-31,44],'05b-N':[-34,-25],'06b-N':[-34,-25],'07b-N':[-34,-25],'31a':[-27,-6],'32a':[-27,-6],'33a':[-19,-7],'34a':[-19,-7],'35a':[-136,-7],'36a':[-137,-7],'37a':[-138,-7],'38a':[-137,-7],'39a':[-137,-7]};
+function acomodarNumeros(){ for(const k in NUM_FIG){ const g=$('mapa').querySelector('#etiquetas #l-'+k); if(!g||g.dataset.fig) continue; g.dataset.fig='1'; g.dataset.t0='translate('+NUM_FIG[k]+') '+(g.dataset.t0!==undefined?g.dataset.t0:g.getAttribute('transform')||''); g.setAttribute('transform',g.dataset.t0); } desK=0; desestirar(); } // el desplazamiento entra en t0, la transformación base que desestirar() restaura
 function posFamilias(){ const mp=$('mapa'), m=mp.getScreenCTM(), cr=$('cont').getBoundingClientRect(); if(!m||!m.a) return;
-  FAM.items.forEach(({d,x,y,w,h})=>{ const px=w*m.a, py=h*m.d; d.style.cssText='left:'+(x*m.a+m.e-cr.left).toFixed(1)+'px;top:'+(y*m.d+m.f-cr.top).toFixed(1)+'px;width:'+px.toFixed(1)+'px;height:'+py.toFixed(1)+'px;font-size:'+(45*m.a).toFixed(1)+'px;line-height:'+(d.classList.contains('v')?px:py).toFixed(1)+'px'; }); } // en vertical el alto de línea es el ancho de la caja
+  FAM.items.forEach(({d,x,y,w,h,n})=>{ const px=w*m.a, py=h*m.d; d.style.cssText='left:'+(x*m.a+m.e-cr.left).toFixed(1)+'px;top:'+(y*m.d+m.f-cr.top).toFixed(1)+'px;width:'+px.toFixed(1)+'px;height:'+py.toFixed(1)+'px;font-size:'+(FAM_PX*m.a).toFixed(1)+'px;line-height:'+(d.classList.contains('v')?px:py/n).toFixed(1)+'px'; }); } // en vertical el alto de línea es el ancho de la caja
 function familias(){
   const cont=$('cont'), mp=$('mapa'), on=cont.classList.contains('mapa-estatico')&&!cont.classList.contains('sin-nums');
   let box=$('fam-capa'); if(!on){ FAM.on=false; FAM.items=[]; if(box) box.hidden=true; return; }
   const m=mp.getScreenCTM(); if(!m||!m.a) return;
   if(!box){ box=el('div'); box.id='fam-capa'; box.setAttribute('aria-hidden','true'); cont.appendChild(box); }
   box.hidden=false; box.replaceChildren(); FAM.on=true; FAM.items=[];
-  const inv=m.inverse(), aSvg=r=>{ const p=new DOMPoint(r.left,r.top).matrixTransform(inv), q=new DOMPoint(r.right,r.bottom).matrixTransform(inv); return [Math.min(p.x,q.x)-8,Math.min(p.y,q.y)-8,Math.abs(q.x-p.x)+16,Math.abs(q.y-p.y)+16]; };
-  const obst=[]; mp.querySelectorAll('#etiquetas .pl[id^="l-"], #pines > g').forEach(g=>{ if(getComputedStyle(g).display==='none'||g.classList.contains('lat')) return; const r=(g.querySelector('rect')||g).getBoundingClientRect(); if(r.width) obst.push(aSvg(r)); });
-  const zonas=[...mp.querySelectorAll('#zonas path')], enZona=(z,x,y)=>{ try{ return z.isPointInFill(new DOMPoint(x,y).matrixTransform(z.getCTM().inverse())); }catch(e){ return true; } };
-  const cv=FAM.cv||(FAM.cv=document.createElement('canvas').getContext('2d')); cv.font='400 45px '+(getComputedStyle(document.documentElement).getPropertyValue('--body')||'Arial');
-  const noms=[...mp.querySelectorAll('#zonas-nombre text')].map(t=>{ const r=t.getBoundingClientRect(), a=new DOMPoint(r.left+r.width/2,r.top+r.height/2).matrixTransform(inv), n=t.textContent.trim(), w=cv.measureText(n).width+16;
-    return {n,ax:a.x,ay:a.y,w,h:55,z:zonas.find(z=>enZona(z,a.x,a.y))}; }).sort((a,b)=>b.w-a.w);
-  const pu=[], choca=(X,Y,w,h)=>obst.concat(pu).some(p=>X<p[0]+p[2]&&X+w>p[0]&&Y<p[1]+p[3]&&Y+h>p[1]);
-  noms.forEach(nm=>{
-    const cand=[]; for(const v of [0,1]) for(let dx=-420;dx<=420;dx+=20) for(let dy=-330;dy<=330;dy+=20) cand.push([dx,dy,v,Math.hypot(dx,dy)+(v?70:0)]);
-    cand.sort((a,b)=>a[3]-b[3]);
-    for(const [dx,dy,v] of cand){ const w=v?nm.h:nm.w, h=v?nm.w:nm.h, X=nm.ax+dx-w/2, Y=nm.ay+dy-h/2;
-      if(X<STORE[0]||Y<STORE[1]||X+w>STORE[0]+STORE[2]||Y+h>STORE[1]+STORE[3]||choca(X,Y,w,h)) continue;
-      if(nm.z&&!enZona(nm.z,X+w/2,Y+h/2)) continue;
-      pu.push([X-8,Y-8,w+16,h+16]); const d=el('span','fam'+(v?' v':''),nm.n); box.appendChild(d); FAM.items.push({d,x:X,y:Y,w,h}); break; } });
+  const cv=FAM.cv||(FAM.cv=document.createElement('canvas').getContext('2d')); cv.font='400 '+FAM_PX+'px '+(getComputedStyle(document.documentElement).getPropertyValue('--body')||'Arial');
+  FAM_FIG.forEach(([n,cx,cy,v])=>{ const ls=n.split('\n'), t=Math.ceil(Math.max(...ls.map(x=>cv.measureText(x).width))), l=Math.round(FAM_PX*1.75), w=v?l:t, h=v?t:l*ls.length;
+    const d=el('span','fam'+(v?' v':''),n); box.appendChild(d); FAM.items.push({d,x:cx-w/2,y:cy-h/2,w,h,n:ls.length}); });
   posFamilias();
 }
 // Pasillo de partida elegido: su etiqueta (clase .orig) se ve igual que la del destino
@@ -444,8 +436,7 @@ function oriTxt(){ const pto=PUNTOS[A.origen]; if(pto) return ['Saliendo desde '
 const PUNTOS={'@pago':{id:'pin-pago',txt:'el punto de pago'}}, PIN_ORIGEN={'pin-entrada':'','pin-pago':'@pago'};
 // Punta del pin en coordenadas del motor de rutas (la capa de la ruta lleva su propia transformación respecto al plano)
 function puntoPin(id){ const g=$('mapa').querySelector('#'+id), t=rutaGrupo()&&rutaGrupo().transform.baseVal.consolidate(); if(!g||!t||!g.dataset.ax) return null; const q=new DOMPoint(+g.dataset.ax,+g.dataset.ay).matrixTransform(t.matrix.inverse()); return [q.x,q.y]; }
-function fijarOrigen(id){ track('ubicacion_elegida',!id?'entrada':PUNTOS[id]?'pago':'pasillo'); const manual=A.ubic; A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan();
-  if(manual&&R.ruta) $('start').classList.add('solo'); } // ubicación elegida a mano: el mapa sigue completo (sin panel) hasta que termine el recorrido
+function fijarOrigen(id){ track('ubicacion_elegida',!id?'entrada':PUNTOS[id]?'pago':'pasillo'); A.pideOrigen=false; A.origenElegido=true; A.origen=id||''; renderPlan(); }
 function idsOrigen(){ return [...$('desde').options].map(o=>o.value).filter(Boolean); }
 // Cambiar ubicación (Figma P-04b/c): mapa a pantalla completa con todos los números de pasillo y un snackbar; tocar un pasillo traza la ruta desde ahí
 let snackT=0;
@@ -546,13 +537,13 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=121" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=130" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
     let ico, tx, ty, ta='start';
     if(id==='entrada'){ // pastilla azul con la puerta; el nombre va a su izquierda
-      ico=`<rect x="${p.x-10.5*k}" y="${p.y-12.5*k}" width="${21*k}" height="${25*k}" rx="${10.5*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8.5*k,p.y-8.5*k,17*k,17*k); tx=p.x-14.5*k; ty=p.y; ta='end'; }
+      ico=`<rect x="${p.x-10.5*k}" y="${p.y-12.5*k}" width="${21*k}" height="${25*k}" rx="${10.5*k}" fill="#0072ce" stroke="#fff" stroke-width="${2*k}"/>`+img('door-windows',p.x-8.5*k,p.y-8.5*k,17*k,17*k); tx=p.x+14.5*k; ty=p.y; ta='start'; }
     else { // pin de 36 px con la punta en el punto; la sombra del archivo mide 40,87 px de alto
       ico=img({patio:'pin-patio-constructor',pago:'pin-punto-de-pago',esc:'pin-escaleras'}[id],p.x-18.5*k,p.y-34.4*k,37*k,42*k);
       if(id==='patio'){ tx=p.x-21.5*k; ty=p.y-18.5*k; ta='end'; } else { tx=p.x+20.5*k; ty=p.y-18.5*k; } } // Patio: su nombre va a la izquierda del pin (sobre el pin chocaba con «Baños & Cocinas»); los demás, a su derecha
@@ -656,7 +647,7 @@ function paintSteps(){
   $('rutaPrev').disabled=R.paso<=0; $('rutaNext').disabled=R.paso>=n-1;
 }
 function setPaso(i){ R.paso=i; paintSteps(); caption(R.pasos[i]); }
-function endGuide(){ $('start').classList.remove('solo'); R.guiando=false; R.mr=null; R.proj=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
+function endGuide(){ R.guiando=false; R.mr=null; R.proj=null; $('callouts').classList.remove('guiando'); layoutCallouts(); const p=rutaPath(); if(p) p.style.opacity=''; $('rutaPlay').textContent='Repetir recorrido animado'; }
 function cancelGuide(keepView){ R.token++; cancelAnimationFrame(R.anim); if(R.guiando){ endGuide(); if(R.fit&&!keepView) setVB(R.fit); } }
 const easeOut=u=>1-Math.pow(1-u,3);
 function tweenVB(a,b,dur,tk,fn=ease){ return new Promise(res=>{ const t0=performance.now(); const f=t=>{ if(tk!==R.token) return res(); const u=Math.min(1,(t-t0)/dur); setVB(a.map((v,i)=>v+(b[i]-v)*fn(u))); if(u<1) R.anim=requestAnimationFrame(f); else res(); }; R.anim=requestAnimationFrame(f); }); }
@@ -716,7 +707,7 @@ function styleRoute(r){
   j.querySelectorAll(':scope > line').forEach(l=>l.setAttribute('display','none'));
 }
 function clearDest(){ $('mapa').classList.remove('con-ruta'); $('mapa').querySelectorAll('#etiquetas .pl.orig').forEach(g=>g.classList.remove('orig')); document.querySelectorAll('#mapa .dest,#mapa .dest-sel,#mapa .dest-alt,#mapa .orig-sel').forEach(e=>{ e.classList.remove('dest','dest-sel','dest-alt','orig-sel'); e.style.transitionDelay=''; }); clearCallouts(); escalarEtiquetas(); }
-function hideRoute(){ $('start').classList.remove('solo'); clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
+function hideRoute(){ clearDest(); R.uz=false; R.token++; cancelAnimationFrame(R.anim); R.guiando=false;
   // borra la ruta anterior (capa sin id al final del plano) y anula un recorrido que estuviera por arrancar
   { const j=rutaGrupo(); if(j&&!j.id) j.replaceChildren(); R.ruta=null; R.trail=null; R.marker=null; R.len=0; } $('rutaModal').classList.add('idle'); try{ const d=$('destino'); d.value=''; if(d.onchange) d.onchange(); }catch(e){} setVB(STORE.slice()); document.querySelectorAll('.card.sel,.dcard.sel').forEach(c=>c.classList.remove('sel')); }
 // Ruta completa de una vez (el trazo se dibuja en ~1 s, sin mover la cámara)
@@ -1028,7 +1019,7 @@ sampleFn={ async json(opts){
   return j;
 } };
 initTracking();
-escalarEtiquetas(); // mapa de inicio (estático): números con el estilo de la ruta
+acomodarNumeros(); escalarEtiquetas(); // mapa de inicio (estático): números con el estilo de la ruta
 $('sheetPay').addEventListener('click',()=>{ if(window.gtag) gtag('event','escanea_paga_click',{sesion_id:sesionId()}); track('pago_click'); });
 $('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.contains('sin-nums'); track('ver_pasillos',ver?'on':'off'); setTimeout(familias,0); c.classList.toggle('sin-nums',!ver); b.classList.toggle('on',ver); b.lastElementChild.textContent=ver?'Ocultar pasillos':'Ver pasillos'; b.firstElementChild.src=ver?'img/eye-disabled.svg':'img/eye-enabled.svg'; };
 /* ---------- Input (Figma 89:8559…89:10254): píldora → caja cuando el texto pasa de una línea; sin micrófono cuando hay texto ---------- */
