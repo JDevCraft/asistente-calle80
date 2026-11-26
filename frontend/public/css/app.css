@@ -383,7 +383,7 @@ body.escribiendo .sh-top{gap:0}
 .ori-cambiar{flex:none;width:76px;padding:10px 16px;border:0;border-radius:4px;background:none;color:var(--primary);font:400 14px/20px var(--body);text-decoration:underline;text-underline-position:from-font;white-space:nowrap}
 
 /* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
-#start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl{display:none}
+#start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl,#start.solo .sheet,#start.solo .pay-wrap,#start.solo .mapctl{display:none}
 #start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt,#start.ubic #mapa #gondolas rect.orig-sel{fill:#e7ebf0;stroke:none}
 #start.ubic #mapa #etiquetas .pl.orig rect,#start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
 #start.ubic #mapa #etiquetas .pl.orig text,#start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
