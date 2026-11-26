@@ -304,10 +304,10 @@ const STEP=REDUCE_UI?0:280; // ms entre una opción y la siguiente (pasillos y b
 // texto con partes en negrita: ['Dirígete al pasillo ',['b','26a'],' para…']
 function rico(partes){ return partes.filter(Boolean).map(p=>Array.isArray(p)?el(p[0],null,p[1]):document.createTextNode(p)); }
 // «Escanea y paga»: no aparece al inicio; con la ruta a la vista espera PAY_MS y se despliega (el mapa se reacomoda). Salir del resultado la repliega y reinicia la espera
-const PAY_MS=5000; let payT=0, payWant=false;
+const PAY_MS=7000; let payT=0, payWant=false;
 function payStart(){ const a=$('sheetAct'); if(!payWant||payT||a.classList.contains('on')) return; // sheet() se repite en el resultado (pills, panel): no reinicia la espera
   payT=setTimeout(()=>{ payT=0; a.inert=false; a.classList.add('on'); },PAY_MS); }
-// Oculta la tarjeta y cancela su espera; se llama al empezar cada ruta o recorrido para que solo vuelva a salir 5 s después de que este termine
+// Oculta la tarjeta y cancela su espera; se llama al empezar cada ruta o recorrido para que solo vuelva a salir 7 s después de que este termine
 function payReset(){ const a=$('sheetAct'); clearTimeout(payT); payT=0; a.classList.remove('on'); a.inert=true; }
 function payCard(on){
   if(!on){ payWant=false; payReset(); return; }
@@ -539,7 +539,7 @@ $('mapa').querySelectorAll('#etiquetas .pl.ref').forEach(g=>{ if(/puntos de pago
 function pines(){ try{ const sv=$('mapa'), et=sv.querySelector('#etiquetas'); if(!et) return; const viejo=sv.querySelector('#pines'); if(viejo) viejo.remove();
   const ref=re=>[...et.querySelectorAll('.pl.ref')].find(g=>re.test(g.textContent)), inv=sv.getScreenCTM()&&sv.getScreenCTM().inverse(); if(!inv) return;
   const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.id='pines'; g.setAttribute('pointer-events','none');
-  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=136" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  const k=3.5, img=(f,x,y,w,h)=>`<image href="img/${f}.svg?v=137" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
   [['Patio Constructor',sv.querySelector('#g-patio'),'patio'],['Punto de pago',ref(/puntos de pago/i),'pago'],['Escaleras',ref(/rampas el/i),'esc'],['Entrada',sv.querySelector('#ent-base'),'entrada']].forEach(([n,e,id])=>{
     const r=e&&e.getBoundingClientRect(); if(!r||!(r.width||r.height)) return;
     const p=new DOMPoint(r.left+r.width/2-(id==='patio'?10*k:0),r.top+r.height/2).matrixTransform(inv); // Patio: se corre a la izquierda para que su nombre no se corte en el borde
@@ -1041,12 +1041,14 @@ $('verNums').onclick=()=>{ const c=$('cont'), b=$('verNums'), ver=c.classList.co
 /* ---------- Panel: teclado, velo, asa e información ---------- */
 (function(){
   const need=$('need'), body=document.body, sh=$('sheet'), vv=window.visualViewport;
-  // iOS no achica el layout con el teclado: el panel sube lo que ocupe el teclado (Android usa interactive-widget=resizes-content)
-  const kb=()=>{ const h=vv&&body.classList.contains('escribiendo')?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0; document.documentElement.style.setProperty('--kb',Math.round(h)+'px'); };
+  // Si el navegador no achica el layout con el teclado (iOS), el panel sube lo que el teclado tape del cuerpo; si ya lo achicó (Android, iOS recientes con
+  // interactive-widget=resizes-content) no sube nada. Se mide contra el borde inferior real del cuerpo, no contra innerHeight, que cambia en otro momento que visualViewport
+  const kb=()=>{ const h=vv&&body.classList.contains('escribiendo')?Math.max(0,body.getBoundingClientRect().bottom-(vv.offsetTop+vv.height)):0; document.documentElement.style.setProperty('--kb',Math.round(h)+'px'); };
   if(vv){ vv.addEventListener('resize',kb); vv.addEventListener('scroll',kb); }
+  window.addEventListener('resize',kb); // el layout se achica después del teclado: sin esto --kb se queda viejo y el campo sube hasta arriba
   // Con el teclado el plano se ve completo y sin deformar, con franjas blancas a los lados; sin teclado se estira a todo el ancho
   const encaje=()=>{ $('mapa').setAttribute('preserveAspectRatio',body.classList.contains('escribiendo')?'xMidYMin meet':'none'); desK=0; desestirar(); };
-  need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); encaje(); sh.classList.remove('min'); kb(); requestAnimationFrame(()=>window.scrollTo(0,0)); });
+  need.addEventListener('focus',()=>{ body.classList.add('escribiendo'); encaje(); sh.classList.remove('min'); kb(); [150,400,800].forEach(t=>setTimeout(kb,t)); requestAnimationFrame(()=>window.scrollTo(0,0)); });
   need.addEventListener('blur',()=>{ body.classList.remove('escribiendo'); encaje(); kb(); });
   $('scrim').addEventListener('click',()=>need.blur());
   // Asa: tocar contrae/expande; arrastrar hacia abajo contrae y hacia arriba expande
