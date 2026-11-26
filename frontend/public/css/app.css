@@ -386,8 +386,9 @@ body.escribiendo .sh-top{gap:0}
 /* Cambiar ubicación (Figma v3 P-04b): mapa a pantalla completa, sin panel ni botón de números, sin destino ni ruta a la vista */
 #start.ubic .sheet,#start.ubic .pay-wrap,#start.ubic .mapctl,#start.solo .sheet,#start.solo .pay-wrap,#start.solo .mapctl{display:none}
 #start.ubic #mapa #gondolas rect.dest,#start.ubic #mapa #gondolas rect.dest-sel,#start.ubic #mapa #gondolas rect.dest-alt,#start.ubic #mapa #gondolas rect.orig-sel{fill:#e7ebf0;stroke:none}
-#start.ubic #mapa #etiquetas .pl.orig rect,#start.ubic #mapa #etiquetas .pl.dest rect,#start.ubic #mapa #etiquetas .pl.dest-sel rect,#start.ubic #mapa #etiquetas .pl.dest-alt rect{fill:#fff;stroke:#d6dce3;stroke-width:1.5}
-#start.ubic #mapa #etiquetas .pl.orig text,#start.ubic #mapa #etiquetas .pl.dest text,#start.ubic #mapa #etiquetas .pl.dest-sel text,#start.ubic #mapa #etiquetas .pl.dest-alt text{fill:#6b7682}
+/* «Cambiar ubicación»: todos los números de pasillo con el estilo azul de la ruta (el 1,22x va en escalarEtiquetas) */
+#start.ubic #mapa #etiquetas .pl[id^="l-"] rect{fill:#005192;stroke:#ffffff;stroke-width:3}
+#start.ubic #mapa #etiquetas .pl[id^="l-"] text{fill:#ffffff}
 /* Snackbar (Figma 166:14292): #333, radio 4, padding 12 16, texto 14/20 blanco y acción Bold #b0d3f0 */
 .snack{position:absolute;left:9px;right:9px;top:8px;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:4px;background:#333;box-shadow:0 4px 7px rgba(0,0,0,.25);font:400 14px/20px var(--body)}
 .snack[hidden]{display:none}
